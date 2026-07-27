@@ -117,4 +117,18 @@ public class InventoryRepository {
             orderId
         ) == 1;
     }
+
+    public int sumForOrder(String orderNo) {
+        Integer total = jdbcTemplate.queryForObject(
+            """
+            select coalesce(sum(l.quantity_delta), 0)
+              from inventory_ledger l
+              join customer_order o on o.id = l.order_id
+             where o.order_no = ?
+            """,
+            Integer.class,
+            orderNo
+        );
+        return total == null ? 0 : total;
+    }
 }
