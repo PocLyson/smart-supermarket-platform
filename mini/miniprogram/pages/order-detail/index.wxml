@@ -19,8 +19,8 @@
     <view class="card">
       <view class="section-title">商品快照</view>
       <view wx:for="{{order.items}}" wx:key="productId" class="row-between order-line">
-        <text>{{item.productName || item.name}} × {{item.quantity}}</text>
-        <text>¥{{(item.subtotalCent || item.unitPriceCent * item.quantity) / 100}}</text>
+        <text>{{item.productName}} × {{item.quantity}}</text>
+        <text>¥{{item.subtotalCent / 100}}</text>
       </view>
       <view class="row-between">
         <text>订单合计</text>
@@ -32,7 +32,7 @@
       <view class="section-title">状态记录</view>
       <view wx:for="{{order.history}}" wx:key="index" class="order-line">
         <view>{{orderStatusLabel[item.status]}}</view>
-        <view class="muted">{{item.occurredAt || item.createdAt}}</view>
+        <view class="muted">{{item.createdAt}}</view>
         <view wx:if="{{item.reason}}" class="muted">{{item.reason}}</view>
       </view>
     </view>

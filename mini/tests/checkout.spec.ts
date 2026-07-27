@@ -12,7 +12,27 @@ const selectedItems = [
   },
 ]
 
+const orderItems = [
+  {
+    productId: 1,
+    productName: '纯牛奶',
+    unitPriceCent: 590,
+    quantity: 2,
+    subtotalCent: 1180,
+  },
+]
+
 const setup = () => {
+  let persistedPending: unknown
+  const pendingStorage = {
+    read: vi.fn(() => persistedPending),
+    write: vi.fn((value: unknown) => {
+      persistedPending = value
+    }),
+    clear: vi.fn(() => {
+      persistedPending = undefined
+    }),
+  }
   const auth = {
     ensureSession: vi.fn().mockResolvedValue({ accessToken: 'customer-token' }),
   }
@@ -25,7 +45,7 @@ const setup = () => {
       pickupName: '李先生',
       phone: '13800138000',
       totalCent: 1180,
-      items: selectedItems,
+      items: orderItems,
       history: [],
     }),
     list: vi.fn().mockResolvedValue({
@@ -44,13 +64,14 @@ const setup = () => {
     profile,
     orders,
     cart,
+    pendingStorage,
     createIdempotencyKey: () => '123e4567-e89b-42d3-a456-426614174000',
   })
   checkout.updateContact({
     pickupName: '李先生',
     phone: '13800138000',
   })
-  return { checkout, auth, profile, orders, cart }
+  return { checkout, auth, profile, orders, cart, pendingStorage }
 }
 
 describe('checkout', () => {
@@ -95,7 +116,7 @@ describe('checkout', () => {
         pickupName: '李先生',
         phone: '13800138000',
         totalCent: 1180,
-        items: selectedItems,
+        items: orderItems,
         history: [],
       })
 
@@ -122,7 +143,7 @@ describe('checkout', () => {
           pickupName: '李先生',
           phone: '13800138000',
           totalCent: 1180,
-          items: selectedItems,
+          items: orderItems,
           history: [],
           createdAt: '2026-07-27T10:00:00+08:00',
         },
@@ -148,6 +169,11 @@ describe('checkout', () => {
       orders,
       cart,
       createIdempotencyKey: () => keys.shift() ?? 'unexpected',
+      pendingStorage: {
+        read: () => undefined,
+        write: vi.fn(),
+        clear: vi.fn(),
+      },
     })
     checkout.updateContact({
       pickupName: '李先生',
@@ -162,5 +188,55 @@ describe('checkout', () => {
       '123e4567-e89b-42d3-a456-426614174000',
       '223e4567-e89b-42d3-a456-426614174000',
     ])
+  })
+
+  it('restores the original request and key after an app restart', async () => {
+    const {
+      checkout,
+      auth,
+      profile,
+      orders,
+      cart,
+      pendingStorage,
+    } = setup()
+    orders.create.mockRejectedValueOnce(new NetworkUncertainError())
+
+    await expect(checkout.submit()).rejects.toThrow('订单结果尚未确认')
+
+    cart.selectedItems.mockReturnValue([
+      {
+        productId: 2,
+        name: '面包',
+        coverImageUrl: '',
+        unitPriceCent: 450,
+        quantity: 1,
+        selected: true,
+      },
+    ])
+    const restored = createCheckout({
+      auth,
+      profile,
+      orders,
+      cart,
+      pendingStorage,
+      createIdempotencyKey: () => 'new-key-must-not-be-used',
+    })
+    restored.updateContact({
+      pickupName: '王女士',
+      phone: '13900139000',
+    })
+
+    await restored.submit()
+
+    expect(orders.create).toHaveBeenLastCalledWith(
+      '123e4567-e89b-42d3-a456-426614174000',
+      {
+        pickupName: '李先生',
+        phone: '13800138000',
+        items: [{ productId: 1, quantity: 2 }],
+      },
+    )
+    expect(cart.remove).toHaveBeenLastCalledWith([1])
+    expect(pendingStorage.clear).toHaveBeenCalled()
   })
 })

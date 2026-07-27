@@ -27,6 +27,7 @@ export interface CheckoutDependencies {
   profile: CheckoutProfile
   orders: CheckoutOrders
   cart: Pick<Cart, 'selectedItems' | 'remove'>
+  pendingStorage: PendingCheckoutStorage
   createIdempotencyKey: () => string
 }
 
@@ -34,6 +35,43 @@ export interface Checkout {
   updateContact(profile: CustomerProfile): void
   submit(): Promise<CustomerOrder>
   isSubmitting(): boolean
+}
+
+interface PendingCheckout {
+  idempotencyKey: string
+  request: CreateOrderRequest
+  purchasedProductIds: number[]
+  uncertain: boolean
+}
+
+export interface PendingCheckoutStorage {
+  read(): unknown
+  write(value: PendingCheckout): void
+  clear(): void
+}
+
+const PENDING_CHECKOUT_STORAGE_KEY = 'smart-store-pending-checkout-v1'
+
+const isPendingCheckout = (value: unknown): value is PendingCheckout => {
+  if (!value || typeof value !== 'object') return false
+  const pending = value as Partial<PendingCheckout>
+  return (
+    typeof pending.idempotencyKey === 'string' &&
+    pending.idempotencyKey.length > 0 &&
+    !!pending.request &&
+    typeof pending.request.pickupName === 'string' &&
+    typeof pending.request.phone === 'string' &&
+    Array.isArray(pending.request.items) &&
+    pending.request.items.every(
+      (item) =>
+        Number.isSafeInteger(item.productId) &&
+        Number.isSafeInteger(item.quantity) &&
+        item.quantity >= 1,
+    ) &&
+    Array.isArray(pending.purchasedProductIds) &&
+    pending.purchasedProductIds.every(Number.isSafeInteger) &&
+    typeof pending.uncertain === 'boolean'
+  )
 }
 
 const validateContact = (profile: CustomerProfile): CustomerProfile => {
@@ -69,7 +107,6 @@ export const createUuid = (): string => {
 export const createCheckout = (dependencies: CheckoutDependencies): Checkout => {
   let contact: CustomerProfile = { pickupName: '', phone: '' }
   let submitting = false
-  let pendingKey: string | undefined
 
   return {
     updateContact: (profile) => {
@@ -78,29 +115,63 @@ export const createCheckout = (dependencies: CheckoutDependencies): Checkout => 
     isSubmitting: () => submitting,
     submit: async () => {
       if (submitting) throw new Error('订单正在提交，请勿重复操作')
-      const selected = dependencies.cart.selectedItems()
-      if (selected.length === 0) throw new Error('请先选择要结算的商品')
-      const validContact = validateContact(contact)
+      const stored = dependencies.pendingStorage.read()
+      if (stored !== undefined && !isPendingCheckout(stored)) {
+        dependencies.pendingStorage.clear()
+      }
+      let pending = isPendingCheckout(stored) ? stored : undefined
+      const selected = pending ? [] : dependencies.cart.selectedItems()
+      if (!pending && selected.length === 0) {
+        throw new Error('请先选择要结算的商品')
+      }
+      const validContact = pending
+        ? {
+            pickupName: pending.request.pickupName,
+            phone: pending.request.phone,
+          }
+        : validateContact(contact)
       submitting = true
       try {
         await dependencies.auth.ensureSession()
         await dependencies.profile.save(validContact)
-        pendingKey ??= dependencies.createIdempotencyKey()
-        const request: CreateOrderRequest = {
-          ...validContact,
-          items: toRequestItems(selected),
+        if (!pending) {
+          pending = {
+            idempotencyKey: dependencies.createIdempotencyKey(),
+            request: {
+              ...validContact,
+              items: toRequestItems(selected),
+            },
+            purchasedProductIds: selected.map((item) => item.productId),
+            uncertain: false,
+          }
+          dependencies.pendingStorage.write(pending)
+        } else if (pending.uncertain) {
+          try {
+            await dependencies.orders.list({ page: 1, size: 20 })
+          } catch {
+            throw new Error('订单结果尚未确认，请稍后重试')
+          }
         }
         try {
-          const order = await dependencies.orders.create(pendingKey, request)
-          dependencies.cart.remove(selected.map((item) => item.productId))
-          pendingKey = undefined
+          const order = await dependencies.orders.create(
+            pending.idempotencyKey,
+            pending.request,
+          )
+          dependencies.cart.remove(pending.purchasedProductIds)
+          dependencies.pendingStorage.clear()
           return order
         } catch (error) {
           if (error instanceof NetworkUncertainError) {
-            await dependencies.orders.list({ page: 1, size: 20 })
+            pending = { ...pending, uncertain: true }
+            dependencies.pendingStorage.write(pending)
+            try {
+              await dependencies.orders.list({ page: 1, size: 20 })
+            } catch {
+              // The durable key and original request remain available for retry.
+            }
             throw new Error('订单结果尚未确认，请勿修改商品并稍后重试')
           }
-          pendingKey = undefined
+          dependencies.pendingStorage.clear()
           throw error
         }
       } finally {
@@ -110,10 +181,20 @@ export const createCheckout = (dependencies: CheckoutDependencies): Checkout => 
   }
 }
 
+const wxPendingCheckoutStorage: PendingCheckoutStorage = {
+  read: () =>
+    typeof wx === 'undefined'
+      ? undefined
+      : (wx.getStorageSync(PENDING_CHECKOUT_STORAGE_KEY) as unknown),
+  write: (value) => wx.setStorageSync(PENDING_CHECKOUT_STORAGE_KEY, value),
+  clear: () => wx.removeStorageSync(PENDING_CHECKOUT_STORAGE_KEY),
+}
+
 export const checkout = createCheckout({
   auth: authService,
   profile: profileService,
   orders: ordersService,
   cart,
+  pendingStorage: wxPendingCheckoutStorage,
   createIdempotencyKey: createUuid,
 })

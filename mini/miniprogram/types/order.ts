@@ -22,19 +22,15 @@ export interface CreateOrderRequest {
 
 export interface OrderItemSnapshot {
   productId: number
-  productName?: string
-  name?: string
-  coverImageUrl?: string
+  productName: string
   unitPriceCent: number
   quantity: number
-  subtotalCent?: number
-  selected?: boolean
+  subtotalCent: number
 }
 
 export interface OrderStatusHistory {
   status: OrderStatus
-  occurredAt?: string
-  createdAt?: string
+  createdAt: string
   reason?: string
 }
 

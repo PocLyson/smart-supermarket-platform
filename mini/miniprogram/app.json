@@ -8,11 +8,7 @@
     "pages/order-detail/index"
   ],
   "window": {
-    "navigationBarTitleText": "智慧超市",
-    "navigationBarBackgroundColor": "#ffffff",
-    "navigationBarTextStyle": "black",
-    "backgroundColor": "#f5f6f8",
-    "backgroundTextStyle": "dark"
+    "navigationBarTitleText": "智慧超市"
   },
   "style": "v2",
   "sitemapLocation": "sitemap.json"

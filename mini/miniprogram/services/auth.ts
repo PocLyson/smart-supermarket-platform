@@ -3,7 +3,7 @@ import {
   type CustomerSession,
   type SessionStore,
 } from '../store/session'
-import { http, setUnauthorizedHandler, type HttpClient } from './http'
+import { http, type HttpClient } from './http'
 
 export interface CustomerProfile {
   pickupName: string
@@ -83,8 +83,6 @@ export const createProfileService = (
     )
   },
 })
-
-setUnauthorizedHandler(() => sessionStore.clear())
 
 export const authService = createAuthService({
   client: http,
