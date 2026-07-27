@@ -1,0 +1,32 @@
+.category-strip {
+  box-sizing: border-box;
+  width: 100%;
+  margin-bottom: var(--space-3);
+  white-space: nowrap;
+}
+
+.category-strip button {
+  display: inline-block;
+  margin-right: var(--space-2);
+}
+
+.product-card {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.product-image {
+  width: 180rpx;
+  height: 180rpx;
+  flex: 0 0 auto;
+  border-radius: var(--radius-sm);
+  background: var(--color-page);
+}
+
+.product-content {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  justify-content: space-between;
+}

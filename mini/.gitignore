@@ -1,0 +1,5 @@
+node_modules/
+.vitest/
+dist/
+miniprogram_npm/
+project.private.config.json

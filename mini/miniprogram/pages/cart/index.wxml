@@ -1,0 +1,30 @@
+<view class="page-shell">
+  <checkbox-group bindchange="onToggle">
+    <view wx:for="{{items}}" wx:key="productId" class="card">
+      <view class="row-between">
+        <label class="row">
+          <checkbox value="{{item.productId}}" checked="{{item.selected}}" />
+          <text>{{item.name}}</text>
+        </label>
+        <button class="button-danger" size="mini" data-id="{{item.productId}}" bindtap="onRemove">移除</button>
+      </view>
+      <view class="row-between">
+        <text class="price">¥{{item.unitPriceCent / 100}}</text>
+        <view class="row">
+          <button class="button-secondary" size="mini" data-id="{{item.productId}}" bindtap="onDecrease">−</button>
+          <text>{{item.quantity}}</text>
+          <button class="button-secondary" size="mini" data-id="{{item.productId}}" bindtap="onIncrease">+</button>
+        </view>
+      </view>
+    </view>
+  </checkbox-group>
+
+  <view wx:if="{{!items.length}}" class="state-panel">购物车还是空的</view>
+  <view wx:else class="card row-between">
+    <view>
+      <view class="price">合计 ¥{{totalCent / 100}}</view>
+      <view class="muted">展示价格仅供参考，以提交订单时服务端价格为准</view>
+    </view>
+    <button class="button-primary" bindtap="onCheckout">去结算</button>
+  </view>
+</view>

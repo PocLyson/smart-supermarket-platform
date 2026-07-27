@@ -1,0 +1,23 @@
+page {
+  --color-page: #f5f6f8;
+  --color-surface: #ffffff;
+  --color-primary: #1677ff;
+  --color-primary-contrast: #ffffff;
+  --color-text: #1f2329;
+  --color-text-secondary: #646a73;
+  --color-border: #e5e6eb;
+  --color-danger: #d92d20;
+  --color-success: #15803d;
+  --space-1: 8rpx;
+  --space-2: 16rpx;
+  --space-3: 24rpx;
+  --space-4: 32rpx;
+  --space-5: 48rpx;
+  --radius-sm: 8rpx;
+  --radius-md: 16rpx;
+  --radius-lg: 24rpx;
+  --font-caption: 24rpx;
+  --font-body: 28rpx;
+  --font-title: 36rpx;
+  --font-price: 32rpx;
+}

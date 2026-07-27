@@ -1,0 +1,32 @@
+<view class="page-shell">
+  <view class="card row">
+    <input class="field" value="{{keyword}}" placeholder="搜索商品" bindinput="onKeywordInput" bindconfirm="onSearch" />
+    <button class="button-primary" size="mini" bindtap="onSearch">搜索</button>
+  </view>
+
+  <scroll-view class="category-strip" scroll-x>
+    <button class="button-secondary" size="mini" data-id="all" bindtap="onSelectCategory">全部</button>
+    <button wx:for="{{categories}}" wx:key="id" class="button-secondary" size="mini" data-id="{{item.id}}" bindtap="onSelectCategory">{{item.name}}</button>
+  </scroll-view>
+
+  <view wx:if="{{error}}" class="state-panel">
+    <text>{{error}}</text>
+    <button class="button-secondary" size="mini" bindtap="loadInitial">重试</button>
+  </view>
+  <view wx:elif="{{empty}}" class="state-panel">没有找到商品</view>
+
+  <view wx:else>
+    <view wx:for="{{products}}" wx:key="id" class="card product-card" data-id="{{item.id}}" bindtap="onOpenProduct">
+      <image class="product-image" src="{{item.coverImageUrl}}" mode="aspectFill" />
+      <view class="product-content">
+        <view>{{item.name}}</view>
+        <view class="row-between">
+          <text class="price">¥{{item.priceCent / 100}}</text>
+          <text class="muted">/{{item.unit}}</text>
+        </view>
+      </view>
+    </view>
+    <view wx:if="{{loading}}" class="state-panel">加载中...</view>
+    <view wx:elif="{{reachedEnd && products.length}}" class="state-panel">已经到底了</view>
+  </view>
+</view>

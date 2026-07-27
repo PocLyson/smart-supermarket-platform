@@ -1,0 +1,14 @@
+{
+  "name": "smart-supermarket-mini",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/wechat-miniprogram": "^3.4.8",
+    "typescript": "^5.9.2",
+    "vitest": "^4.1.6"
+  }
+}

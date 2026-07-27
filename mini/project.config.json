@@ -1,0 +1,15 @@
+{
+  "appid": "touristappid",
+  "projectname": "smart-supermarket-mini",
+  "miniprogramRoot": "miniprogram/",
+  "compileType": "miniprogram",
+  "setting": {
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": true,
+    "compileHotReLoad": true
+  },
+  "simulatorType": "wechat",
+  "condition": {}
+}
