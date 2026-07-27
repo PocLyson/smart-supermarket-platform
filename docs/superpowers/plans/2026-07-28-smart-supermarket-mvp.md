@@ -6,12 +6,15 @@
 
 **Architecture:** 单仓库包含微信原生小程序、Vue 3 管理后台和 Spring Boot 3 模块化单体后端。后端按认证、商品、库存、订单、员工与审计分包；MySQL 是核心数据唯一事实来源，Redis 只保存可重建的短期状态。
 
-**Tech Stack:** Java 17、Spring Boot 3.5.9、Maven、Spring Security、Spring Data JPA、Flyway、MySQL 8、Redis、Vue 3、TypeScript、Vite、Vue Router、Pinia、Element Plus、Vitest、微信原生小程序。
+**Tech Stack:** Java 17、Spring Boot 3.5.9、Maven、Spring Security、Spring Data JPA、Flyway、MySQL 8、Redis、Vue 3、TypeScript、Vite、Vue Router、Pinia、Element Plus、Vitest、微信原生小程序、TDesign MiniProgram、TDesign Icons。
 
 ## Global Constraints
 
 - 顾客端必须使用微信原生小程序。
 - 管理后台必须使用 Vue 3 + Element Plus。
+- 小程序组件库必须使用 TDesign MiniProgram，图标统一使用 TDesign Icons；不得混用 Vant Weapp、WeUI 等其他完整组件库。
+- 小程序基础交互组件优先复用 TDesign，首页业务卡片、商品卡片、分类入口和推荐专区按项目视觉规范自定义。
+- 管理后台与小程序均须映射“深绛红”主题变量，禁止直接套用组件库默认品牌色或零售模板视觉。
 - 后端必须使用 Java 17 + Spring Boot 3。
 - 核心数据必须保存于 MySQL 8；Redis 不得成为核心数据唯一来源。
 - 认证与授权使用 JWT，顾客和员工使用隔离的认证入口及权限规则。
@@ -763,7 +766,7 @@ Expected: FAIL because the mini-program modules do not exist.
 
 - [ ] **Step 3: Implement storefront and cart**
 
-Use native WXML/WXSS/components and TypeScript page files. `http.ts` wraps `wx.request`, reads `apiBaseUrl` from an environment-specific config module, and converts the backend envelope into resolved data or a displayed Chinese error.
+Use native WXML/WXSS and TypeScript page files with TDesign MiniProgram primitives and TDesign Icons. Map component theme variables to the confirmed deep-crimson visual tokens. Use TDesign for generic controls such as buttons, search, tabs, grid, stepper, popup, dialog, toast, skeleton and tab bar; implement the home business cards, product cards, category entrances and recommendation sections as project-specific components. Do not mix Vant Weapp or WeUI, and do not copy the visual styling of a TDesign retail starter. `http.ts` wraps `wx.request`, reads `apiBaseUrl` from an environment-specific config module, and converts the backend envelope into resolved data or a displayed Chinese error.
 
 The home page must support:
 
