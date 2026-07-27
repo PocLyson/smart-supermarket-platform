@@ -2,12 +2,14 @@ package com.luneng.smartstore.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.luneng.smartstore.common.api.ApiResponse;
+import com.luneng.smartstore.common.web.RateLimitFilter;
 import com.luneng.smartstore.common.web.RequestIdFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -22,6 +24,7 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(
         HttpSecurity http,
         JwtAuthenticationFilter jwtAuthenticationFilter,
+        RateLimitFilter rateLimitFilter,
         ObjectMapper objectMapper
     ) throws Exception {
         http
@@ -57,8 +60,19 @@ public class SecurityConfig {
                 .accessDeniedHandler((request, response, exception) ->
                     writeError(objectMapper, request, response, 403, "FORBIDDEN", "无权执行该操作"))
             )
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterAfter(rateLimitFilter, JwtAuthenticationFilter.class);
         return http.build();
+    }
+
+    @Bean
+    FilterRegistrationBean<RateLimitFilter> rateLimitFilterRegistration(
+        RateLimitFilter filter
+    ) {
+        FilterRegistrationBean<RateLimitFilter> registration =
+            new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
     }
 
     @Bean

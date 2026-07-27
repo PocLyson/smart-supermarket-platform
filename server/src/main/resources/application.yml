@@ -18,6 +18,10 @@ spring:
       ddl-auto: validate
   flyway:
     enabled: true
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
 
 management:
   endpoints:
@@ -32,3 +36,13 @@ smart-store:
     app-id: ${WECHAT_APP_ID}
     app-secret: ${WECHAT_APP_SECRET}
   upload-dir: ${UPLOAD_DIR}
+  rate-limit:
+    staff-login:
+      limit: 10
+      window-seconds: 600
+    customer-login:
+      limit: 30
+      window-seconds: 600
+    order-create:
+      limit: 10
+      window-seconds: 60

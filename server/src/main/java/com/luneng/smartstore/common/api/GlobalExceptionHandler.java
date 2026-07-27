@@ -12,6 +12,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -35,6 +36,19 @@ public class GlobalExceptionHandler {
         HttpServletRequest request
     ) {
         return error(exception.getStatus(), exception.getCode(), exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    ResponseEntity<ApiResponse<Void>> imageTooLarge(
+        MaxUploadSizeExceededException exception,
+        HttpServletRequest request
+    ) {
+        return error(
+            HttpStatus.BAD_REQUEST,
+            "INVALID_IMAGE",
+            "图片不能超过 5 MiB",
+            request
+        );
     }
 
     @ExceptionHandler({EntityNotFoundException.class, NoSuchElementException.class})
