@@ -37,10 +37,10 @@
         </view>
       </view>
       <block wx:for="{{categories}}" wx:key="id">
-        <view wx:if="{{index < 9}}" class="category-slot">
+        <view class="category-slot">
           <view class="category-item {{selectedCategoryId === item.id ? 'is-selected' : ''}}" role="button" aria-label="{{item.name}}" data-id="{{item.id}}" hover-class="category-hover" bindtap="onSelectCategory">
             <view class="category-image-wrap">
-              <image class="category-image" src="{{categoryImages[index]}}" mode="aspectFill" />
+              <image class="category-image" src="{{categoryImages[index % categoryImages.length]}}" mode="aspectFill" />
             </view>
             <text class="category-name">{{item.name}}</text>
           </view>
@@ -76,7 +76,7 @@
     </view>
   </view>
 
-  <t-tab-bar value="{{homeTab}}" fixed split="{{false}}" bind:change="onTabChange">
+  <t-tab-bar value="{{homeTab}}" fixed placeholder split="{{false}}" bind:change="onTabChange">
     <t-tab-bar-item value="home" icon="/assets/icons/home-filled.svg">首页</t-tab-bar-item>
     <t-tab-bar-item value="category" icon="/assets/icons/view-module.svg">分类</t-tab-bar-item>
     <t-tab-bar-item value="cart" icon="/assets/icons/cart.svg" url="/pages/cart/index" link-type="navigateTo">购物车</t-tab-bar-item>

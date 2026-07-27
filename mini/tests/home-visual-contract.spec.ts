@@ -46,6 +46,7 @@ describe('deep burgundy home visual contract', () => {
     expect(home).toContain('<t-search')
     expect(home).toContain('<t-button')
     expect(home).toContain('<t-tab-bar')
+    expect(home).toMatch(/<t-tab-bar[^>]*\splaceholder(?:\s|>)/)
     expect(home).toContain('<t-icon')
     expect(pageConfig.usingComponents).toMatchObject({
       't-button': 'tdesign-miniprogram/button/button',
@@ -63,6 +64,8 @@ describe('deep burgundy home visual contract', () => {
     expect(home).toContain('class="category-slot"')
     expect(home).toContain('role="button"')
     expect(home).not.toContain('<button class="category-item')
+    expect(home).not.toContain('index < 9')
+    expect(home).toContain('categoryImages[index % categoryImages.length]')
     expect(homeStyles).toMatch(
       /\.category-grid\s*\{[\s\S]*?display:\s*flex;[\s\S]*?flex-wrap:\s*wrap;/,
     )
@@ -72,5 +75,13 @@ describe('deep burgundy home visual contract', () => {
     expect(homeStyles).toMatch(
       /\.category-item\s*\{[\s\S]*?box-sizing:\s*border-box;[\s\S]*?width:\s*100%;/,
     )
+  })
+
+  it('pins the confirmed TDesign version', () => {
+    const packageJson = JSON.parse(
+      readFileSync(resolve(miniRoot, '..', 'package.json'), 'utf8'),
+    ) as { dependencies?: Record<string, string> }
+
+    expect(packageJson.dependencies?.['tdesign-miniprogram']).toBe('1.15.3')
   })
 })

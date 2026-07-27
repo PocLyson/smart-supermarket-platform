@@ -27,6 +27,7 @@ No actionable P0/P1/P2 differences remain.
    - Root cause evidence: 微信开发者工具 WXML inspector showed `.category-slot` at `73.2 × 79`, while its native `button.category-item` child was `184 × 79` because the injected `wx-button:not(.size-mini)` rule overrode the intended width.
    - Fix: replaced native category buttons with custom `view` controls carrying `role="button"` and `aria-label`; retained the 20% flex slots.
 2. Post-fix comparison shows two complete rows of five evenly sized category entries, no clipping, stable hero/product grids, and an unobstructed fixed tab bar.
+3. Post-review runtime check injected 11 enabled categories. All entries rendered across additional rows, overflow entries received a cyclic local-image fallback, and the TDesign tab bar placeholder kept the end of the list clear of the fixed navigation.
 
 ## Focused region evidence
 
@@ -38,6 +39,7 @@ A separate enlarged crop was not needed: the equal-size side-by-side comparison 
 - Home compiled after the final layout change.
 - TDesign search, button, icon, and tab bar rendered in the simulator.
 - 分类 tab scroll interaction passed.
+- More than 9 enabled categories remained visible and tappable in an additional row.
 - Console was cleared after validation; no current application error remained. Backend-unavailable and tourist-mode messages observed earlier were environmental and were not used as passing evidence.
 
 ## Follow-up polish
