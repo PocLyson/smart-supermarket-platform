@@ -94,10 +94,16 @@ onMounted(load)
           <template #default="{ row }">¥{{ centToYuan(row.totalCent) }}</template>
         </el-table-column>
         <el-table-column label="订单状态" width="130">
-          <template #default="{ row }">{{ statusText(row.status) }}</template>
+          <template #default="{ row }">
+            <span class="status-tag" :data-status="row.status">{{ statusText(row.status) }}</span>
+          </template>
         </el-table-column>
         <el-table-column label="付款状态" width="110">
-          <template #default="{ row }">{{ paymentText(row.paymentStatus) }}</template>
+          <template #default="{ row }">
+            <span class="status-tag" :data-payment-status="row.paymentStatus">
+              {{ paymentText(row.paymentStatus) }}
+            </span>
+          </template>
         </el-table-column>
         <el-table-column label="操作" width="100">
           <template #default="{ row }">

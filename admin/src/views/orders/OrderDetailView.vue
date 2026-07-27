@@ -141,11 +141,19 @@ onMounted(load)
       <div class="summary-grid">
         <article class="surface-card">
           <span>订单状态</span>
-          <strong>{{ orderStatusLabel[order.status] }}</strong>
+          <strong>
+            <span class="status-tag" :data-status="order.status">
+              {{ orderStatusLabel[order.status] }}
+            </span>
+          </strong>
         </article>
         <article class="surface-card">
           <span>付款状态</span>
-          <strong>{{ paymentStatusLabel[order.paymentStatus] }}</strong>
+          <strong>
+            <span class="status-tag" :data-payment-status="order.paymentStatus">
+              {{ paymentStatusLabel[order.paymentStatus] }}
+            </span>
+          </strong>
         </article>
         <article class="surface-card">
           <span>取货人</span>
