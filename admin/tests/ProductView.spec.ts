@@ -68,4 +68,15 @@ describe('product money and editor behavior', () => {
       expect.objectContaining({ coverImageUrl: '/files/0b657bd4.webp' }),
     )
   })
+
+  it('disables product saving while an image upload is pending', async () => {
+    const wrapper = mount(ProductView)
+    await flushPromises()
+    await wrapper.get('[data-test="product-create"]').trigger('click')
+
+    wrapper.findComponent(ProductImageUpload).vm.$emit('uploading-change', true)
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.get('[data-test="product-submit"]').attributes('disabled')).toBeDefined()
+  })
 })

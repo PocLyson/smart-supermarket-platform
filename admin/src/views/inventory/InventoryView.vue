@@ -7,6 +7,7 @@ import {
   type InventoryItem,
   type InventoryAdjustmentRequest,
 } from '@/api/inventory'
+import { reportUnexpectedError } from '@/utils/errors'
 
 const items = ref<InventoryItem[]>([])
 const dialogVisible = ref(false)
@@ -16,7 +17,11 @@ const form = reactive<{ delta: string; reason: string }>({ delta: '', reason: ''
 const errorMessage = ref('')
 
 const load = async (): Promise<void> => {
-  items.value = (await listInventory()).items
+  try {
+    items.value = (await listInventory()).items
+  } catch (error) {
+    reportUnexpectedError(error, '库存加载失败')
+  }
 }
 
 const openAdjustment = (item: InventoryItem): void => {

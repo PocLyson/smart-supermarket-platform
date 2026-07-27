@@ -13,6 +13,7 @@ import {
 } from '@/api/orders'
 import { ApiError } from '@/api/http'
 import { centToYuan } from '@/utils/money'
+import { reportUnexpectedError } from '@/utils/errors'
 import { orderStatusLabel, paymentStatusLabel } from './orderPresentation'
 
 type MutationKind = 'accept' | 'reject' | 'ready' | 'pay' | 'complete' | 'cancel'
@@ -44,6 +45,8 @@ const load = async (): Promise<void> => {
   loading.value = true
   try {
     order.value = await getOrder(props.orderNo)
+  } catch (error) {
+    reportUnexpectedError(error, '订单详情加载失败')
   } finally {
     loading.value = false
   }

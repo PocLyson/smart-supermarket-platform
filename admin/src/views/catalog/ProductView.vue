@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import { nextTick, onMounted, reactive, ref } from 'vue'
+import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import {
   createProduct,
   listCategories,
@@ -13,6 +13,7 @@ import {
 } from '@/api/catalog'
 import { ApiError } from '@/api/http'
 import ProductImageUpload from '@/components/ProductImageUpload.vue'
+import { reportUnexpectedError } from '@/utils/errors'
 import { centToYuan, yuanToCent } from '@/utils/money'
 
 interface ProductForm {
@@ -29,8 +30,10 @@ const products = ref<Product[]>([])
 const categories = ref<Category[]>([])
 const dialogVisible = ref(false)
 const pending = ref(false)
+const imageUploading = ref(false)
 const editingId = ref<number>()
 const errorMessage = ref('')
+const productFormRef = ref<FormInstance>()
 const form = reactive<ProductForm>({
   name: '',
   categoryId: '',
@@ -40,14 +43,36 @@ const form = reactive<ProductForm>({
   description: '',
   onShelf: true,
 })
+const rules: FormRules<ProductForm> = {
+  name: [{ required: true, message: '请输入商品名称', trigger: 'blur' }],
+  categoryId: [{ required: true, message: '请选择商品分类', trigger: 'change' }],
+  priceYuan: [
+    {
+      validator: (_rule, value: string, callback) => {
+        try {
+          yuanToCent(value)
+          callback()
+        } catch {
+          callback(new Error('金额格式错误'))
+        }
+      },
+      trigger: 'blur',
+    },
+  ],
+  unit: [{ required: true, message: '请输入商品单位', trigger: 'blur' }],
+}
 
 const load = async (): Promise<void> => {
-  const [categoryItems, productPage] = await Promise.all([
-    listCategories(),
-    listProducts({ page: 0, size: 100 }),
-  ])
-  categories.value = categoryItems
-  products.value = productPage.items
+  try {
+    const [categoryItems, productPage] = await Promise.all([
+      listCategories(),
+      listProducts({ page: 0, size: 100 }),
+    ])
+    categories.value = categoryItems
+    products.value = productPage.items
+  } catch (error) {
+    reportUnexpectedError(error, '商品加载失败')
+  }
 }
 
 const openEditor = (product?: Product): void => {
@@ -63,6 +88,7 @@ const openEditor = (product?: Product): void => {
   })
   errorMessage.value = ''
   dialogVisible.value = true
+  void nextTick(() => productFormRef.value?.clearValidate())
 }
 
 const toPayload = (): ProductWriteRequest => {
@@ -81,6 +107,15 @@ const toPayload = (): ProductWriteRequest => {
 }
 
 const submit = async (): Promise<void> => {
+  if (imageUploading.value) {
+    errorMessage.value = '图片上传完成后才能保存商品'
+    return
+  }
+  try {
+    await productFormRef.value?.validate()
+  } catch {
+    return
+  }
   pending.value = true
   errorMessage.value = ''
   try {
@@ -103,7 +138,7 @@ const toggleShelf = async (product: Product): Promise<void> => {
     await setProductShelf(product.id, !product.onShelf)
     await load()
   } catch (error) {
-    ElMessage.error(error instanceof Error ? error.message : '操作失败')
+    reportUnexpectedError(error, '商品状态更新失败')
   }
 }
 
@@ -146,47 +181,57 @@ onMounted(load)
       </el-table>
     </div>
     <el-dialog v-model="dialogVisible" :title="editingId ? '编辑商品' : '新增商品'" width="600">
-      <div class="form-grid">
-        <div class="form-field">
-          <label>商品名称</label>
+      <el-form
+        ref="productFormRef"
+        :model="form"
+        :rules="rules"
+        label-position="top"
+        class="form-grid"
+      >
+        <el-form-item label="商品名称" prop="name">
           <input v-model="form.name" data-test="product-name" class="text-control" />
-        </div>
-        <div class="form-field">
-          <label>商品分类</label>
+        </el-form-item>
+        <el-form-item label="商品分类" prop="categoryId">
           <select v-model="form.categoryId" data-test="product-category" class="text-control">
             <option value="" disabled>请选择分类</option>
             <option v-for="category in categories" :key="category.id" :value="String(category.id)">
               {{ category.name }}
             </option>
           </select>
-        </div>
-        <div class="form-field">
-          <label>售价（元）</label>
+        </el-form-item>
+        <el-form-item label="售价（元）" prop="priceYuan">
           <input
             v-model="form.priceYuan"
             data-test="product-price"
             class="text-control"
             inputmode="decimal"
           />
-        </div>
-        <div class="form-field">
-          <label>单位</label>
+        </el-form-item>
+        <el-form-item label="单位" prop="unit">
           <input v-model="form.unit" data-test="product-unit" class="text-control" />
-        </div>
-        <div class="form-field">
-          <label>商品封面</label>
-          <ProductImageUpload v-model="form.coverImageUrl" />
-        </div>
-        <div class="form-field">
-          <label>商品详情</label>
+        </el-form-item>
+        <el-form-item label="商品封面">
+          <ProductImageUpload
+            v-model="form.coverImageUrl"
+            @uploading-change="imageUploading = $event"
+            @error="errorMessage = $event"
+          />
+        </el-form-item>
+        <el-form-item label="商品详情">
           <textarea v-model="form.description" class="text-control" />
-        </div>
+        </el-form-item>
         <el-switch v-model="form.onShelf" active-text="上架" inactive-text="下架" />
         <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
-      </div>
+      </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button data-test="product-submit" type="primary" :loading="pending" @click="submit">
+        <el-button
+          data-test="product-submit"
+          type="primary"
+          :loading="pending"
+          :disabled="pending || imageUploading"
+          @click="submit"
+        >
           保存
         </el-button>
       </template>

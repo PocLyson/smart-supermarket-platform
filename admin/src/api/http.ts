@@ -1,4 +1,5 @@
 import type { ApiResponse } from '@/types/common'
+import { ElMessage } from 'element-plus'
 
 export class ApiError extends Error {
   constructor(
@@ -36,6 +37,11 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
   }
 
   const response = await fetch(`${apiBaseUrl()}${path}`, { ...options, headers })
+  if (response.status === 401) {
+    localStorage.removeItem(SESSION_KEY)
+    if (window.location.pathname !== '/login') window.location.assign('/login')
+  }
+
   let envelope: ApiResponse<T>
   try {
     envelope = (await response.json()) as ApiResponse<T>
@@ -43,11 +49,8 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
     throw new ApiError('服务器响应格式错误', 'INVALID_RESPONSE', '', response.status)
   }
 
-  if (response.status === 401) {
-    localStorage.removeItem(SESSION_KEY)
-    if (window.location.pathname !== '/login') window.location.assign('/login')
-  }
   if (!response.ok || envelope.code !== 'OK') {
+    if (envelope.message) ElMessage.error(envelope.message)
     throw new ApiError(
       envelope.message || '请求失败',
       envelope.code,

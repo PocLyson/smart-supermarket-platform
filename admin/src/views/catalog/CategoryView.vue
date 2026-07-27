@@ -8,6 +8,7 @@ import {
   type Category,
   type CategoryWriteRequest,
 } from '@/api/catalog'
+import { reportUnexpectedError } from '@/utils/errors'
 
 const categories = ref<Category[]>([])
 const dialogVisible = ref(false)
@@ -16,7 +17,11 @@ const editingId = ref<number>()
 const form = reactive<CategoryWriteRequest>({ name: '', sortOrder: 0, enabled: true })
 
 const load = async (): Promise<void> => {
-  categories.value = await listCategories()
+  try {
+    categories.value = await listCategories()
+  } catch (error) {
+    reportUnexpectedError(error, '分类加载失败')
+  }
 }
 
 const openEditor = (category?: Category): void => {
@@ -42,6 +47,8 @@ const submit = async (): Promise<void> => {
     dialogVisible.value = false
     await load()
     ElMessage.success('分类已保存')
+  } catch (error) {
+    reportUnexpectedError(error, '分类保存失败')
   } finally {
     pending.value = false
   }

@@ -8,6 +8,7 @@ import {
   type PaymentStatus,
 } from '@/api/orders'
 import { centToYuan } from '@/utils/money'
+import { reportUnexpectedError } from '@/utils/errors'
 import { orderStatusLabel, paymentStatusLabel } from './orderPresentation'
 
 const items = ref<AdminOrderSummary[]>([])
@@ -36,6 +37,8 @@ const load = async (): Promise<void> => {
       size: 20,
     }
     items.value = (await listOrders(query)).items
+  } catch (error) {
+    reportUnexpectedError(error, '订单加载失败')
   } finally {
     loading.value = false
   }

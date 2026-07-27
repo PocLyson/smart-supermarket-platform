@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { listAuditLogs, type AuditLog, type AuditLogQuery } from '@/api/audit'
+import { reportUnexpectedError } from '@/utils/errors'
 
 const items = ref<AuditLog[]>([])
 const loading = ref(false)
@@ -17,6 +18,8 @@ const load = async (): Promise<void> => {
       size: 20,
     }
     items.value = (await listAuditLogs(query)).items
+  } catch (error) {
+    reportUnexpectedError(error, '审计记录加载失败')
   } finally {
     loading.value = false
   }

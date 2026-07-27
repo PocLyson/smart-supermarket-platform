@@ -4,8 +4,13 @@ import { ElMessage, type UploadRawFile, type UploadRequestOptions } from 'elemen
 import { uploadProductImage } from '@/api/images'
 
 const props = defineProps<{ modelValue: string }>()
-const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
+const emit = defineEmits<{
+  'update:modelValue': [value: string]
+  'uploading-change': [value: boolean]
+  error: [message: string]
+}>()
 const uploading = ref(false)
+const errorMessage = ref('')
 
 const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/webp'])
 const maxSize = 5 * 1024 * 1024
@@ -31,14 +36,19 @@ const beforeUpload = (file: UploadRawFile): boolean => {
 
 const upload = async (options: UploadRequestOptions): Promise<void> => {
   uploading.value = true
+  errorMessage.value = ''
+  emit('uploading-change', true)
   try {
     const response = await uploadProductImage(options.file)
     emit('update:modelValue', response.url)
     options.onSuccess(response)
   } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '图片上传失败'
+    emit('error', errorMessage.value)
     options.onError(error as never)
   } finally {
     uploading.value = false
+    emit('uploading-change', false)
   }
 }
 </script>
@@ -59,6 +69,7 @@ const upload = async (options: UploadRequestOptions): Promise<void> => {
       <el-button :loading="uploading">{{ modelValue ? '更换图片' : '上传图片' }}</el-button>
     </el-upload>
     <p class="hint">支持 JPEG、PNG、WebP，最大 5 MiB</p>
+    <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
   </div>
 </template>
 

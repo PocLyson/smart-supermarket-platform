@@ -9,7 +9,7 @@ describe('admin route permissions', () => {
     setActivePinia(createPinia())
   })
 
-  it.each(['/products', '/categories', '/inventory'])(
+  it.each(['/products', '/categories', '/inventory', '/staff', '/audit'])(
     'rejects cashier direct navigation to %s',
     async (path) => {
       const auth = useAuthStore()

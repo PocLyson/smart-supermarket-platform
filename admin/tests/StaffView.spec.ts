@@ -14,6 +14,14 @@ describe('StaffView', () => {
   beforeEach(() => {
     vi.mocked(staffApi.listStaff).mockResolvedValue([
       {
+        id: 1,
+        username: 'owner',
+        role: 'OWNER',
+        enabled: true,
+        lastLoginAt: '2026-07-28T07:00:00Z',
+        createdAt: '2026-07-27T08:00:00Z',
+      },
+      {
         id: 2,
         username: 'cashier01',
         role: 'CASHIER',
@@ -31,6 +39,16 @@ describe('StaffView', () => {
 
     expect(wrapper.text()).toContain('cashier01')
     expect(wrapper.text()).not.toContain('$2a$10$must-not-render')
+  })
+
+  it('offers account mutations only for cashier rows', async () => {
+    const wrapper = mount(StaffView)
+    await flushPromises()
+
+    expect(wrapper.find('[data-test="staff-toggle-1"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="staff-reset-1"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="staff-toggle-2"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="staff-reset-2"]').exists()).toBe(true)
   })
 
   it('creates a cashier and refreshes the account list', async () => {
