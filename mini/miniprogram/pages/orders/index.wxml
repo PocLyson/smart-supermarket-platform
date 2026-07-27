@@ -8,10 +8,10 @@
     <view wx:for="{{orders}}" wx:key="orderNo" class="card" data-order-no="{{item.orderNo}}" bindtap="onOpenOrder">
       <view class="row-between">
         <text>{{item.orderNo}}</text>
-        <text>{{orderStatusLabel[item.status]}}</text>
+        <text class="status-tag status-{{item.status}}">{{orderStatusLabel[item.status]}}</text>
       </view>
       <view class="row-between">
-        <text class="muted">{{paymentStatusLabel[item.paymentStatus]}}</text>
+        <text class="payment-tag payment-{{item.paymentStatus}}">{{paymentStatusLabel[item.paymentStatus]}}</text>
         <text class="price">¥{{item.totalCent / 100}}</text>
       </view>
     </view>

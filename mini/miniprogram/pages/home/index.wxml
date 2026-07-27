@@ -1,12 +1,12 @@
 <view class="page-shell">
   <view class="card row">
-    <input class="field" value="{{keyword}}" placeholder="搜索商品" bindinput="onKeywordInput" bindconfirm="onSearch" />
+    <input class="field" placeholder-class="field-placeholder" value="{{keyword}}" placeholder="搜索商品" bindinput="onKeywordInput" bindconfirm="onSearch" />
     <button class="button-primary" size="mini" bindtap="onSearch">搜索</button>
   </view>
 
   <scroll-view class="category-strip" scroll-x>
-    <button class="button-secondary" size="mini" data-id="all" bindtap="onSelectCategory">全部</button>
-    <button wx:for="{{categories}}" wx:key="id" class="button-secondary" size="mini" data-id="{{item.id}}" bindtap="onSelectCategory">{{item.name}}</button>
+    <button class="button-secondary category-button" size="mini" data-id="all" bindtap="onSelectCategory">全部</button>
+    <button wx:for="{{categories}}" wx:key="id" class="button-secondary category-button" size="mini" data-id="{{item.id}}" bindtap="onSelectCategory">{{item.name}}</button>
   </scroll-view>
 
   <view wx:if="{{error}}" class="state-panel">

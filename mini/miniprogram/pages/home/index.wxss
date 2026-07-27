@@ -5,7 +5,7 @@
   white-space: nowrap;
 }
 
-.category-strip button {
+.category-button {
   display: inline-block;
   margin-right: var(--space-2);
 }
@@ -16,11 +16,11 @@
 }
 
 .product-image {
-  width: 180rpx;
-  height: 180rpx;
+  width: var(--size-product-thumb);
+  height: var(--size-product-thumb);
   flex: 0 0 auto;
-  border-radius: var(--radius-sm);
-  background: var(--color-page);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-subtle);
 }
 
 .product-content {

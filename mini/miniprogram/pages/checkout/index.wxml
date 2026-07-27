@@ -1,8 +1,8 @@
 <view class="page-shell">
   <view class="card">
     <view class="section-title">取货信息</view>
-    <input class="field form-field" value="{{pickupName}}" maxlength="40" placeholder="取货人姓名" bindinput="onPickupNameInput" />
-    <input class="field form-field" value="{{phone}}" type="number" maxlength="11" placeholder="手机号" bindinput="onPhoneInput" />
+    <input class="field form-field" placeholder-class="field-placeholder" value="{{pickupName}}" maxlength="40" placeholder="取货人姓名" bindinput="onPickupNameInput" />
+    <input class="field form-field" placeholder-class="field-placeholder" value="{{phone}}" type="number" maxlength="11" placeholder="手机号" bindinput="onPhoneInput" />
   </view>
 
   <view class="card">
@@ -19,5 +19,5 @@
   </view>
 
   <view wx:if="{{error}}" class="state-panel">{{error}}</view>
-  <button class="button-primary" loading="{{submitting}}" disabled="{{submitting || !items.length}}" bindtap="onSubmit">提交订单</button>
+  <button class="button-primary {{submitting || !items.length ? 'is-disabled' : ''}}" loading="{{submitting}}" disabled="{{submitting || !items.length}}" bindtap="onSubmit">提交订单</button>
 </view>

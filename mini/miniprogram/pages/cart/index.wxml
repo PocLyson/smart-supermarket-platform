@@ -11,9 +11,9 @@
       <view class="row-between">
         <text class="price">¥{{item.unitPriceCent / 100}}</text>
         <view class="row">
-          <button class="button-secondary" size="mini" data-id="{{item.productId}}" bindtap="onDecrease">−</button>
+          <button class="button-secondary quantity-button" size="mini" data-id="{{item.productId}}" bindtap="onDecrease">−</button>
           <text>{{item.quantity}}</text>
-          <button class="button-secondary" size="mini" data-id="{{item.productId}}" bindtap="onIncrease">+</button>
+          <button class="button-secondary quantity-button" size="mini" data-id="{{item.productId}}" bindtap="onIncrease">+</button>
         </view>
       </view>
     </view>
