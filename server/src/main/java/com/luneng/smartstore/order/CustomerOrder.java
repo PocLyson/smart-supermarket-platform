@@ -142,6 +142,75 @@ public class CustomerOrder {
         ));
     }
 
+    public void accept(long actorId) {
+        requireStatus(OrderStatus.PENDING_CONFIRMATION, "当前状态不允许接单");
+        transition(OrderStatus.PREPARING, actorId, "接单");
+        acceptedAt = Instant.now();
+    }
+
+    public void markReady(long actorId) {
+        requireStatus(OrderStatus.PREPARING, "当前状态不允许标记备货完成");
+        transition(OrderStatus.READY_FOR_PICKUP, actorId, "备货完成");
+        readyAt = Instant.now();
+    }
+
+    public void markPaid(PaymentMethod method) {
+        requireStatus(OrderStatus.READY_FOR_PICKUP, "当前状态不允许收款");
+        if (paymentStatus == PaymentStatus.PAID) {
+            throw new BusinessException("ORDER_STATE_CONFLICT", "订单已付款");
+        }
+        if (method == null) {
+            throw new BusinessException("VALIDATION_ERROR", "付款方式不能为空");
+        }
+        paymentMethod = method;
+        paymentStatus = PaymentStatus.PAID;
+        paidAt = Instant.now();
+    }
+
+    public void complete(long actorId) {
+        requireStatus(OrderStatus.READY_FOR_PICKUP, "当前状态不允许完成订单");
+        if (paymentStatus != PaymentStatus.PAID) {
+            throw new BusinessException("ORDER_STATE_CONFLICT", "订单未付款，不能完成");
+        }
+        transition(OrderStatus.COMPLETED, actorId, "订单完成");
+        completedAt = Instant.now();
+    }
+
+    public void cancelByStaff(long actorId, String reason) {
+        if (status != OrderStatus.PENDING_CONFIRMATION
+            && status != OrderStatus.PREPARING
+            && status != OrderStatus.READY_FOR_PICKUP) {
+            throw new BusinessException("ORDER_STATE_CONFLICT", "当前状态不允许取消");
+        }
+        if (reason == null || reason.isBlank()) {
+            throw new BusinessException("VALIDATION_ERROR", "取消原因不能为空");
+        }
+        OrderStatus previous = status;
+        status = OrderStatus.CANCELLED;
+        cancelledBy = "STAFF";
+        cancelReason = reason.trim();
+        cancelledAt = Instant.now();
+        addHistory(new OrderStatusHistory(
+            previous,
+            status,
+            "STAFF",
+            actorId,
+            cancelReason
+        ));
+    }
+
+    private void transition(OrderStatus next, long actorId, String remark) {
+        OrderStatus previous = status;
+        status = next;
+        addHistory(new OrderStatusHistory(previous, next, "STAFF", actorId, remark));
+    }
+
+    private void requireStatus(OrderStatus expected, String message) {
+        if (status != expected) {
+            throw new BusinessException("ORDER_STATE_CONFLICT", message);
+        }
+    }
+
     public void markInventoryReleased() {
         this.inventoryReleased = true;
     }

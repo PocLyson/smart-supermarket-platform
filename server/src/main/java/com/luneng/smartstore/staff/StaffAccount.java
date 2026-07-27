@@ -33,6 +33,13 @@ public class StaffAccount {
     protected StaffAccount() {
     }
 
+    public StaffAccount(String username, String passwordHash, String role) {
+        this.username = username;
+        this.passwordHash = passwordHash;
+        this.role = role;
+        this.enabled = true;
+    }
+
     public Long getId() {
         return id;
     }
@@ -55,5 +62,13 @@ public class StaffAccount {
 
     public void recordLogin(Instant at) {
         this.lastLoginAt = at;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public void resetPassword(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 }

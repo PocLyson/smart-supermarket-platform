@@ -1,5 +1,7 @@
 package com.luneng.smartstore.catalog;
 
+import com.luneng.smartstore.audit.AuditService;
+import com.luneng.smartstore.auth.CurrentPrincipal;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -8,9 +10,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class CatalogService {
     private final CatalogRepository repository;
+    private final AuditService auditService;
 
-    public CatalogService(CatalogRepository repository) {
+    public CatalogService(CatalogRepository repository, AuditService auditService) {
         this.repository = repository;
+        this.auditService = auditService;
     }
 
     @Transactional(readOnly = true)
@@ -19,16 +23,34 @@ public class CatalogService {
     }
 
     @Transactional
-    public CategoryView createCategory(CategoryWriteRequest request) {
-        return CategoryView.from(repository.save(
+    public CategoryView createCategory(
+        CategoryWriteRequest request,
+        CurrentPrincipal actor,
+        String requestId
+    ) {
+        Category category = repository.save(
             new Category(request.name(), request.sortOrder(), request.enabled())
-        ));
+        );
+        auditService.record(
+            actor, "CATEGORY_CREATE", "CATEGORY", category.getId().toString(),
+            category.getName(), requestId
+        );
+        return CategoryView.from(category);
     }
 
     @Transactional
-    public CategoryView updateCategory(long id, CategoryWriteRequest request) {
+    public CategoryView updateCategory(
+        long id,
+        CategoryWriteRequest request,
+        CurrentPrincipal actor,
+        String requestId
+    ) {
         Category category = repository.category(id).orElseThrow(EntityNotFoundException::new);
         category.update(request.name(), request.sortOrder(), request.enabled());
+        auditService.record(
+            actor, "CATEGORY_UPDATE", "CATEGORY", Long.toString(id),
+            category.getName(), requestId
+        );
         return CategoryView.from(category);
     }
 
@@ -62,10 +84,14 @@ public class CatalogService {
     }
 
     @Transactional
-    public ProductView createProduct(ProductWriteRequest request) {
+    public ProductView createProduct(
+        ProductWriteRequest request,
+        CurrentPrincipal actor,
+        String requestId
+    ) {
         Category category = repository.category(request.categoryId())
             .orElseThrow(EntityNotFoundException::new);
-        return ProductView.from(repository.save(new Product(
+        Product product = repository.save(new Product(
             category,
             request.name(),
             request.priceCent(),
@@ -73,11 +99,21 @@ public class CatalogService {
             request.coverImageUrl(),
             request.description(),
             request.onShelf()
-        )));
+        ));
+        auditService.record(
+            actor, "PRODUCT_CREATE", "PRODUCT", product.getId().toString(),
+            product.getName(), requestId
+        );
+        return ProductView.from(product);
     }
 
     @Transactional
-    public ProductView updateProduct(long id, ProductWriteRequest request) {
+    public ProductView updateProduct(
+        long id,
+        ProductWriteRequest request,
+        CurrentPrincipal actor,
+        String requestId
+    ) {
         Product product = repository.product(id).orElseThrow(EntityNotFoundException::new);
         Category category = repository.category(request.categoryId())
             .orElseThrow(EntityNotFoundException::new);
@@ -90,13 +126,26 @@ public class CatalogService {
             request.description(),
             request.onShelf()
         );
+        auditService.record(
+            actor, "PRODUCT_UPDATE", "PRODUCT", Long.toString(id),
+            product.getName(), requestId
+        );
         return ProductView.from(product);
     }
 
     @Transactional
-    public ProductView shelf(long id, boolean onShelf) {
+    public ProductView shelf(
+        long id,
+        boolean onShelf,
+        CurrentPrincipal actor,
+        String requestId
+    ) {
         Product product = repository.product(id).orElseThrow(EntityNotFoundException::new);
         product.setOnShelf(onShelf);
+        auditService.record(
+            actor, "PRODUCT_SHELF", "PRODUCT", Long.toString(id),
+            onShelf ? "上架" : "下架", requestId
+        );
         return ProductView.from(product);
     }
 

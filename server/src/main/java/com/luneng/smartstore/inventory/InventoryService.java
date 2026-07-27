@@ -1,6 +1,7 @@
 package com.luneng.smartstore.inventory;
 
 import com.luneng.smartstore.auth.CurrentPrincipal;
+import com.luneng.smartstore.audit.AuditService;
 import com.luneng.smartstore.common.api.BusinessException;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
@@ -10,13 +11,26 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class InventoryService {
     private final InventoryRepository repository;
+    private final AuditService auditService;
 
-    public InventoryService(InventoryRepository repository) {
+    public InventoryService(InventoryRepository repository, AuditService auditService) {
         this.repository = repository;
+        this.auditService = auditService;
     }
 
     @Transactional
     public void adjust(long productId, int delta, String reason, CurrentPrincipal actor) {
+        adjust(productId, delta, reason, actor, "internal");
+    }
+
+    @Transactional
+    public void adjust(
+        long productId,
+        int delta,
+        String reason,
+        CurrentPrincipal actor,
+        String requestId
+    ) {
         if (delta == 0 || reason == null || reason.isBlank()) {
             throw new BusinessException(
                 "VALIDATION_ERROR",
@@ -39,6 +53,14 @@ public class InventoryService {
             reason.trim(),
             actor.actorType().name(),
             actor.id()
+        );
+        auditService.record(
+            actor,
+            "INVENTORY_ADJUST",
+            "PRODUCT",
+            Long.toString(productId),
+            "delta=" + delta + ", reason=" + reason.trim(),
+            requestId
         );
     }
 

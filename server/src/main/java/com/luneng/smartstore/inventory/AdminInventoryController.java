@@ -39,9 +39,10 @@ public class AdminInventoryController {
         @AuthenticationPrincipal CurrentPrincipal principal,
         HttpServletRequest request
     ) {
-        service.adjust(productId, body.delta(), body.reason(), principal);
+        String requestId = RequestIdFilter.requestId(request);
+        service.adjust(productId, body.delta(), body.reason(), principal, requestId);
         return ApiResponse.success(
-            RequestIdFilter.requestId(request),
+            requestId,
             Map.of("availableQuantity", service.current(productId))
         );
     }

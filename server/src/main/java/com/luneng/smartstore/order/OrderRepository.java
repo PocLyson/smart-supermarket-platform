@@ -27,4 +27,22 @@ public interface OrderRepository extends JpaRepository<CustomerOrder, Long> {
     @EntityGraph(attributePaths = "items")
     @Query("select o from CustomerOrder o where o.orderNo = :orderNo")
     Optional<CustomerOrder> findDetailedByOrderNo(@Param("orderNo") String orderNo);
+
+    @Query("""
+        select o from CustomerOrder o
+        where (:status is null or o.status = :status)
+          and (:paymentStatus is null or o.paymentStatus = :paymentStatus)
+          and (
+            :keyword = ''
+            or lower(o.orderNo) like lower(concat('%', :keyword, '%'))
+            or lower(o.pickupName) like lower(concat('%', :keyword, '%'))
+            or o.phone like concat('%', :keyword, '%')
+          )
+        """)
+    Page<CustomerOrder> searchAdmin(
+        @Param("status") OrderStatus status,
+        @Param("paymentStatus") PaymentStatus paymentStatus,
+        @Param("keyword") String keyword,
+        Pageable pageable
+    );
 }

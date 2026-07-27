@@ -1,5 +1,6 @@
 package com.luneng.smartstore.catalog;
 
+import com.luneng.smartstore.auth.CurrentPrincipal;
 import com.luneng.smartstore.common.api.ApiResponse;
 import com.luneng.smartstore.common.web.RequestIdFilter;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -33,11 +35,13 @@ public class AdminCatalogController {
     @PostMapping("/categories")
     ApiResponse<CatalogService.CategoryView> createCategory(
         @Valid @RequestBody CategoryRequest body,
+        @AuthenticationPrincipal CurrentPrincipal principal,
         HttpServletRequest request
     ) {
+        String requestId = RequestIdFilter.requestId(request);
         return ApiResponse.success(
-            RequestIdFilter.requestId(request),
-            service.createCategory(body.toCommand())
+            requestId,
+            service.createCategory(body.toCommand(), principal, requestId)
         );
     }
 
@@ -45,11 +49,13 @@ public class AdminCatalogController {
     ApiResponse<CatalogService.CategoryView> updateCategory(
         @PathVariable long id,
         @Valid @RequestBody CategoryRequest body,
+        @AuthenticationPrincipal CurrentPrincipal principal,
         HttpServletRequest request
     ) {
+        String requestId = RequestIdFilter.requestId(request);
         return ApiResponse.success(
-            RequestIdFilter.requestId(request),
-            service.updateCategory(id, body.toCommand())
+            requestId,
+            service.updateCategory(id, body.toCommand(), principal, requestId)
         );
     }
 
@@ -70,11 +76,13 @@ public class AdminCatalogController {
     @PostMapping("/products")
     ApiResponse<CatalogService.ProductView> createProduct(
         @Valid @RequestBody ProductWriteRequest body,
+        @AuthenticationPrincipal CurrentPrincipal principal,
         HttpServletRequest request
     ) {
+        String requestId = RequestIdFilter.requestId(request);
         return ApiResponse.success(
-            RequestIdFilter.requestId(request),
-            service.createProduct(body)
+            requestId,
+            service.createProduct(body, principal, requestId)
         );
     }
 
@@ -82,11 +90,13 @@ public class AdminCatalogController {
     ApiResponse<CatalogService.ProductView> updateProduct(
         @PathVariable long id,
         @Valid @RequestBody ProductWriteRequest body,
+        @AuthenticationPrincipal CurrentPrincipal principal,
         HttpServletRequest request
     ) {
+        String requestId = RequestIdFilter.requestId(request);
         return ApiResponse.success(
-            RequestIdFilter.requestId(request),
-            service.updateProduct(id, body)
+            requestId,
+            service.updateProduct(id, body, principal, requestId)
         );
     }
 
@@ -94,11 +104,13 @@ public class AdminCatalogController {
     ApiResponse<CatalogService.ProductView> shelf(
         @PathVariable long id,
         @RequestBody ShelfRequest body,
+        @AuthenticationPrincipal CurrentPrincipal principal,
         HttpServletRequest request
     ) {
+        String requestId = RequestIdFilter.requestId(request);
         return ApiResponse.success(
-            RequestIdFilter.requestId(request),
-            service.shelf(id, body.onShelf())
+            requestId,
+            service.shelf(id, body.onShelf(), principal, requestId)
         );
     }
 
