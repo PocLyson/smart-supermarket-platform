@@ -2,7 +2,10 @@
   "pages": [
     "pages/home/index",
     "pages/product/index",
-    "pages/cart/index"
+    "pages/cart/index",
+    "pages/checkout/index",
+    "pages/orders/index",
+    "pages/order-detail/index"
   ],
   "window": {
     "navigationBarTitleText": "智慧超市",

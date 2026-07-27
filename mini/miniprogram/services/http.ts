@@ -20,6 +20,12 @@ export class NetworkUncertainError extends Error {
   }
 }
 
+let unauthorizedHandler: (() => void) | undefined
+
+export const setUnauthorizedHandler = (handler: () => void): void => {
+  unauthorizedHandler = handler
+}
+
 const showError = (message: string): void => {
   wx.showToast({ title: message || '请求失败，请稍后重试', icon: 'none' })
 }
@@ -40,6 +46,7 @@ const request = <T>(path: string, options: RequestOptions = {}): Promise<T> =>
           resolve(data.data)
           return
         }
+        if (statusCode === 401) unauthorizedHandler?.()
         const error = new Error(data.message || '请求失败，请稍后重试')
         showError(error.message)
         reject(error)
@@ -53,23 +60,37 @@ const request = <T>(path: string, options: RequestOptions = {}): Promise<T> =>
   })
 
 export interface HttpClient {
-  get<T>(path: string, query?: Record<string, unknown>): Promise<T>
+  get<T>(
+    path: string,
+    query?: Record<string, unknown>,
+    headers?: Record<string, string>,
+  ): Promise<T>
   post<T>(
     path: string,
     data?: unknown,
     headers?: Record<string, string>,
   ): Promise<T>
-  put<T>(path: string, data?: unknown): Promise<T>
+  put<T>(
+    path: string,
+    data?: unknown,
+    headers?: Record<string, string>,
+  ): Promise<T>
 }
 
 export const http: HttpClient = {
-  get: <T>(path: string, query?: Record<string, unknown>) =>
-    request<T>(path, { data: query }),
+  get: <T>(
+    path: string,
+    query?: Record<string, unknown>,
+    headers?: Record<string, string>,
+  ) => request<T>(path, { data: query, headers }),
   post: <T>(
     path: string,
     data?: unknown,
     headers?: Record<string, string>,
   ) => request<T>(path, { method: 'POST', data, headers }),
-  put: <T>(path: string, data?: unknown) =>
-    request<T>(path, { method: 'PUT', data }),
+  put: <T>(
+    path: string,
+    data?: unknown,
+    headers?: Record<string, string>,
+  ) => request<T>(path, { method: 'PUT', data, headers }),
 }

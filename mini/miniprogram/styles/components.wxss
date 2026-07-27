@@ -79,3 +79,8 @@
   border-radius: var(--radius-sm);
   background: var(--color-surface);
 }
+
+.form-field,
+.order-line {
+  margin-bottom: var(--space-2);
+}

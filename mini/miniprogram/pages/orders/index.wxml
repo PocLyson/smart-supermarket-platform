@@ -1,0 +1,21 @@
+<view class="page-shell">
+  <view wx:if="{{error}}" class="state-panel">
+    <text>{{error}}</text>
+    <button class="button-secondary" size="mini" data-reset="true" bindtap="loadOrders">重试</button>
+  </view>
+  <view wx:elif="{{empty}}" class="state-panel">还没有订单</view>
+  <view wx:else>
+    <view wx:for="{{orders}}" wx:key="orderNo" class="card" data-order-no="{{item.orderNo}}" bindtap="onOpenOrder">
+      <view class="row-between">
+        <text>{{item.orderNo}}</text>
+        <text>{{orderStatusLabel[item.status]}}</text>
+      </view>
+      <view class="row-between">
+        <text class="muted">{{paymentStatusLabel[item.paymentStatus]}}</text>
+        <text class="price">¥{{item.totalCent / 100}}</text>
+      </view>
+    </view>
+    <view wx:if="{{loading}}" class="state-panel">加载中...</view>
+    <view wx:elif="{{reachedEnd && orders.length}}" class="state-panel">已经到底了</view>
+  </view>
+</view>

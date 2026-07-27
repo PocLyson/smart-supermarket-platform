@@ -1,0 +1,23 @@
+<view class="page-shell">
+  <view class="card">
+    <view class="section-title">取货信息</view>
+    <input class="field form-field" value="{{pickupName}}" maxlength="40" placeholder="取货人姓名" bindinput="onPickupNameInput" />
+    <input class="field form-field" value="{{phone}}" type="number" maxlength="11" placeholder="手机号" bindinput="onPhoneInput" />
+  </view>
+
+  <view class="card">
+    <view class="section-title">商品清单</view>
+    <view wx:for="{{items}}" wx:key="productId" class="row-between order-line">
+      <text>{{item.name}} × {{item.quantity}}</text>
+      <text>¥{{item.unitPriceCent * item.quantity / 100}}</text>
+    </view>
+    <view class="row-between">
+      <text>预计合计</text>
+      <text class="price">¥{{totalCent / 100}}</text>
+    </view>
+    <view class="muted">最终金额以服务端下单结果为准</view>
+  </view>
+
+  <view wx:if="{{error}}" class="state-panel">{{error}}</view>
+  <button class="button-primary" loading="{{submitting}}" disabled="{{submitting || !items.length}}" bindtap="onSubmit">提交订单</button>
+</view>
