@@ -79,4 +79,22 @@ describe('product money and editor behavior', () => {
 
     expect(wrapper.get('[data-test="product-submit"]').attributes('disabled')).toBeDefined()
   })
+
+  it('keeps the current editor open while an image upload is pending', async () => {
+    const wrapper = mount(ProductView)
+    await flushPromises()
+    await wrapper.get('[data-test="product-create"]').trigger('click')
+    await wrapper.get('[data-test="product-name"]').setValue('正在上传的商品')
+    wrapper.findComponent(ProductImageUpload).vm.$emit('uploading-change', true)
+    await wrapper.vm.$nextTick()
+
+    await wrapper.get('[data-test="product-cancel"]').trigger('click')
+
+    expect(wrapper.find('[data-test="product-name"]').exists()).toBe(true)
+    expect(wrapper.get('[data-test="product-name"]').element).toHaveProperty(
+      'value',
+      '正在上传的商品',
+    )
+    expect(wrapper.text()).toContain('图片上传完成后才能关闭编辑器')
+  })
 })

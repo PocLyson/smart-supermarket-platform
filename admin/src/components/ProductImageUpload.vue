@@ -85,7 +85,7 @@ const upload = async (options: UploadRequestOptions): Promise<void> => {
   width: 88px;
   aspect-ratio: 1;
   overflow: hidden;
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-bg-canvas);
 }

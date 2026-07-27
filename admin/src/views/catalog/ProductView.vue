@@ -76,6 +76,10 @@ const load = async (): Promise<void> => {
 }
 
 const openEditor = (product?: Product): void => {
+  if (imageUploading.value) {
+    errorMessage.value = '图片上传完成后才能切换商品'
+    return
+  }
   editingId.value = product?.id
   Object.assign(form, {
     name: product?.name ?? '',
@@ -89,6 +93,22 @@ const openEditor = (product?: Product): void => {
   errorMessage.value = ''
   dialogVisible.value = true
   void nextTick(() => productFormRef.value?.clearValidate())
+}
+
+const requestClose = (): void => {
+  if (imageUploading.value) {
+    errorMessage.value = '图片上传完成后才能关闭编辑器'
+    return
+  }
+  dialogVisible.value = false
+}
+
+const beforeClose = (done: () => void): void => {
+  if (imageUploading.value) {
+    errorMessage.value = '图片上传完成后才能关闭编辑器'
+    return
+  }
+  done()
 }
 
 const toPayload = (): ProductWriteRequest => {
@@ -152,7 +172,12 @@ onMounted(load)
         <h1>商品管理</h1>
         <p>价格按人民币分提交，商品规格作为独立商品维护。</p>
       </div>
-      <el-button data-test="product-create" type="primary" @click="openEditor()">
+      <el-button
+        data-test="product-create"
+        type="primary"
+        :disabled="imageUploading"
+        @click="openEditor()"
+      >
         新增商品
       </el-button>
     </header>
@@ -180,7 +205,15 @@ onMounted(load)
         </el-table-column>
       </el-table>
     </div>
-    <el-dialog v-model="dialogVisible" :title="editingId ? '编辑商品' : '新增商品'" width="600">
+    <el-dialog
+      v-model="dialogVisible"
+      :title="editingId ? '编辑商品' : '新增商品'"
+      width="600"
+      :before-close="beforeClose"
+      :show-close="!imageUploading"
+      :close-on-click-modal="!imageUploading"
+      :close-on-press-escape="!imageUploading"
+    >
       <el-form
         ref="productFormRef"
         :model="form"
@@ -224,7 +257,7 @@ onMounted(load)
         <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button data-test="product-cancel" @click="requestClose">取消</el-button>
         <el-button
           data-test="product-submit"
           type="primary"

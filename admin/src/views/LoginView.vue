@@ -79,7 +79,7 @@ const submit = async (): Promise<void> => {
 .login-card {
   width: min(100%, 420px);
   padding: var(--space-8);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-bg-surface);
   box-shadow: var(--shadow-surface);
