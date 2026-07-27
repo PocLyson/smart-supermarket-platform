@@ -14,6 +14,18 @@ Page({
     error: '',
     empty: false,
     reachedEnd: false,
+    homeTab: 'home',
+    categoryImages: [
+      '/assets/categories/fruit.jpg',
+      '/assets/categories/vegetables.jpg',
+      '/assets/categories/dairy.jpg',
+      '/assets/categories/snacks.jpg',
+      '/assets/categories/grain-oil.jpg',
+      '/assets/categories/meat-eggs.jpg',
+      '/assets/categories/bakery.jpg',
+      '/assets/categories/household.jpg',
+      '/assets/categories/beverages.jpg',
+    ],
   },
 
   onLoad() {
@@ -76,6 +88,20 @@ Page({
 
   onSearch() {
     void this.loadProducts(true)
+  },
+
+  onCategoryNav() {
+    wx.pageScrollTo({
+      selector: '#category-section',
+      duration: 200,
+    })
+  },
+
+  onTabChange(event: { detail: { value: string } }) {
+    if (event.detail.value === 'category') {
+      this.setData({ homeTab: 'home' })
+      this.onCategoryNav()
+    }
   },
 
   onSelectCategory(event: WechatMiniprogram.TouchEvent) {

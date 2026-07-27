@@ -1,32 +1,74 @@
 page {
-  /* Brand: A "青禾鲜绿" */
-  --primary-50: #F2F8F3;
-  --primary-100: #E2F0E5;
-  --primary-200: #C3DFC9;
-  --primary-300: #96C5A1;
-  --primary-400: #62A874;
-  --primary-500: #3E8A57;
-  --primary-600: #2F7046;
-  --primary-700: #285B3A;
-  --primary-800: #234A32;
-  --primary-900: #1D3D2B;
+  /* Brand: "深绛红" */
+  --primary-50: #FCF6F7;
+  --primary-100: #F5E7EA;
+  --primary-200: #E9C8CE;
+  --primary-300: #D79DA7;
+  --primary-400: #BC6C7A;
+  --primary-500: #A34B5C;
+  --primary-600: #8E2F3F;
+  --primary-700: #762536;
+  --primary-800: #5E1D2B;
+  --primary-900: #48151F;
+
+  /* TDesign MiniProgram theme mapping */
+  --td-brand-color-1: #FCF6F7;
+  --td-brand-color-2: #F5E7EA;
+  --td-brand-color-3: #E9C8CE;
+  --td-brand-color-4: #D79DA7;
+  --td-brand-color-5: #BC6C7A;
+  --td-brand-color-6: #A34B5C;
+  --td-brand-color-7: #8E2F3F;
+  --td-brand-color-8: #762536;
+  --td-brand-color-9: #5E1D2B;
+  --td-brand-color-10: #48151F;
+  --td-primary-color-1: var(--td-brand-color-1);
+  --td-primary-color-2: var(--td-brand-color-2);
+  --td-primary-color-3: var(--td-brand-color-3);
+  --td-primary-color-7: var(--td-brand-color-7);
+  --td-primary-color-8: var(--td-brand-color-8);
+  --td-primary-color-9: var(--td-brand-color-9);
+  --td-brand-color: var(--primary-600);
+  --td-brand-color-focus: var(--primary-100);
+  --td-brand-color-active: var(--primary-800);
+  --td-brand-color-disabled: var(--primary-200);
+  --td-brand-color-light: var(--primary-100);
+  --td-brand-color-light-active: var(--primary-200);
+  --td-bg-color-page: #F8F5F1;
+  --td-bg-color-container: #FFFFFF;
+  --td-bg-color-secondarycontainer: #F3EEEB;
+  --td-bg-color-container-active: #F5E7EA;
+  --td-text-color-primary: #292326;
+  --td-text-color-secondary: #595054;
+  --td-text-color-placeholder: #82787C;
+  --td-border-level-1-color: #E7DFE1;
+  --td-border-level-2-color: #D8CFD2;
+  --td-component-border: #D8CFD2;
+  --td-radius-default: 8rpx;
+  --td-radius-medium: 16rpx;
+  --td-radius-large: 24rpx;
+  --td-tab-bar-bg-color: #FFFFFF;
+  --td-tab-bar-border-color: #E7DFE1;
+  --td-tab-bar-active-color: #8E2F3F;
+  --td-tab-bar-color: #292326;
+  --td-tab-bar-height: 112rpx;
 
   /* Neutral surfaces and content */
-  --color-bg-page: #F6F7F3;
+  --color-bg-page: #F8F5F1;
   --color-bg-surface: #FFFFFF;
   --color-bg-overlay: #FFFFFF;
-  --color-bg-subtle: #F0F3EF;
-  --color-bg-hover: #F0F3EF;
-  --color-text-primary: #1F2923;
-  --color-text-secondary: #465249;
-  --color-text-tertiary: #667169;
-  --color-text-placeholder: #68736B;
-  --color-border-default: #C8D0C9;
-  --color-border-control: #7C887E;
-  --color-divider: #E1E6E1;
-  --color-mask: rgba(31, 41, 35, 0.48);
-  --color-disabled-bg: #E7EAE6;
-  --color-disabled-text: #727B74;
+  --color-bg-subtle: #F3EEEB;
+  --color-bg-hover: #F5E7EA;
+  --color-text-primary: #292326;
+  --color-text-secondary: #595054;
+  --color-text-tertiary: #776E72;
+  --color-text-placeholder: #82787C;
+  --color-border-default: #D8CFD2;
+  --color-border-control: #9B8F94;
+  --color-divider: #E7DFE1;
+  --color-mask: rgba(41, 35, 38, 0.48);
+  --color-disabled-bg: #EDE8E6;
+  --color-disabled-text: #7A7175;
 
   /* Semantic feedback */
   --color-success: #1F7A5A;
@@ -39,11 +81,11 @@ page {
   --color-warning-border: #E6B866;
   --color-warning-text: #754600;
   --color-warning-icon: #9A5C00;
-  --color-error: #B42318;
-  --color-error-bg: #FFF1F0;
-  --color-error-border: #E9A09A;
-  --color-error-text: #7A1A14;
-  --color-error-icon: #B42318;
+  --color-error: #C2412D;
+  --color-error-bg: #FFF3EF;
+  --color-error-border: #E9A08F;
+  --color-error-text: #7A271A;
+  --color-error-icon: #C2412D;
   --color-info: #2563A6;
   --color-info-bg: #EEF5FC;
   --color-info-border: #94BCE4;
@@ -63,9 +105,9 @@ page {
   --status-completed-bg: #ECF8F2;
   --status-completed-text: #15543E;
   --status-completed-border: #86C7AD;
-  --status-cancelled-bg: #FFF1F0;
-  --status-cancelled-text: #7A1A14;
-  --status-cancelled-border: #E9A09A;
+  --status-cancelled-bg: #FFF3EF;
+  --status-cancelled-text: #7A271A;
+  --status-cancelled-border: #E9A08F;
   --payment-unpaid-bg: #FFF7E6;
   --payment-unpaid-text: #754600;
   --payment-unpaid-border: #E6B866;
@@ -125,14 +167,14 @@ page {
 
   /* Borders, focus, elevation and mask */
   --border-width-default: 2rpx;
-  --border-color-default: #C8D0C9;
-  --border-color-control: #7C887E;
-  --border-color-focus: #2F7046;
-  --shadow-focus: 0 0 0 4rpx #FFFFFF, 0 0 0 8rpx #2F7046;
-  --shadow-card: 0 2rpx 4rpx rgba(31, 41, 35, 0.06);
-  --shadow-dropdown: 0 16rpx 48rpx rgba(31, 41, 35, 0.12);
-  --shadow-modal: 0 32rpx 80rpx rgba(31, 41, 35, 0.16);
-  --overlay-mask: rgba(31, 41, 35, 0.48);
+  --border-color-default: #D8CFD2;
+  --border-color-control: #9B8F94;
+  --border-color-focus: #8E2F3F;
+  --shadow-focus: 0 0 0 4rpx #FFFFFF, 0 0 0 8rpx #8E2F3F;
+  --shadow-card: 0 2rpx 8rpx rgba(72, 21, 31, 0.06);
+  --shadow-dropdown: 0 16rpx 48rpx rgba(72, 21, 31, 0.12);
+  --shadow-modal: 0 32rpx 80rpx rgba(72, 21, 31, 0.16);
+  --overlay-mask: rgba(41, 35, 38, 0.48);
 
   /* Controls, media and motion */
   --size-touch-min: 88rpx;

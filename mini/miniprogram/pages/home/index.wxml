@@ -1,32 +1,85 @@
-<view class="page-shell">
-  <view class="card row">
-    <input class="field" placeholder-class="field-placeholder" value="{{keyword}}" placeholder="搜索商品" bindinput="onKeywordInput" bindconfirm="onSearch" />
-    <button class="button-primary" size="mini" bindtap="onSearch">搜索</button>
+<view class="home-page">
+  <view class="home-header">
+    <view class="store-heading" aria-label="当前门店 鲁能超市李老家分店">
+      <t-icon name="/assets/icons/location.svg" size="48rpx" />
+      <text class="store-name">鲁能超市李老家分店</text>
+    </view>
+
+    <view class="search-card">
+      <t-search
+        t-class="home-search"
+        value="{{keyword}}"
+        placeholder="搜索店内商品"
+        bind:change="onKeywordInput"
+        bind:submit="onSearch"
+      />
+      <t-button t-class="search-button" theme="primary" size="medium" bind:tap="onSearch">搜索</t-button>
+    </view>
   </view>
 
-  <scroll-view class="category-strip" scroll-x>
-    <button class="button-secondary category-button" size="mini" data-id="all" bindtap="onSelectCategory">全部</button>
-    <button wx:for="{{categories}}" wx:key="id" class="button-secondary category-button" size="mini" data-id="{{item.id}}" bindtap="onSelectCategory">{{item.name}}</button>
-  </scroll-view>
-
-  <view wx:if="{{error}}" class="state-panel">
-    <text>{{error}}</text>
-    <button class="button-secondary" size="mini" bindtap="loadInitial">重试</button>
-  </view>
-  <view wx:elif="{{empty}}" class="state-panel">没有找到商品</view>
-
-  <view wx:else>
-    <view wx:for="{{products}}" wx:key="id" class="card product-card" data-id="{{item.id}}" bindtap="onOpenProduct">
-      <image class="product-image" src="{{item.coverImageUrl}}" mode="aspectFill" />
-      <view class="product-content">
-        <view>{{item.name}}</view>
-        <view class="row-between">
-          <text class="price">¥{{item.priceCent / 100}}</text>
-          <text class="muted">/{{item.unit}}</text>
-        </view>
+  <view class="home-content">
+    <view class="home-hero">
+      <image class="hero-image" src="/assets/home/burgundy-grocery-hero.jpg" mode="aspectFill" />
+      <view class="hero-copy">
+        <text class="hero-title">家门口的放心好物</text>
+        <text class="hero-subtitle">线上选购 到店自取</text>
+        <view class="hero-rule"></view>
       </view>
     </view>
-    <view wx:if="{{loading}}" class="state-panel">加载中...</view>
-    <view wx:elif="{{reachedEnd && products.length}}" class="state-panel">已经到底了</view>
+
+    <view id="category-section" class="category-grid">
+      <view class="category-slot">
+        <view class="category-item {{selectedCategoryId == null ? 'is-selected' : ''}}" role="button" aria-label="全部商品" data-id="all" hover-class="category-hover" bindtap="onSelectCategory">
+          <view class="category-image-wrap">
+            <image class="category-image" src="{{categoryImages[0]}}" mode="aspectFill" />
+          </view>
+          <text class="category-name">全部商品</text>
+        </view>
+      </view>
+      <block wx:for="{{categories}}" wx:key="id">
+        <view wx:if="{{index < 9}}" class="category-slot">
+          <view class="category-item {{selectedCategoryId === item.id ? 'is-selected' : ''}}" role="button" aria-label="{{item.name}}" data-id="{{item.id}}" hover-class="category-hover" bindtap="onSelectCategory">
+            <view class="category-image-wrap">
+              <image class="category-image" src="{{categoryImages[index]}}" mode="aspectFill" />
+            </view>
+            <text class="category-name">{{item.name}}</text>
+          </view>
+        </view>
+      </block>
+    </view>
+
+    <view wx:if="{{error}}" class="state-panel home-state">
+      <text>{{error}}</text>
+      <t-button theme="primary" variant="outline" size="small" bind:tap="loadInitial">重试</t-button>
+    </view>
+    <view wx:elif="{{empty}}" class="state-panel home-state">没有找到商品</view>
+
+    <view wx:else class="recommend-section">
+      <view class="section-heading">
+        <text class="section-title">精选好物</text>
+        <text class="section-subtitle">到店自取 放心选购</text>
+      </view>
+      <view class="product-grid">
+        <view wx:for="{{products}}" wx:key="id" class="product-card" data-id="{{item.id}}" hover-class="product-card-hover" bindtap="onOpenProduct">
+          <image class="product-image" src="{{item.coverImageUrl}}" mode="aspectFill" />
+          <view class="product-content">
+            <text class="product-name">{{item.name}}</text>
+            <view class="product-meta">
+              <text class="product-price">¥{{item.priceCent / 100}}</text>
+              <text class="product-unit">/{{item.unit}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view wx:if="{{loading}}" class="state-panel home-state">加载中...</view>
+      <view wx:elif="{{reachedEnd && products.length}}" class="list-end">已经到底了</view>
+    </view>
   </view>
+
+  <t-tab-bar value="{{homeTab}}" fixed split="{{false}}" bind:change="onTabChange">
+    <t-tab-bar-item value="home" icon="/assets/icons/home-filled.svg">首页</t-tab-bar-item>
+    <t-tab-bar-item value="category" icon="/assets/icons/view-module.svg">分类</t-tab-bar-item>
+    <t-tab-bar-item value="cart" icon="/assets/icons/cart.svg" url="/pages/cart/index" link-type="navigateTo">购物车</t-tab-bar-item>
+    <t-tab-bar-item value="orders" icon="/assets/icons/order.svg" url="/pages/orders/index" link-type="navigateTo">订单</t-tab-bar-item>
+  </t-tab-bar>
 </view>

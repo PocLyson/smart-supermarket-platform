@@ -7,8 +7,12 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@types/node": "^24.13.3",
     "@types/wechat-miniprogram": "^3.4.8",
     "typescript": "^5.9.2",
     "vitest": "^4.1.6"
+  },
+  "dependencies": {
+    "tdesign-miniprogram": "^1.15.3"
   }
 }
