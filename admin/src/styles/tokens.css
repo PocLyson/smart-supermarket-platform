@@ -1,34 +1,35 @@
 :root {
   color-scheme: light;
 
-  /* Brand: 青禾鲜绿 */
-  --primary-50: #f2f8f3;
-  --primary-100: #e2f0e5;
-  --primary-200: #c3dfc9;
-  --primary-300: #96c5a1;
-  --primary-400: #62a874;
-  --primary-500: #3e8a57;
-  --primary-600: #2f7046;
-  --primary-700: #285b3a;
-  --primary-800: #234a32;
-  --primary-900: #1d3d2b;
+  /* Brand: 深绛红 */
+  --primary-50: #fbf4f5;
+  --primary-100: #f5e7ea;
+  --primary-200: #e9c9d0;
+  --primary-300: #d89ba7;
+  --primary-400: #c46b7a;
+  --primary-500: #a94758;
+  --primary-600: #8e2f3f;
+  --primary-700: #762536;
+  --primary-800: #5e1d2b;
+  --primary-900: #461520;
 
   /* Neutral surfaces, text and borders */
-  --color-bg-page: #f6f7f3;
+  --color-bg-page: #f8f5f1;
   --color-bg-surface: #ffffff;
   --color-bg-overlay: #ffffff;
-  --color-bg-subtle: #f0f3ef;
-  --color-text-primary: #1f2923;
-  --color-text-secondary: #465249;
-  --color-text-tertiary: #667169;
-  --color-text-placeholder: #68736b;
+  --color-bg-subtle: #f3eeec;
+  --color-bg-sidebar: #342b2f;
+  --color-text-primary: #292326;
+  --color-text-secondary: #595054;
+  --color-text-tertiary: #766c71;
+  --color-text-placeholder: #776d72;
   --color-text-inverse: #ffffff;
-  --color-border-default: #c8d0c9;
-  --color-border-control: #7c887e;
-  --color-divider: #e1e6e1;
-  --color-mask: rgb(31 41 35 / 48%);
-  --color-disabled-bg: #e7eae6;
-  --color-disabled-text: #727b74;
+  --color-border-default: #d8cfd2;
+  --color-border-control: #8e8388;
+  --color-divider: #e9e2e4;
+  --color-mask: rgb(41 35 38 / 48%);
+  --color-disabled-bg: #ece8e6;
+  --color-disabled-text: #7b7377;
 
   /* Semantic states */
   --success-primary: #1f7a5a;
@@ -102,10 +103,10 @@
   --radius-xl: 16px;
   --radius-round: 9999px;
   --border-width: 1px;
-  --shadow-focus: 0 0 0 2px #ffffff, 0 0 0 4px #2f7046;
-  --shadow-card: 0 1px 2px rgb(31 41 35 / 6%);
-  --shadow-dropdown: 0 8px 24px rgb(31 41 35 / 12%);
-  --shadow-modal: 0 16px 40px rgb(31 41 35 / 16%);
+  --shadow-focus: 0 0 0 2px #ffffff, 0 0 0 4px #8e2f3f;
+  --shadow-card: 0 1px 2px rgb(41 35 38 / 6%);
+  --shadow-dropdown: 0 8px 24px rgb(41 35 38 / 12%);
+  --shadow-modal: 0 16px 40px rgb(41 35 38 / 16%);
 
   /* Layout and density */
   --layout-sidebar-width: 220px;
@@ -122,7 +123,6 @@
   --color-warning: var(--warning-primary);
   --color-danger: var(--error-primary);
   --color-bg-canvas: var(--color-bg-page);
-  --color-bg-sidebar: var(--primary-900);
   --color-border: var(--color-border-default);
   --shadow-surface: var(--shadow-card);
 
@@ -132,7 +132,7 @@
   --el-color-primary-light-5: var(--primary-300);
   --el-color-primary-light-7: var(--primary-200);
   --el-color-primary-light-8: var(--primary-100);
-  --el-color-primary-light-9: var(--primary-50);
+  --el-color-primary-light-9: var(--primary-100);
   --el-color-primary-dark-2: var(--primary-700);
   --el-color-success: var(--success-primary);
   --el-color-success-light-3: var(--success-border);
@@ -171,7 +171,7 @@
   --el-border-color-dark: var(--color-border-control);
   --el-border-color-darker: var(--color-border-control);
   --el-mask-color: var(--color-mask);
-  --el-mask-color-extra-light: rgb(31 41 35 / 16%);
+  --el-mask-color-extra-light: rgb(41 35 38 / 16%);
   --el-border-radius-base: var(--radius-md);
   --el-border-radius-small: var(--radius-sm);
   --el-border-radius-round: var(--radius-round);
@@ -399,6 +399,13 @@ textarea.text-control {
   font-size: var(--font-size-body);
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-label);
+}
+
+.el-button--primary {
+  --el-button-hover-bg-color: var(--primary-700);
+  --el-button-hover-border-color: var(--primary-700);
+  --el-button-active-bg-color: var(--primary-800);
+  --el-button-active-border-color: var(--primary-800);
 }
 
 .el-button:not(.el-button--primary):not(.el-button--success):not(.el-button--warning):not(
