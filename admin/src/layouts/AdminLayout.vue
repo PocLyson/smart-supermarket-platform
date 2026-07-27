@@ -21,6 +21,8 @@ const logout = async (): Promise<void> => {
           <RouterLink to="/products">商品管理</RouterLink>
           <RouterLink to="/categories">分类管理</RouterLink>
           <RouterLink to="/inventory">线上库存</RouterLink>
+          <RouterLink to="/staff">员工账号</RouterLink>
+          <RouterLink to="/audit">操作审计</RouterLink>
         </template>
       </nav>
       <div class="account">

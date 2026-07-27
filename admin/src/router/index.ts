@@ -1,4 +1,3 @@
-import { h } from 'vue'
 import {
   createMemoryHistory,
   createRouter,
@@ -46,7 +45,22 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'orders',
-        component: { render: () => h('div', { class: 'surface-card' }, '订单工作台待接入') },
+        component: () => import('@/views/orders/OrderListView.vue'),
+      },
+      {
+        path: 'orders/:orderNo',
+        component: () => import('@/views/orders/OrderDetailView.vue'),
+        props: true,
+      },
+      {
+        path: 'staff',
+        component: () => import('@/views/staff/StaffView.vue'),
+        meta: { ownerOnly: true },
+      },
+      {
+        path: 'audit',
+        component: () => import('@/views/audit/AuditLogView.vue'),
+        meta: { ownerOnly: true },
       },
     ],
   },

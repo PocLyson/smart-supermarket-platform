@@ -2,6 +2,11 @@ import { config } from '@vue/test-utils'
 import ElementPlus from 'element-plus'
 
 config.global.plugins = [ElementPlus]
+config.global.stubs = {
+  RouterLink: {
+    template: '<a><slot /></a>',
+  },
+}
 
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
