@@ -1,6 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 import ProductView from '@/views/catalog/ProductView.vue'
+import ProductImageUpload from '@/components/ProductImageUpload.vue'
 import { centToYuan, yuanToCent } from '@/utils/money'
 import * as catalogApi from '@/api/catalog'
 
@@ -48,5 +49,23 @@ describe('product money and editor behavior', () => {
       description: '',
       onShelf: true,
     })
+  })
+
+  it('includes the uploaded image URL in the product write DTO', async () => {
+    const wrapper = mount(ProductView)
+    await flushPromises()
+
+    await wrapper.get('[data-test="product-create"]').trigger('click')
+    await wrapper.get('[data-test="product-name"]').setValue('纯牛奶')
+    await wrapper.get('[data-test="product-category"]').setValue('1')
+    await wrapper.get('[data-test="product-price"]').setValue('5.90')
+    await wrapper.get('[data-test="product-unit"]').setValue('盒')
+    wrapper.findComponent(ProductImageUpload).vm.$emit('update:modelValue', '/files/0b657bd4.webp')
+    await wrapper.get('[data-test="product-submit"]').trigger('click')
+    await flushPromises()
+
+    expect(catalogApi.createProduct).toHaveBeenLastCalledWith(
+      expect.objectContaining({ coverImageUrl: '/files/0b657bd4.webp' }),
+    )
   })
 })

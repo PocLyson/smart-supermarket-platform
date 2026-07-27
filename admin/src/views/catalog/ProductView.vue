@@ -12,6 +12,7 @@ import {
   type ProductWriteRequest,
 } from '@/api/catalog'
 import { ApiError } from '@/api/http'
+import ProductImageUpload from '@/components/ProductImageUpload.vue'
 import { centToYuan, yuanToCent } from '@/utils/money'
 
 interface ProductForm {
@@ -173,8 +174,8 @@ onMounted(load)
           <input v-model="form.unit" data-test="product-unit" class="text-control" />
         </div>
         <div class="form-field">
-          <label>封面地址</label>
-          <input v-model="form.coverImageUrl" class="text-control" />
+          <label>商品封面</label>
+          <ProductImageUpload v-model="form.coverImageUrl" />
         </div>
         <div class="form-field">
           <label>商品详情</label>

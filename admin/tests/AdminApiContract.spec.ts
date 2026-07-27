@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { acceptOrder, markOrderPaid, rejectOrder } from '@/api/orders'
 import { createCashier, resetStaffPassword, setStaffEnabled } from '@/api/staff'
 import { listAuditLogs } from '@/api/audit'
+import { uploadProductImage } from '@/api/images'
 
 const ok = (data: unknown) =>
   Promise.resolve(
@@ -87,5 +88,23 @@ describe('frozen admin API contract', () => {
       '/api/admin/audit-logs?actorId=1&action=PRODUCT_UPDATE&objectType=PRODUCT&page=0&size=20',
       expect.objectContaining({ headers: expect.any(Headers) }),
     )
+  })
+
+  it('uploads product images as authenticated multipart data', async () => {
+    vi.mocked(fetch).mockImplementationOnce(() =>
+      ok({ url: '/files/generated.webp', width: 800, height: 800, size: 204800 }),
+    )
+    const file = new File(['image'], 'milk.webp', { type: 'image/webp' })
+
+    await uploadProductImage(file)
+
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/admin/files/images',
+      expect.objectContaining({ method: 'POST', body: expect.any(FormData) }),
+    )
+    const [, options] = vi.mocked(fetch).mock.calls[0]
+    const headers = options?.headers as Headers
+    expect(headers.get('Authorization')).toBe('Bearer owner-token')
+    expect(headers.has('Content-Type')).toBe(false)
   })
 })
