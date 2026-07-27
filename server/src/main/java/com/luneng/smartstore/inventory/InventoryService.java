@@ -1,0 +1,114 @@
+package com.luneng.smartstore.inventory;
+
+import com.luneng.smartstore.auth.CurrentPrincipal;
+import com.luneng.smartstore.common.api.BusinessException;
+import java.util.Map;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public class InventoryService {
+    private final InventoryRepository repository;
+
+    public InventoryService(InventoryRepository repository) {
+        this.repository = repository;
+    }
+
+    @Transactional
+    public void adjust(long productId, int delta, String reason, CurrentPrincipal actor) {
+        if (delta == 0 || reason == null || reason.isBlank()) {
+            throw new BusinessException(
+                "VALIDATION_ERROR",
+                "库存变动数量不能为零且原因不能为空",
+                HttpStatus.BAD_REQUEST
+            );
+        }
+        repository.ensure(productId);
+        int before = repository.lockCurrent(productId);
+        if (repository.adjust(productId, delta) != 1) {
+            throw insufficientStock();
+        }
+        int after = before + delta;
+        repository.ledger(
+            productId,
+            null,
+            delta,
+            before,
+            after,
+            reason.trim(),
+            actor.actorType().name(),
+            actor.id()
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public int current(long productId) {
+        return repository.current(productId);
+    }
+
+    @Transactional
+    public void reserve(Map<Long, Integer> quantities, String orderNo) {
+        Long orderId = repository.orderId(orderNo);
+        quantities.entrySet().stream()
+            .sorted(Map.Entry.comparingByKey())
+            .forEach(entry -> {
+                long productId = entry.getKey();
+                int quantity = entry.getValue();
+                if (quantity <= 0) {
+                    throw new BusinessException(
+                        "VALIDATION_ERROR",
+                        "商品数量必须大于零",
+                        HttpStatus.BAD_REQUEST
+                    );
+                }
+                repository.ensure(productId);
+                int before = repository.lockCurrent(productId);
+                if (repository.adjust(productId, -quantity) != 1) {
+                    throw insufficientStock();
+                }
+                repository.ledger(
+                    productId,
+                    orderId,
+                    -quantity,
+                    before,
+                    before - quantity,
+                    "ORDER_RESERVATION",
+                    "CUSTOMER",
+                    null
+                );
+            });
+    }
+
+    @Transactional
+    public void release(String orderNo) {
+        long orderId = repository.orderId(orderNo);
+        if (!repository.markReleased(orderId)) {
+            throw new BusinessException("ORDER_STATE_CONFLICT", "库存已返还");
+        }
+        for (Map<String, Object> row : repository.reservations(orderId)) {
+            long productId = ((Number) row.get("product_id")).longValue();
+            int quantity = ((Number) row.get("quantity")).intValue();
+            int before = repository.lockCurrent(productId);
+            repository.adjust(productId, quantity);
+            repository.ledger(
+                productId,
+                orderId,
+                quantity,
+                before,
+                before + quantity,
+                "ORDER_RELEASE",
+                "SYSTEM",
+                null
+            );
+        }
+    }
+
+    private BusinessException insufficientStock() {
+        return new BusinessException(
+            "INSUFFICIENT_STOCK",
+            "库存不足",
+            HttpStatus.CONFLICT
+        );
+    }
+}
