@@ -1,0 +1,17 @@
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+server/target/
+server/.mvn/wrapper/maven-wrapper.jar
+server/.mvn/wrapper/dists/
+admin/node_modules/
+admin/dist/
+mini/node_modules/
+
+.env
+uploads/
+backups/
+*.log
