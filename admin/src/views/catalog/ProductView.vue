@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { nextTick, onMounted, reactive, ref } from 'vue'
-import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import {
   createProduct,
   listCategories,
@@ -15,6 +15,8 @@ import { ApiError } from '@/api/http'
 import ProductImageUpload from '@/components/ProductImageUpload.vue'
 import { reportUnexpectedError } from '@/utils/errors'
 import { centToYuan, yuanToCent } from '@/utils/money'
+import UiStatePanel from '@/components/UiStatePanel.vue'
+import AppIcon from '@/components/AppIcon.vue'
 
 interface ProductForm {
   name: string
@@ -33,6 +35,12 @@ const pending = ref(false)
 const imageUploading = ref(false)
 const editingId = ref<number>()
 const errorMessage = ref('')
+const loading = ref(false)
+const loadError = ref('')
+const total = ref(0)
+const page = ref(1)
+const pageSize = 20
+const filters = reactive({ keyword: '', categoryId: '', shelf: '' })
 const productFormRef = ref<FormInstance>()
 const form = reactive<ProductForm>({
   name: '',
@@ -63,16 +71,44 @@ const rules: FormRules<ProductForm> = {
 }
 
 const load = async (): Promise<void> => {
+  loading.value = true
+  loadError.value = ''
   try {
     const [categoryItems, productPage] = await Promise.all([
       listCategories(),
-      listProducts({ page: 0, size: 100 }),
+      listProducts({
+        keyword: filters.keyword.trim() || undefined,
+        categoryId: filters.categoryId ? Number(filters.categoryId) : undefined,
+        page: page.value - 1,
+        size: pageSize,
+      }),
     ])
     categories.value = categoryItems
-    products.value = productPage.items
+    products.value =
+      filters.shelf === ''
+        ? productPage.items
+        : productPage.items.filter((item) => item.onShelf === (filters.shelf === 'on'))
+    total.value = filters.shelf === '' ? productPage.total : products.value.length
   } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '商品加载失败'
     reportUnexpectedError(error, '商品加载失败')
+  } finally {
+    loading.value = false
   }
+}
+
+const search = async (): Promise<void> => {
+  page.value = 1
+  await load()
+}
+const reset = async (): Promise<void> => {
+  Object.assign(filters, { keyword: '', categoryId: '', shelf: '' })
+  page.value = 1
+  await load()
+}
+const changePage = async (value: number): Promise<void> => {
+  page.value = value
+  await load()
 }
 
 const openEditor = (product?: Product): void => {
@@ -155,10 +191,20 @@ const submit = async (): Promise<void> => {
 
 const toggleShelf = async (product: Product): Promise<void> => {
   try {
+    await ElMessageBox.confirm(
+      `确认${product.onShelf ? '下架' : '上架'}“${product.name}”？${product.onShelf ? '下架后顾客将无法购买。' : '上架后顾客可在小程序中购买。'}`,
+      product.onShelf ? '确认下架商品' : '确认上架商品',
+      {
+        confirmButtonText: product.onShelf ? '确认下架' : '确认上架',
+        cancelButtonText: '取消',
+        type: product.onShelf ? 'warning' : 'info',
+      },
+    )
     await setProductShelf(product.id, !product.onShelf)
     await load()
+    ElMessage.success(product.onShelf ? '商品已下架' : '商品已上架')
   } catch (error) {
-    reportUnexpectedError(error, '商品状态更新失败')
+    if (error !== 'cancel' && error !== 'close') reportUnexpectedError(error, '商品状态更新失败')
   }
 }
 
@@ -169,8 +215,9 @@ onMounted(load)
   <section class="page-stack">
     <header class="page-header">
       <div>
+        <p class="page-kicker">商品与售卖</p>
         <h1>商品管理</h1>
-        <p>价格按人民币分提交，商品规格作为独立商品维护。</p>
+        <p>维护小程序商品信息、售价和上下架状态。</p>
       </div>
       <el-button
         data-test="product-create"
@@ -178,37 +225,126 @@ onMounted(load)
         :disabled="imageUploading"
         @click="openEditor()"
       >
-        新增商品
+        <AppIcon name="plus" />新增商品
       </el-button>
     </header>
-    <div class="surface-card">
-      <el-table :data="products">
-        <el-table-column prop="name" label="商品" min-width="180" />
-        <el-table-column prop="categoryName" label="分类" min-width="120" />
-        <el-table-column label="价格" width="120">
-          <template #default="{ row }">¥{{ centToYuan(row.priceCent) }}/{{ row.unit }}</template>
-        </el-table-column>
-        <el-table-column label="状态" width="100">
-          <template #default="{ row }">
-            <el-tag :type="row.onShelf ? 'success' : 'info'">
-              {{ row.onShelf ? '已上架' : '已下架' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="180">
-          <template #default="{ row }">
-            <el-button link type="primary" @click="openEditor(row)">编辑</el-button>
-            <el-button link :type="row.onShelf ? 'danger' : 'success'" @click="toggleShelf(row)">
-              {{ row.onShelf ? '下架' : '上架' }}
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
+    <form class="surface-card filter-panel" @submit.prevent="search">
+      <div class="filter-field is-wide">
+        <label for="product-keyword">商品关键词</label>
+        <input
+          id="product-keyword"
+          v-model="filters.keyword"
+          class="text-control"
+          placeholder="商品名称"
+        />
+      </div>
+      <div class="filter-field">
+        <label for="product-category-filter">商品分类</label>
+        <select id="product-category-filter" v-model="filters.categoryId" class="text-control">
+          <option value="">全部分类</option>
+          <option v-for="category in categories" :key="category.id" :value="String(category.id)">
+            {{ category.name }}
+          </option>
+        </select>
+      </div>
+      <div class="filter-field">
+        <label for="product-shelf-filter">售卖状态</label>
+        <select id="product-shelf-filter" v-model="filters.shelf" class="text-control">
+          <option value="">全部状态</option>
+          <option value="on">已上架</option>
+          <option value="off">已下架</option>
+        </select>
+      </div>
+      <div class="filter-actions">
+        <el-button native-type="button" @click="reset">重置</el-button>
+        <el-button native-type="submit" type="primary" :loading="loading">
+          <AppIcon name="search" />查询
+        </el-button>
+      </div>
+    </form>
+    <div class="surface-card data-region">
+      <div class="data-region__summary">
+        <span>共 {{ total }} 件商品</span><span>价格为顾客最终看到的线上售价</span>
+      </div>
+      <div v-if="loading" class="skeleton-stack">
+        <div v-for="i in 8" :key="i" class="skeleton-row" />
+      </div>
+      <UiStatePanel
+        v-else-if="loadError"
+        kind="error"
+        title="商品加载失败"
+        :description="loadError"
+        action-label="重新加载"
+        @action="load"
+      />
+      <UiStatePanel
+        v-else-if="!products.length"
+        kind="empty"
+        :title="
+          filters.keyword || filters.categoryId || filters.shelf ? '当前筛选没有商品' : '还没有商品'
+        "
+        description="新增商品后可设置图片、分类、售价和上下架状态。"
+        :action-label="
+          filters.keyword || filters.categoryId || filters.shelf ? '清除筛选' : '新增商品'
+        "
+        @action="filters.keyword || filters.categoryId || filters.shelf ? reset() : openEditor()"
+      />
+      <div v-else class="responsive-table">
+        <el-table :data="products">
+          <el-table-column label="商品" min-width="220">
+            <template #default="{ row }">
+              <div class="product-cell">
+                <img
+                  v-if="row.coverImageUrl"
+                  :src="row.coverImageUrl"
+                  alt=""
+                  width="44"
+                  height="44"
+                />
+                <div>
+                  <strong>{{ row.name }}</strong
+                  ><span>{{ row.unit }}</span>
+                </div>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column prop="categoryName" label="分类" min-width="120" />
+          <el-table-column label="线上售价" width="130" align="right">
+            <template #default="{ row }">¥{{ centToYuan(row.priceCent) }}/{{ row.unit }}</template>
+          </el-table-column>
+          <el-table-column label="状态" width="100">
+            <template #default="{ row }">
+              <el-tag :type="row.onShelf ? 'success' : 'info'">
+                {{ row.onShelf ? '已上架' : '已下架' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="180">
+            <template #default="{ row }">
+              <el-button link type="primary" @click="openEditor(row)">编辑</el-button>
+              <el-button link :type="row.onShelf ? 'danger' : 'success'" @click="toggleShelf(row)">
+                {{ row.onShelf ? '下架' : '上架' }}
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+      <div v-if="!loading && !loadError && total > 0" class="pagination-bar">
+        <span>第 {{ page }} 页，每页 {{ pageSize }} 条</span>
+        <el-pagination
+          :current-page="page"
+          :page-size="pageSize"
+          :total="total"
+          layout="prev, pager, next"
+          @current-change="changePage"
+        />
+      </div>
     </div>
     <el-dialog
       v-model="dialogVisible"
       :title="editingId ? '编辑商品' : '新增商品'"
       width="600"
+      style="--dialog-width: 600px"
       :before-close="beforeClose"
       :show-close="!imageUploading"
       :close-on-click-modal="!imageUploading"
@@ -222,7 +358,12 @@ onMounted(load)
         class="form-grid"
       >
         <el-form-item label="商品名称" prop="name">
-          <input v-model="form.name" data-test="product-name" class="text-control" />
+          <input
+            id="product-name"
+            v-model="form.name"
+            data-test="product-name"
+            class="text-control"
+          />
         </el-form-item>
         <el-form-item label="商品分类" prop="categoryId">
           <select v-model="form.categoryId" data-test="product-category" class="text-control">
@@ -254,7 +395,7 @@ onMounted(load)
           <textarea v-model="form.description" class="text-control" />
         </el-form-item>
         <el-switch v-model="form.onShelf" active-text="上架" inactive-text="下架" />
-        <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
+        <p v-if="errorMessage" class="inline-alert" role="alert">{{ errorMessage }}</p>
       </el-form>
       <template #footer>
         <el-button data-test="product-cancel" @click="requestClose">取消</el-button>
@@ -271,3 +412,24 @@ onMounted(load)
     </el-dialog>
   </section>
 </template>
+
+<style scoped>
+.product-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.product-cell img {
+  flex: 0 0 auto;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+}
+.product-cell div {
+  display: grid;
+}
+.product-cell span {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-helper);
+}
+</style>

@@ -44,4 +44,14 @@ describe('LoginView', () => {
 
     expect(localStorage.getItem('smart-store-admin-session')).toContain('owner-token')
   })
+
+  it('lets staff verify the password they entered', async () => {
+    const wrapper = mount(LoginView)
+    const password = wrapper.get('[data-test="login-password"]')
+
+    expect(password.attributes('type')).toBe('password')
+    await wrapper.get('[data-test="password-toggle"]').trigger('click')
+    expect(password.attributes('type')).toBe('text')
+    expect(wrapper.get('[data-test="password-toggle"]').attributes('aria-label')).toContain('隐藏')
+  })
 })
