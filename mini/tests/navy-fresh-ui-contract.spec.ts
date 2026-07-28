@@ -40,8 +40,20 @@ describe('approved navy fresh UI structure', () => {
     expect(category).not.toContain('category-rail')
     expect(category).toContain('wx:for="{{categoryPresentation}}"')
     expect(category).toContain('{{item.name}}')
+    expect(category).toContain('已展示 {{products.length}} 件')
+    expect(category).toContain('aria-label="查看分类 {{item.name}}"')
+    expect(category).toContain('hover-class="category-chip-hover"')
     expect(categoryStyles).toMatch(
-      /\.category-chip\s*\{[\s\S]*?width:\s*108rpx;/,
+      /\.category-chip\s*\{[\s\S]*?width:\s*120rpx;[\s\S]*?min-height:\s*152rpx;/,
+    )
+    expect(categoryStyles).toMatch(
+      /\.category-chip-label\s*\{[\s\S]*?font-size:\s*24rpx;/,
+    )
+    expect(categoryStyles).toMatch(
+      /\.category-chip\.is-selected\s*\{[\s\S]*?border-color:\s*var\(--primary-600\);/,
+    )
+    expect(categoryStyles).toMatch(
+      /\.category-chip-hover\s*\{[\s\S]*?background:\s*var\(--primary-50\);/,
     )
     expect(orders).toContain('order-filters')
     expect(orders).toContain('全部')

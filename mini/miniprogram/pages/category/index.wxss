@@ -100,8 +100,8 @@
 .category-chip {
   display: inline-flex;
   box-sizing: border-box;
-  width: 108rpx;
-  min-height: 144rpx;
+  width: 120rpx;
+  min-height: 152rpx;
   padding: var(--space-1);
   border: var(--border-width-default) solid var(--color-divider);
   border-radius: var(--radius-md);
@@ -120,15 +120,19 @@
 }
 
 .category-chip-label {
-  font-size: 22rpx;
-  line-height: 32rpx;
+  font-size: 24rpx;
+  line-height: 36rpx;
 }
 
 .category-chip.is-selected {
-  border-color: var(--primary-300);
+  border-color: var(--primary-600);
   background: var(--primary-100);
   color: var(--primary-600);
   font-weight: var(--weight-semibold);
+}
+
+.category-chip-hover {
+  background: var(--primary-50);
 }
 
 .category-product {
