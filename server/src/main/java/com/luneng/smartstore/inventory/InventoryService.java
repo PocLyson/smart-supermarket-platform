@@ -3,6 +3,9 @@ package com.luneng.smartstore.inventory;
 import com.luneng.smartstore.auth.CurrentPrincipal;
 import com.luneng.smartstore.audit.AuditService;
 import com.luneng.smartstore.common.api.BusinessException;
+import jakarta.persistence.EntityNotFoundException;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -69,6 +72,21 @@ public class InventoryService {
         return repository.current(productId);
     }
 
+    @Transactional(readOnly = true)
+    public InventoryList list() {
+        List<InventoryItem> items = repository.list().stream()
+            .map(InventoryItem::from)
+            .toList();
+        return new InventoryList(items, items.size(), 0, items.size());
+    }
+
+    @Transactional(readOnly = true)
+    public InventoryItem item(long productId) {
+        return repository.item(productId)
+            .map(InventoryItem::from)
+            .orElseThrow(EntityNotFoundException::new);
+    }
+
     @Transactional
     public void reserve(Map<Long, Integer> quantities, String orderNo) {
         Long orderId = repository.orderId(orderNo);
@@ -132,5 +150,31 @@ public class InventoryService {
             "库存不足",
             HttpStatus.CONFLICT
         );
+    }
+
+    public record InventoryList(
+        List<InventoryItem> items,
+        long total,
+        int page,
+        int size
+    ) {
+    }
+
+    public record InventoryItem(
+        long productId,
+        String productName,
+        int availableQuantity,
+        String unit,
+        LocalDateTime updatedAt
+    ) {
+        static InventoryItem from(InventoryRepository.InventoryRow row) {
+            return new InventoryItem(
+                row.productId(),
+                row.productName(),
+                row.availableQuantity(),
+                row.unit(),
+                row.updatedAt()
+            );
+        }
     }
 }

@@ -38,6 +38,10 @@ describe('StaffView', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('cashier01')
+    expect(wrapper.text()).toContain('老板')
+    expect(wrapper.text()).toContain('收银员')
+    expect(wrapper.text()).not.toContain('OWNER')
+    expect(wrapper.text()).not.toContain('CASHIER')
     expect(wrapper.text()).not.toContain('$2a$10$must-not-render')
   })
 

@@ -34,7 +34,7 @@ describe('frozen admin API contract', () => {
   it('uses the frozen order transition paths and DTOs', async () => {
     await acceptOrder('202607280001')
     await rejectOrder('202607280001', { reason: '缺货' })
-    await markOrderPaid('202607280001', { paymentMethod: 'WECHAT_QR' })
+    await markOrderPaid('202607280001', { method: 'WECHAT_QR' })
 
     expect(fetch).toHaveBeenNthCalledWith(
       1,
@@ -51,7 +51,7 @@ describe('frozen admin API contract', () => {
       '/api/admin/orders/202607280001/pay',
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({ paymentMethod: 'WECHAT_QR' }),
+        body: JSON.stringify({ method: 'WECHAT_QR' }),
       }),
     )
   })

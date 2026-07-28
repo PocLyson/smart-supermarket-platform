@@ -6,7 +6,6 @@ import com.luneng.smartstore.common.web.RequestIdFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import java.util.Map;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,15 +24,15 @@ public class AdminInventoryController {
     }
 
     @GetMapping
-    ApiResponse<Map<String, String>> list(HttpServletRequest request) {
+    ApiResponse<InventoryService.InventoryList> list(HttpServletRequest request) {
         return ApiResponse.success(
             RequestIdFilter.requestId(request),
-            Map.of("message", "使用商品 ID 查询或调整库存")
+            service.list()
         );
     }
 
     @PostMapping("/{productId}/adjustments")
-    ApiResponse<Map<String, Integer>> adjust(
+    ApiResponse<InventoryService.InventoryItem> adjust(
         @PathVariable long productId,
         @Valid @RequestBody AdjustmentRequest body,
         @AuthenticationPrincipal CurrentPrincipal principal,
@@ -43,7 +42,7 @@ public class AdminInventoryController {
         service.adjust(productId, body.delta(), body.reason(), principal, requestId);
         return ApiResponse.success(
             requestId,
-            Map.of("availableQuantity", service.current(productId))
+            service.item(productId)
         );
     }
 

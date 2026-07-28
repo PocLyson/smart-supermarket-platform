@@ -8,6 +8,7 @@ import {
   type InventoryAdjustmentRequest,
 } from '@/api/inventory'
 import { reportUnexpectedError } from '@/utils/errors'
+import { formatDateTime } from '@/utils/date'
 
 const items = ref<InventoryItem[]>([])
 const dialogVisible = ref(false)
@@ -65,7 +66,7 @@ onMounted(load)
     <header class="page-header">
       <div>
         <h1>线上库存</h1>
-        <p>线上可售数量独立维护，每次调整都需要填写可审计原因。</p>
+        <p>此处仅管理小程序可售数量，不会自动同步线下收银库存。</p>
       </div>
     </header>
     <div class="surface-card">
@@ -74,7 +75,9 @@ onMounted(load)
         <el-table-column label="可售库存" width="150">
           <template #default="{ row }">{{ row.availableQuantity }} {{ row.unit }}</template>
         </el-table-column>
-        <el-table-column prop="updatedAt" label="更新时间" min-width="180" />
+        <el-table-column label="更新时间" min-width="180">
+          <template #default="{ row }">{{ formatDateTime(row.updatedAt) }}</template>
+        </el-table-column>
         <el-table-column label="操作" width="120">
           <template #default="{ row }">
             <el-button

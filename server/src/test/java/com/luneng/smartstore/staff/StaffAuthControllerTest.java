@@ -51,6 +51,8 @@ class StaffAuthControllerTest extends IntegrationTestBase {
                     """))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.role").value("OWNER"))
+            .andExpect(jsonPath("$.data.staffId").isNumber())
+            .andExpect(jsonPath("$.data.username").value("owner"))
             .andExpect(jsonPath("$.data.accessToken").isNotEmpty());
     }
 

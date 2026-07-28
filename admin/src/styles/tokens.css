@@ -109,7 +109,7 @@
   --shadow-modal: 0 16px 40px rgb(41 35 38 / 16%);
 
   /* Layout and density */
-  --layout-sidebar-width: 220px;
+  --layout-sidebar-width: 208px;
   --layout-content-max: 1440px;
   --control-height-small: 32px;
   --control-height: 36px;
@@ -238,6 +238,7 @@ a:hover {
 
 .page-stack {
   display: grid;
+  min-width: 0;
   gap: var(--space-6);
 }
 
@@ -261,7 +262,9 @@ a:hover {
 }
 
 .surface-card {
+  min-width: 0;
   padding: var(--space-4);
+  overflow: hidden;
   border: var(--border-width) solid var(--color-border-default);
   border-radius: var(--radius-md);
   background: var(--color-bg-surface);

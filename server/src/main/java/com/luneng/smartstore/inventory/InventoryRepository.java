@@ -1,7 +1,9 @@
 package com.luneng.smartstore.inventory;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -39,6 +41,51 @@ public class InventoryRepository {
             productId
         );
         return value == null ? 0 : value;
+    }
+
+    public List<InventoryRow> list() {
+        return jdbcTemplate.query(
+            """
+            select p.id as product_id,
+                   p.name as product_name,
+                   coalesce(i.available_quantity, 0) as available_quantity,
+                   p.unit,
+                   coalesce(i.updated_at, p.updated_at) as updated_at
+              from product p
+              left join online_inventory i on i.product_id = p.id
+             order by p.id
+            """,
+            (resultSet, rowNumber) -> new InventoryRow(
+                resultSet.getLong("product_id"),
+                resultSet.getString("product_name"),
+                resultSet.getInt("available_quantity"),
+                resultSet.getString("unit"),
+                resultSet.getObject("updated_at", LocalDateTime.class)
+            )
+        );
+    }
+
+    public Optional<InventoryRow> item(long productId) {
+        return jdbcTemplate.query(
+            """
+            select i.product_id,
+                   p.name as product_name,
+                   i.available_quantity,
+                   p.unit,
+                   i.updated_at
+              from online_inventory i
+              join product p on p.id = i.product_id
+             where i.product_id = ?
+            """,
+            (resultSet, rowNumber) -> new InventoryRow(
+                resultSet.getLong("product_id"),
+                resultSet.getString("product_name"),
+                resultSet.getInt("available_quantity"),
+                resultSet.getString("unit"),
+                resultSet.getObject("updated_at", LocalDateTime.class)
+            ),
+            productId
+        ).stream().findFirst();
     }
 
     public int adjust(long productId, int delta) {
@@ -130,5 +177,14 @@ public class InventoryRepository {
             orderNo
         );
         return total == null ? 0 : total;
+    }
+
+    public record InventoryRow(
+        long productId,
+        String productName,
+        int availableQuantity,
+        String unit,
+        LocalDateTime updatedAt
+    ) {
     }
 }

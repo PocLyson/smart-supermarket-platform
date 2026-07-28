@@ -10,7 +10,6 @@ export type PaymentMethod = 'CASH' | 'WECHAT_QR'
 
 export interface AdminOrderSummary {
   orderNo: string
-  customerId: number
   pickupName: string
   phone: string
   totalCent: number
@@ -19,7 +18,6 @@ export interface AdminOrderSummary {
   paymentMethod: PaymentMethod | null
   cancelReason: string | null
   createdAt: string
-  updatedAt: string
 }
 
 export interface AdminOrderItem {
@@ -34,14 +32,15 @@ export interface AdminOrderItem {
 export interface OrderStatusHistoryItem {
   fromStatus: OrderStatus | null
   toStatus: OrderStatus
-  actorName: string
+  actorType: 'CUSTOMER' | 'STAFF' | 'SYSTEM'
+  actorId: number
   remark: string | null
   createdAt: string
 }
 
 export interface AdminOrderDetail extends AdminOrderSummary {
   items: AdminOrderItem[]
-  statusHistory: OrderStatusHistoryItem[]
+  history: OrderStatusHistoryItem[]
 }
 
 export interface AdminOrderQuery {
@@ -57,7 +56,7 @@ export interface ReasonRequest {
 }
 
 export interface PaymentRequest {
-  paymentMethod: PaymentMethod
+  method: PaymentMethod
 }
 
 export const listOrders = (query: AdminOrderQuery = {}): Promise<PageResult<AdminOrderSummary>> =>

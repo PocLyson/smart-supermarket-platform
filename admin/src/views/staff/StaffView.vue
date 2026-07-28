@@ -9,6 +9,7 @@ import {
   type StaffAccount,
 } from '@/api/staff'
 import { reportUnexpectedError } from '@/utils/errors'
+import { formatDateTime } from '@/utils/date'
 
 const items = ref<StaffAccount[]>([])
 const dialogVisible = ref(false)
@@ -92,11 +93,15 @@ onMounted(load)
     <div class="surface-card">
       <el-table :data="items">
         <el-table-column prop="username" label="用户名" />
-        <el-table-column prop="role" label="角色" width="120" />
+        <el-table-column label="角色" width="120">
+          <template #default="{ row }">{{ row.role === 'OWNER' ? '老板' : '收银员' }}</template>
+        </el-table-column>
         <el-table-column label="状态" width="100">
           <template #default="{ row }">{{ row.enabled ? '启用' : '停用' }}</template>
         </el-table-column>
-        <el-table-column prop="lastLoginAt" label="最近登录" min-width="180" />
+        <el-table-column label="最近登录" min-width="180">
+          <template #default="{ row }">{{ formatDateTime(row.lastLoginAt) }}</template>
+        </el-table-column>
         <el-table-column label="操作" width="220">
           <template #default="{ row }">
             <template v-if="row.role === 'CASHIER'">

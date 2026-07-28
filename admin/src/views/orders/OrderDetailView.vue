@@ -14,6 +14,7 @@ import {
 import { ApiError } from '@/api/http'
 import { centToYuan } from '@/utils/money'
 import { reportUnexpectedError } from '@/utils/errors'
+import { formatDateTime } from '@/utils/date'
 import { orderStatusLabel, paymentStatusLabel } from './orderPresentation'
 
 type MutationKind = 'accept' | 'reject' | 'ready' | 'pay' | 'complete' | 'cancel'
@@ -40,6 +41,12 @@ const actionMeta: Record<MutationKind, { title: string; nextState: string }> = {
 }
 
 const requiresReason = computed(() => form.kind === 'reject' || form.kind === 'cancel')
+
+const actorLabel = (actorType: 'CUSTOMER' | 'STAFF' | 'SYSTEM', actorId: number): string => {
+  if (actorType === 'CUSTOMER') return '顾客'
+  if (actorType === 'STAFF') return `员工 #${actorId}`
+  return '系统'
+}
 
 const load = async (): Promise<void> => {
   loading.value = true
@@ -73,7 +80,7 @@ const executeMutation = async (): Promise<void> => {
     else if (form.kind === 'reject') await rejectOrder(orderNo, { reason: form.reason.trim() })
     else if (form.kind === 'ready') await markOrderReady(orderNo)
     else if (form.kind === 'pay')
-      await markOrderPaid(orderNo, { paymentMethod: form.paymentMethod })
+      await markOrderPaid(orderNo, { method: form.paymentMethod })
     else if (form.kind === 'complete') await completeOrder(orderNo)
     else await cancelOrder(orderNo, { reason: form.reason.trim() })
     dialogVisible.value = false
@@ -182,11 +189,11 @@ onMounted(load)
         <h2>状态记录</h2>
         <el-timeline>
           <el-timeline-item
-            v-for="item in order.statusHistory"
+            v-for="item in order.history"
             :key="`${item.toStatus}-${item.createdAt}`"
-            :timestamp="item.createdAt"
+            :timestamp="formatDateTime(item.createdAt)"
           >
-            {{ orderStatusLabel[item.toStatus] }} · {{ item.actorName }}
+            {{ orderStatusLabel[item.toStatus] }} · {{ actorLabel(item.actorType, item.actorId) }}
             <p v-if="item.remark">{{ item.remark }}</p>
           </el-timeline-item>
         </el-timeline>

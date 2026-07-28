@@ -31,6 +31,8 @@ management:
         include: health
 
 smart-store:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
   jwt:
     secret: ${JWT_SECRET}
   wechat:

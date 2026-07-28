@@ -2,10 +2,10 @@ package com.luneng.smartstore.order;
 
 import com.luneng.smartstore.auth.CurrentPrincipal;
 import com.luneng.smartstore.common.api.ApiResponse;
+import com.luneng.smartstore.common.api.PageResult;
 import com.luneng.smartstore.common.web.RequestIdFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -45,7 +45,7 @@ public class MiniOrderController {
     }
 
     @GetMapping
-    ApiResponse<Page<OrderView>> list(
+    ApiResponse<PageResult<OrderView>> list(
         @AuthenticationPrincipal CurrentPrincipal principal,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "20") int size,
@@ -53,7 +53,7 @@ public class MiniOrderController {
     ) {
         return ApiResponse.success(
             RequestIdFilter.requestId(request),
-            service.list(principal.id(), page, size)
+            PageResult.from(service.list(principal.id(), page, size))
         );
     }
 

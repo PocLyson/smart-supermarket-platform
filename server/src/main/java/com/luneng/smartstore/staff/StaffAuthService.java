@@ -52,7 +52,12 @@ public class StaffAuthService {
             account.getRole(),
             sessionId
         ));
-        return new LoginResult(token, account.getRole());
+        return new LoginResult(
+            token,
+            account.getRole(),
+            account.getId(),
+            account.getUsername()
+        );
     }
 
     private BusinessException invalidCredentials() {
@@ -63,6 +68,11 @@ public class StaffAuthService {
         );
     }
 
-    public record LoginResult(String accessToken, String role) {
+    public record LoginResult(
+        String accessToken,
+        String role,
+        long staffId,
+        String username
+    ) {
     }
 }

@@ -7,9 +7,8 @@ vi.mock('@/api/audit', () => ({
   listAuditLogs: vi.fn().mockResolvedValue({
     items: [
       {
-        id: 1,
         actorId: 1,
-        actorName: 'owner',
+        actorType: 'STAFF',
         action: 'PRODUCT_UPDATE',
         objectType: 'PRODUCT',
         objectId: '1',
@@ -43,5 +42,8 @@ describe('AuditLogView', () => {
       size: 20,
     })
     expect(wrapper.text()).toContain('req-1')
+    expect(wrapper.text()).toContain('员工 #1')
+    expect(wrapper.text()).toContain('更新商品')
+    expect(wrapper.text()).toContain('商品 · 1')
   })
 })

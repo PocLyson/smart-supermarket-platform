@@ -1,6 +1,7 @@
 package com.luneng.smartstore.order;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -72,5 +73,11 @@ class MiniOrderControllerTest extends IntegrationTestBase {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.totalCent").value(1180))
             .andExpect(jsonPath("$.data.status").value("PENDING_CONFIRMATION"));
+
+        mockMvc.perform(get("/api/mini/orders")
+                .header("Authorization", "Bearer " + customerToken))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.items[0].totalCent").value(1180))
+            .andExpect(jsonPath("$.data.total").value(1));
     }
 }

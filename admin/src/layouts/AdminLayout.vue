@@ -83,6 +83,7 @@ const logout = async (): Promise<void> => {
 
 .content {
   width: min(100%, var(--layout-content-max));
+  min-width: 0;
   padding: var(--space-6);
 }
 

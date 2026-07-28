@@ -83,29 +83,29 @@ onMounted(load)
     </form>
     <div class="surface-card">
       <el-table v-loading="loading" :data="items">
-        <el-table-column prop="orderNo" label="订单号" min-width="180" />
-        <el-table-column label="取货信息" min-width="180">
+        <el-table-column prop="orderNo" label="订单号" min-width="160" />
+        <el-table-column label="取货信息" min-width="135">
           <template #default="{ row }">
             <div>{{ row.pickupName }}</div>
             <small>{{ row.phone }}</small>
           </template>
         </el-table-column>
-        <el-table-column label="金额" width="110">
+        <el-table-column label="金额" width="80">
           <template #default="{ row }">¥{{ centToYuan(row.totalCent) }}</template>
         </el-table-column>
-        <el-table-column label="订单状态" width="130">
+        <el-table-column label="订单状态" width="105">
           <template #default="{ row }">
             <span class="status-tag" :data-status="row.status">{{ statusText(row.status) }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="付款状态" width="110">
+        <el-table-column label="付款状态" width="90">
           <template #default="{ row }">
             <span class="status-tag" :data-payment-status="row.paymentStatus">
               {{ paymentText(row.paymentStatus) }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="100">
+        <el-table-column label="操作" width="80">
           <template #default="{ row }">
             <RouterLink :to="`/orders/${row.orderNo}`">查看详情</RouterLink>
           </template>

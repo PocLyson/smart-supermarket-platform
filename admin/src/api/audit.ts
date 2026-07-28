@@ -3,9 +3,8 @@ import type { PageResult } from '@/types/common'
 import { toQueryString } from '@/utils/query'
 
 export interface AuditLog {
-  id: number
   actorId: number
-  actorName: string
+  actorType: 'CUSTOMER' | 'STAFF' | 'SYSTEM'
   action: string
   objectType: string
   objectId: string

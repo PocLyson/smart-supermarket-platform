@@ -18,7 +18,6 @@ vi.mock('@/api/orders', () => ({
 
 const pendingOrder: ordersApi.AdminOrderDetail = {
   orderNo: '202607280001',
-  customerId: 8,
   pickupName: '李先生',
   phone: '13800138000',
   totalCent: 1180,
@@ -27,7 +26,6 @@ const pendingOrder: ordersApi.AdminOrderDetail = {
   paymentMethod: null,
   cancelReason: null,
   createdAt: '2026-07-28T08:00:00Z',
-  updatedAt: '2026-07-28T08:00:00Z',
   items: [
     {
       productId: 1,
@@ -38,11 +36,12 @@ const pendingOrder: ordersApi.AdminOrderDetail = {
       subtotalCent: 1180,
     },
   ],
-  statusHistory: [
+  history: [
     {
       fromStatus: null,
       toStatus: 'PENDING_CONFIRMATION',
-      actorName: '顾客',
+      actorType: 'CUSTOMER',
+      actorId: 8,
       remark: null,
       createdAt: '2026-07-28T08:00:00Z',
     },
@@ -68,6 +67,7 @@ describe('admin order workflow', () => {
     expect(wrapper.find('[data-test="order-reject"]').exists()).toBe(true)
     expect(wrapper.find('[data-test="order-ready"]').exists()).toBe(false)
     expect(wrapper.find('[data-test="order-complete"]').exists()).toBe(false)
+    expect(wrapper.text()).toContain('顾客')
   })
 
   it('requires a reason for rejection and refreshes after a successful mutation', async () => {
