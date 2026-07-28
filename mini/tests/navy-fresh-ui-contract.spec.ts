@@ -78,6 +78,27 @@ describe('approved navy fresh UI structure', () => {
     )
   })
 
+  it('keeps product purchase information readable above the fixed action bar', () => {
+    const product = read('pages/product/index.wxml')
+    const productStyles = read('pages/product/index.wxss')
+
+    expect(product).toContain('aria-label="{{product.name}} 商品图片"')
+    expect(product).toContain('aria-label="减少购买数量"')
+    expect(product).toContain('aria-label="增加购买数量"')
+    expect(product).toContain('class="product-store-copy"')
+    expect(product).toContain('class="product-description-copy"')
+    expect(product).toContain('hover-class="button-hover"')
+    expect(productStyles).toMatch(
+      /\.product-page\s*\{[\s\S]*?padding-bottom:\s*calc\(208rpx \+ env\(safe-area-inset-bottom\)\);/,
+    )
+    expect(productStyles).toMatch(
+      /\.product-stock-row\s*\{[\s\S]*?flex-wrap:\s*wrap;/,
+    )
+    expect(productStyles).toMatch(
+      /\.product-store-copy\s*\{[\s\S]*?font-size:\s*24rpx;/,
+    )
+  })
+
   it('provides local image error recovery on every product-heavy page', () => {
     for (const page of ['home', 'category', 'search', 'product', 'cart', 'checkout']) {
       const markup = read(`pages/${page}/index.wxml`)

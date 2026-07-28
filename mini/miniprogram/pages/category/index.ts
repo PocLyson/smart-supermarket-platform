@@ -14,7 +14,7 @@ Page({
   data: {
     categories: [] as Category[],
     categoryPresentation: [] as PresentedCategory[],
-    selectedCategoryId: undefined as number | undefined,
+    selectedCategoryId: null as number | null,
     selectedCategoryName: '全部商品',
     products: [] as CategoryProduct[],
     page: 1,
@@ -69,7 +69,7 @@ Page({
     this.setData({ loading: true, error: '' })
     try {
       const result = await catalogService.listProducts({
-        categoryId: this.data.selectedCategoryId,
+        categoryId: this.data.selectedCategoryId ?? undefined,
         page,
         size: pageSize,
       })
@@ -102,7 +102,7 @@ Page({
       : undefined
     const categoryId =
       rawId === 'all'
-        ? undefined
+        ? null
         : selectedByName?.id ?? Number(rawId)
     const selected =
       selectedByName ??

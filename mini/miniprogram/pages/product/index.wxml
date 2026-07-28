@@ -14,7 +14,7 @@
     <button class="button-secondary product-error-action" bindtap="onRetry">重新加载</button>
   </view>
   <view wx:elif="{{product}}">
-    <image class="product-image" src="{{imageFailed ? '/assets/icons/image-placeholder.svg' : (product.coverImageUrl || '/assets/icons/image-placeholder.svg')}}" mode="aspectFit" binderror="onImageError" />
+    <image class="product-image" aria-label="{{product.name}} 商品图片" src="{{imageFailed ? '/assets/icons/image-placeholder.svg' : (product.coverImageUrl || '/assets/icons/image-placeholder.svg')}}" mode="aspectFit" binderror="onImageError" />
     <view class="product-info card">
       <view class="product-badges">
         <text class="product-badge {{outOfStock ? 'is-disabled-badge' : ''}}">{{outOfStock ? '暂时缺货' : '门店现货'}}</text>
@@ -27,24 +27,24 @@
       </view>
       <view class="product-stock-row">
         <view class="product-stock-status"><text class="stock-dot"></text><text>{{outOfStock ? '库存不足' : '库存充足'}}</text></view>
-        <text>鲁能超市李老家分店 · 到店自取</text>
+        <text class="product-store-copy">鲁能超市李老家分店 · 到店自取</text>
       </view>
       <view class="product-description">
         <text class="description-label">商品说明</text>
-        <text class="muted">{{product.description || '门店精选商品，以实际到店商品为准'}}</text>
+        <text class="product-description-copy">{{product.description || '门店精选商品，以实际到店商品为准'}}</text>
       </view>
       <view class="quantity-row">
         <text class="quantity-label">购买数量</text>
         <view class="quantity-stepper">
-          <button class="quantity-button" disabled="{{quantity === 1}}" bindtap="onDecreaseQuantity">−</button>
+          <button class="quantity-button" aria-label="减少购买数量" disabled="{{quantity === 1}}" bindtap="onDecreaseQuantity">−</button>
           <text>{{quantity}}</text>
-          <button class="quantity-button" bindtap="onIncreaseQuantity">+</button>
+          <button class="quantity-button" aria-label="增加购买数量" bindtap="onIncreaseQuantity">+</button>
         </view>
       </view>
     </view>
     <view class="product-purchase-bar">
       <button class="purchase-button button-secondary purchase-secondary" hover-class="button-hover" bindtap="onOpenCart">购物车</button>
-      <button class="purchase-button button-primary {{outOfStock ? 'is-disabled' : ''}}" disabled="{{outOfStock}}" bindtap="onAddToCart">{{outOfStock ? '暂时缺货' : '加入购物车'}}</button>
+      <button class="purchase-button button-primary {{outOfStock ? 'is-disabled' : ''}}" hover-class="button-hover" disabled="{{outOfStock}}" bindtap="onAddToCart">{{outOfStock ? '暂时缺货' : '加入购物车'}}</button>
     </view>
   </view>
 </view>

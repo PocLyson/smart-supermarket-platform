@@ -1,5 +1,5 @@
 .product-page {
-  padding-bottom: calc(176rpx + env(safe-area-inset-bottom));
+  padding-bottom: calc(208rpx + env(safe-area-inset-bottom));
 }
 
 .product-image {
@@ -16,9 +16,11 @@
   margin-top: var(--space-3);
   border-top: var(--border-width-default) solid var(--color-divider);
   color: var(--color-text-secondary);
-  font-size: 22rpx;
+  font-size: 24rpx;
   align-items: center;
+  flex-wrap: wrap;
   justify-content: space-between;
+  gap: var(--space-1) var(--space-2);
 }
 
 .product-stock-status {
@@ -33,6 +35,14 @@
   height: 12rpx;
   border-radius: var(--radius-round);
   background: var(--color-success);
+}
+
+.product-store-copy {
+  margin-left: auto;
+  color: var(--color-text-secondary);
+  font-size: 24rpx;
+  line-height: 36rpx;
+  text-align: right;
 }
 
 .quantity-row {
@@ -132,6 +142,12 @@
   font-size: var(--type-card-title-size);
   font-weight: var(--weight-semibold);
   line-height: var(--type-card-title-line);
+}
+
+.product-description-copy {
+  color: var(--color-text-secondary);
+  font-size: var(--type-helper-size);
+  line-height: var(--type-helper-line);
 }
 
 .product-purchase-bar {
