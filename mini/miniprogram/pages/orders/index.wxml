@@ -23,5 +23,4 @@
     <view wx:if="{{loading}}" class="state-panel">加载中...</view>
     <view wx:elif="{{reachedEnd && orders.length}}" class="state-panel">已经到底了</view>
   </view>
-  <app-tab-bar value="orders" />
 </view>

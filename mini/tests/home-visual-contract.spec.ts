@@ -40,8 +40,8 @@ describe('burgundy retail visual contract', () => {
     expect(navigation).toContain('首页')
     expect(navigation).toContain('分类')
     expect(navigation).toContain('购物车')
-    expect(navigation).toContain('订单')
     expect(navigation).toContain('我的')
+    expect(navigation).not.toContain('value="orders"')
     expect(home).not.toContain('AI 助手')
   })
 
@@ -79,6 +79,7 @@ describe('burgundy retail visual contract', () => {
     expect(profile).toContain('默认取货信息')
     expect(profile).toContain('我的订单')
     expect(profile).toContain('<app-tab-bar value="profile"')
+    expect(read('pages/orders/index.wxml')).not.toContain('<app-tab-bar')
   })
 
   it('constrains native category buttons to the five-column grid', () => {

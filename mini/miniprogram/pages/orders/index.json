@@ -1,7 +1,4 @@
 {
   "navigationBarTitleText": "我的订单",
-  "backgroundColor": "#F8F5F1",
-  "usingComponents": {
-    "app-tab-bar": "../../components/app-tab-bar/index"
-  }
+  "backgroundColor": "#F8F5F1"
 }

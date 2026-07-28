@@ -1,4 +1,4 @@
-export type PrimaryTab = 'home' | 'category' | 'cart' | 'orders' | 'profile'
+export type PrimaryTab = 'home' | 'category' | 'cart' | 'profile'
 
 export type TabNavigation =
   | { method: 'none' }
@@ -9,7 +9,6 @@ const destinations: Record<
   string
 > = {
   cart: '/pages/cart/index',
-  orders: '/pages/orders/index',
   profile: '/pages/profile/index',
 }
 

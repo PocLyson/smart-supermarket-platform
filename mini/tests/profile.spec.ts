@@ -34,7 +34,7 @@ describe('profile presentation', () => {
   })
 })
 
-describe('five-item primary navigation', () => {
+describe('four-item primary navigation', () => {
   it('routes every primary destination without stacking top-level pages', () => {
     expect(resolveTabNavigation('profile', 'home')).toEqual({
       method: 'reLaunch',
@@ -47,10 +47,6 @@ describe('five-item primary navigation', () => {
     expect(resolveTabNavigation('home', 'cart')).toEqual({
       method: 'redirectTo',
       url: '/pages/cart/index',
-    })
-    expect(resolveTabNavigation('home', 'orders')).toEqual({
-      method: 'redirectTo',
-      url: '/pages/orders/index',
     })
     expect(resolveTabNavigation('home', 'profile')).toEqual({
       method: 'redirectTo',
