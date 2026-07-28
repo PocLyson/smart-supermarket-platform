@@ -90,6 +90,37 @@ describe('navy fresh retail visual contract', () => {
     })
   })
 
+  it('keeps the home search compact with a restrained action ratio', () => {
+    const styles = read('pages/home/index.wxss')
+
+    expect(styles).toMatch(
+      /\.search-card\s*\{[\s\S]*?height:\s*96rpx;[\s\S]*?padding:\s*4rpx;[\s\S]*?gap:\s*8rpx;/,
+    )
+    expect(styles).toMatch(
+      /\.search-card\s*\{[\s\S]*?--td-search-height:\s*88rpx;/,
+    )
+    expect(styles).toMatch(
+      /\.search-button\s*\{[\s\S]*?width:\s*164rpx;[\s\S]*?min-width:\s*164rpx;[\s\S]*?min-height:\s*88rpx;/,
+    )
+    expect(styles).toMatch(
+      /\.search-button\s*\{[\s\S]*?flex:\s*0 0 164rpx;/,
+    )
+  })
+
+  it('keeps the hero badge concise and inside the copy column', () => {
+    const home = read('pages/home/index.wxml')
+    const styles = read('pages/home/index.wxss')
+
+    expect(home).toContain('<text class="hero-kicker">今日精选</text>')
+    expect(home).not.toContain('鲁能超市李老家分店 · 今日精选')
+    expect(styles).toMatch(
+      /\.hero-kicker\s*\{[\s\S]*?box-sizing:\s*border-box;[\s\S]*?max-width:\s*100%;[\s\S]*?padding:\s*8rpx 20rpx;[\s\S]*?white-space:\s*nowrap;/,
+    )
+    expect(styles).toMatch(
+      /\.hero-kicker\s*\{[\s\S]*?margin-bottom:\s*24rpx;/,
+    )
+  })
+
   it('registers a real profile page', () => {
     const appConfig = JSON.parse(read('app.json')) as { pages: string[] }
     const profile = read('pages/profile/index.wxml')

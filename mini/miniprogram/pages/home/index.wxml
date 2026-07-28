@@ -33,7 +33,7 @@
     <view class="home-hero">
       <image class="hero-image" src="/assets/home/navy-fresh-grocery-hero.png" mode="aspectFill" />
       <view class="hero-copy">
-        <text class="hero-kicker">鲁能超市李老家分店 · 今日精选</text>
+        <text class="hero-kicker">今日精选</text>
         <text class="hero-title">新鲜好物
 到店即取</text>
         <text class="hero-subtitle">门店现货 · 省时省心</text>

@@ -8,7 +8,7 @@
   padding:
     calc(env(safe-area-inset-top) + var(--space-5))
     var(--space-4)
-    var(--space-4);
+    24rpx;
   background: var(--primary-600);
   color: var(--color-bg-surface);
 }
@@ -17,7 +17,7 @@
   display: flex;
   align-items: center;
   min-height: var(--size-touch-min);
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-4);
   justify-content: space-between;
 }
 
@@ -30,7 +30,7 @@
 
 .store-name {
   overflow: hidden;
-  font-size: 36rpx;
+  font-size: 34rpx;
   font-weight: var(--weight-semibold);
   line-height: var(--type-section-title-line);
   text-overflow: ellipsis;
@@ -50,14 +50,18 @@
   display: flex;
   align-items: center;
   box-sizing: border-box;
-  min-height: var(--size-touch-min);
-  padding: var(--space-1);
+  height: 96rpx;
+  padding: 4rpx;
   border-radius: var(--radius-md);
   background: var(--color-bg-surface);
-  gap: var(--space-2);
+  gap: 8rpx;
   --td-search-bg-color: var(--color-bg-surface);
   --td-search-height: 88rpx;
-  --td-search-square-radius: var(--radius-sm);
+  --td-search-square-radius: 20rpx;
+  --td-search-padding: 12rpx 20rpx;
+  --td-search-icon-size: 34rpx;
+  --td-search-font: 28rpx / 40rpx var(--td-font-family, PingFang SC, Microsoft YaHei, Arial Regular);
+  --td-search-placeholder-color: #8A96A8;
 }
 
 .search-field {
@@ -93,10 +97,13 @@
 
 .search-button {
   box-sizing: border-box;
-  min-width: 120rpx;
-  min-height: 76rpx;
+  width: 164rpx;
+  min-width: 164rpx;
+  min-height: 88rpx;
   margin: 0 !important;
-  padding: var(--space-2) var(--space-4);
+  padding: 0;
+  border-radius: 20rpx;
+  flex: 0 0 164rpx;
 }
 
 .category-item::after {
@@ -136,13 +143,14 @@
 }
 
 .hero-kicker {
+  box-sizing: border-box;
   align-self: flex-start;
-  margin-bottom: var(--space-2);
-  padding: var(--space-1) var(--space-2);
+  max-width: 100%;
+  padding: 8rpx 20rpx;
+  white-space: nowrap;
+  margin-bottom: 24rpx;
   border-radius: var(--radius-round);
   background: rgba(255, 255, 255, 0.16);
-  overflow: hidden;
-  max-width: 100%;
   font-size: 20rpx;
   line-height: 32rpx;
 }
