@@ -22,6 +22,14 @@ cd server
 .\mvnw.cmd spring-boot:run
 ```
 
+如果本机已有 MySQL 占用 `3306`，可指定其他主机端口：
+
+```powershell
+$env:MYSQL_PORT = "3307"
+docker compose up -d
+$env:DB_URL = "jdbc:mysql://localhost:3307/smart_store"
+```
+
 本地默认连接：
 
 - MySQL：`localhost:3306/smart_store`

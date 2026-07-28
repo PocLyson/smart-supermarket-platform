@@ -9,7 +9,7 @@ services:
       MYSQL_PASSWORD: smart_store_dev
       MYSQL_ROOT_PASSWORD: root_dev_only
     ports:
-      - "3306:3306"
+      - "${MYSQL_PORT:-3306}:3306"
     volumes:
       - mysql-data:/var/lib/mysql
     healthcheck:

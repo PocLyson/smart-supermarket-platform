@@ -1,4 +1,5 @@
 #!/bin/sh
+# Keep this POSIX wrapper in LF format for Linux and Docker builds.
 set -eu
 
 BASE_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
