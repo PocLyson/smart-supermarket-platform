@@ -12,10 +12,11 @@ Component({
   },
 
   methods: {
-    onChange(event: { detail: { value: PrimaryTab } }) {
+    onTabTap(event: WechatMiniprogram.TouchEvent) {
+      const next = event.currentTarget.dataset.value as PrimaryTab
       const navigation = resolveTabNavigation(
         this.properties.value as PrimaryTab,
-        event.detail.value,
+        next,
       )
       if (navigation.method === 'none') return
       wx[navigation.method]({ url: navigation.url })

@@ -1,4 +1,4 @@
-<view class="page-shell">
+<view class="page-shell cart-page">
   <view class="page-intro">
     <text class="page-title">购物车</text>
     <text class="page-description">选好商品后，到店快速取货</text>
@@ -6,30 +6,39 @@
   <checkbox-group bindchange="onToggle">
     <view wx:for="{{items}}" wx:key="productId" class="card cart-item">
       <view class="row-between cart-item-top">
-        <label class="row cart-select">
+        <label class="cart-select">
           <checkbox value="{{item.productId}}" checked="{{item.selected}}" />
-          <text class="cart-name">{{item.name}}</text>
+          <image class="cart-image" src="{{imageFailed ? '/assets/icons/image-placeholder.svg' : (item.coverImageUrl || '/assets/icons/image-placeholder.svg')}}" mode="aspectFill" data-id="{{item.productId}}" catchtap="onOpenProduct" lazy-load binderror="onImageError" />
+          <view class="cart-product-copy" data-id="{{item.productId}}" catchtap="onOpenProduct">
+            <text class="cart-name">{{item.name}}</text>
+            <text class="cart-service">门店现货 · 到店自取</text>
+            <text class="cart-price">{{item.displayPrice}}</text>
+          </view>
         </label>
-        <button class="cart-remove" size="mini" data-id="{{item.productId}}" bindtap="onRemove">删除</button>
       </view>
       <view class="row-between cart-item-bottom">
-        <text class="price">¥{{item.unitPriceCent / 100}}</text>
+        <button class="cart-remove" size="mini" data-id="{{item.productId}}" bindtap="onRemove">删除</button>
         <view class="row quantity-stepper">
-          <button class="button-secondary quantity-button" size="mini" data-id="{{item.productId}}" bindtap="onDecrease">−</button>
+          <button class="button-secondary quantity-button {{item.quantity === 1 ? 'quantity-disabled' : ''}}" disabled="{{item.quantity === 1}}" size="mini" aria-label="减少 {{item.name}} 数量" data-id="{{item.productId}}" bindtap="onDecrease">−</button>
           <text class="quantity-value">{{item.quantity}}</text>
-          <button class="button-secondary quantity-button" size="mini" data-id="{{item.productId}}" bindtap="onIncrease">+</button>
+          <button class="button-secondary quantity-button" size="mini" aria-label="增加 {{item.name}} 数量" data-id="{{item.productId}}" bindtap="onIncrease">+</button>
         </view>
       </view>
     </view>
   </checkbox-group>
 
-  <view wx:if="{{!items.length}}" class="state-panel">购物车还是空的</view>
+  <view wx:if="{{!items.length}}" class="cart-empty">
+    <image class="empty-icon" src="/assets/icons/cart.svg" mode="aspectFit" />
+    <text class="empty-title">购物车还是空的</text>
+    <text class="empty-copy">去首页挑选新鲜好物吧</text>
+    <button class="button-primary empty-action" bindtap="onGoShopping">去逛逛</button>
+  </view>
   <view wx:else class="cart-summary-bar">
     <view class="cart-summary-copy">
-      <view><text class="summary-label">合计</text><text class="price">¥{{totalCent / 100}}</text></view>
+      <view><text class="summary-label">已选 {{selectedCount}} 种 · 合计</text><text class="price">{{displayTotal}}</text></view>
       <view class="muted">以提交订单时价格为准</view>
     </view>
-    <button class="button-primary checkout-button" bindtap="onCheckout">去结算</button>
+    <button class="button-primary checkout-button {{!selectedCount ? 'is-disabled' : ''}}" disabled="{{!selectedCount}}" bindtap="onCheckout">去结算</button>
   </view>
   <app-tab-bar value="cart" />
 </view>

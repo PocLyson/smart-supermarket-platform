@@ -1,9 +1,24 @@
 import { cart } from '../../store/cart'
+import { formatMoney } from '../../utils/money'
+
+const presentCart = () => {
+  const items = cart.items()
+  return {
+    items: items.map((item) => ({
+      ...item,
+      displayPrice: formatMoney(item.unitPriceCent),
+    })),
+    selectedCount: items.filter((item) => item.selected).length,
+    displayTotal: formatMoney(cart.selectedTotalCent()),
+  }
+}
 
 Page({
   data: {
-    items: cart.items(),
+    ...presentCart(),
     totalCent: cart.selectedTotalCent(),
+    imageFailed: false,
+    fallbackImage: '/assets/icons/image-placeholder.svg',
   },
 
   onShow() {
@@ -12,7 +27,7 @@ Page({
 
   refresh() {
     this.setData({
-      items: cart.items(),
+      ...presentCart(),
       totalCent: cart.selectedTotalCent(),
     })
   },
@@ -42,8 +57,19 @@ Page({
   },
 
   onRemove(event: WechatMiniprogram.TouchEvent) {
-    cart.remove([Number(event.currentTarget.dataset.id)])
-    this.refresh()
+    const productId = Number(event.currentTarget.dataset.id)
+    wx.showModal({
+      title: '删除这件商品？',
+      content: '删除后可以重新加入购物车。',
+      confirmText: '确认删除',
+      confirmColor: '#E5484D',
+      success: ({ confirm }) => {
+        if (!confirm) return
+        cart.remove([productId])
+        this.refresh()
+        wx.showToast({ title: '已删除', icon: 'success' })
+      },
+    })
   },
 
   onCheckout() {
@@ -52,5 +78,19 @@ Page({
       return
     }
     wx.navigateTo({ url: '/pages/checkout/index' })
+  },
+
+  onGoShopping() {
+    wx.reLaunch({ url: '/pages/home/index' })
+  },
+
+  onOpenProduct(event: WechatMiniprogram.TouchEvent) {
+    wx.navigateTo({
+      url: `/pages/product/index?id=${Number(event.currentTarget.dataset.id)}`,
+    })
+  },
+
+  onImageError() {
+    this.setData({ imageFailed: true })
   },
 })

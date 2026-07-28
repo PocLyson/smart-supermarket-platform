@@ -18,13 +18,13 @@ export const buildProfileView = (
   if (!loggedIn) {
     return {
       loggedIn: false,
-      displayName: '微信用户',
-      pickupSummary: '登录后完善取货信息',
+      displayName: '登录 / 注册',
+      pickupSummary: '同步订单与购物车',
     }
   }
   return {
     loggedIn: true,
-    displayName: profile?.pickupName || '微信用户',
+    displayName: profile?.pickupName || '已登录用户',
     pickupSummary: profile ? maskPhone(profile.phone) : '请完善取货信息',
   }
 }

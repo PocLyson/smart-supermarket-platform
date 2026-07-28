@@ -1,12 +1,16 @@
 import { catalogService } from '../../services/catalog'
 import type { Category, ProductSummary } from '../../types/catalog'
+import { buildSearchUrl } from '../search/presentation'
+import { formatMoney } from '../../utils/money'
+
+type ProductCard = ProductSummary & { displayPrice: string }
 
 const pageSize = 10
 
 Page({
   data: {
     categories: [] as Category[],
-    products: [] as ProductSummary[],
+    products: [] as ProductCard[],
     selectedCategoryId: undefined as number | undefined,
     keyword: '',
     page: 1,
@@ -14,6 +18,8 @@ Page({
     error: '',
     empty: false,
     reachedEnd: false,
+    imageFailed: false,
+    fallbackImage: '/assets/icons/image-placeholder.svg',
     categoryImages: [
       '/assets/categories/fruit.jpg',
       '/assets/categories/vegetables.jpg',
@@ -27,10 +33,8 @@ Page({
     ],
   },
 
-  onLoad(options: Record<string, string>) {
-    void this.loadInitial().then(() => {
-      if (options.section === 'category') this.onCategoryNav()
-    })
+  onLoad() {
+    void this.loadInitial()
   },
 
   onReachBottom() {
@@ -65,9 +69,11 @@ Page({
         page,
         size: pageSize,
       })
-      const products = reset
-        ? result.items
-        : [...this.data.products, ...result.items]
+      const incoming = result.items.map((item) => ({
+        ...item,
+        displayPrice: formatMoney(item.priceCent),
+      }))
+      const products = reset ? incoming : [...this.data.products, ...incoming]
       this.setData({
         products,
         page: page + 1,
@@ -88,7 +94,7 @@ Page({
   },
 
   onSearch() {
-    void this.loadProducts(true)
+    wx.navigateTo({ url: buildSearchUrl(this.data.keyword) })
   },
 
   onClearSearch() {
@@ -96,24 +102,25 @@ Page({
     void this.loadProducts(true)
   },
 
-  onCategoryNav() {
-    wx.pageScrollTo({
-      selector: '#category-section',
-      duration: 200,
-    })
-  },
-
   onSelectCategory(event: WechatMiniprogram.TouchEvent) {
-    const value = event.currentTarget.dataset.id
-    this.setData({
-      selectedCategoryId: value === 'all' ? undefined : Number(value),
+    const categoryName = String(event.currentTarget.dataset.name || '')
+    const matched = categoryName
+      ? this.data.categories.find((item) => item.name === categoryName)
+      : undefined
+    const value = matched?.id ?? event.currentTarget.dataset.id
+    const categoryId = value === 'all' ? '' : String(Number(value))
+    wx.navigateTo({
+      url: `/pages/category/index${categoryId ? `?categoryId=${categoryId}` : ''}`,
     })
-    void this.loadProducts(true)
   },
 
   onOpenProduct(event: WechatMiniprogram.TouchEvent) {
     wx.navigateTo({
       url: `/pages/product/index?id=${Number(event.currentTarget.dataset.id)}`,
     })
+  },
+
+  onImageError() {
+    this.setData({ imageFailed: true })
   },
 })

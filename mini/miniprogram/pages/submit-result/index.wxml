@@ -1,0 +1,35 @@
+<view class="result-page">
+  <view class="result-symbol {{uncertain ? 'is-uncertain' : ''}}">
+    <image class="result-symbol-image" src="{{uncertain ? '/assets/icons/state-time.svg' : '/assets/icons/state-success.svg'}}" mode="aspectFit" />
+  </view>
+
+  <text class="result-title">{{uncertain ? '订单结果确认中' : '订单提交成功'}}</text>
+  <text class="result-description">
+    {{uncertain ? '网络状态不稳定，我们会保留本次提交信息。请先查看订单，避免重复提交。' : '门店确认后会开始备货，可在“我的订单”中查看最新进度。'}}
+  </text>
+
+  <view wx:if="{{orderNo}}" class="order-number-card">
+    <text class="order-number-label">订单号</text>
+    <text class="order-number-value">{{orderNo}}</text>
+  </view>
+
+  <view class="pickup-note">
+    <view class="note-line">
+      <image class="note-icon" src="/assets/icons/state-shop.svg" mode="aspectFit" />
+      <view>
+        <text class="note-label">取货门店</text>
+        <text class="note-value">鲁能超市李老家分店</text>
+      </view>
+    </view>
+    <view class="note-line">
+      <image class="note-icon" src="/assets/icons/wallet.svg" mode="aspectFit" />
+      <view>
+        <text class="note-label">付款方式</text>
+        <text class="note-value">到店后使用现金或门店微信收款码</text>
+      </view>
+    </view>
+  </view>
+
+  <button class="button-primary primary-action" bindtap="onViewOrder">{{uncertain ? '查看订单确认结果' : '查看订单详情'}}</button>
+  <button class="button-text secondary-action" bindtap="onBackHome">返回首页</button>
+</view>

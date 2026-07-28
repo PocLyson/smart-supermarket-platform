@@ -5,9 +5,10 @@ export type TabNavigation =
   | { method: 'reLaunch' | 'redirectTo'; url: string }
 
 const destinations: Record<
-  Exclude<PrimaryTab, 'home' | 'category'>,
+  Exclude<PrimaryTab, 'home'>,
   string
 > = {
+  category: '/pages/category/index',
   cart: '/pages/cart/index',
   profile: '/pages/profile/index',
 }
@@ -19,12 +20,6 @@ export const resolveTabNavigation = (
   if (current === target) return { method: 'none' }
   if (target === 'home') {
     return { method: 'reLaunch', url: '/pages/home/index' }
-  }
-  if (target === 'category') {
-    return {
-      method: 'reLaunch',
-      url: '/pages/home/index?section=category',
-    }
   }
   return { method: 'redirectTo', url: destinations[target] }
 }

@@ -3,11 +3,33 @@ import {
   orderStatusLabel,
   paymentStatusLabel,
   type CustomerOrder,
+  type OrderStatus,
 } from '../../types/order'
+import { formatMoney } from '../../utils/money'
+import { resolveOrderProductImage } from '../order-detail/presentation'
+
+type OrderCard = CustomerOrder & {
+  displayTotal: string
+  displayCreatedAt: string
+  itemCount: number
+  imageUrl: string
+}
+
+const presentOrder = (order: CustomerOrder): OrderCard => ({
+  ...order,
+  displayTotal: formatMoney(order.totalCent),
+  displayCreatedAt: order.createdAt
+    ? order.createdAt.replace('T', ' ').slice(0, 16)
+    : '下单时间以订单详情为准',
+  itemCount: order.items?.length || 0,
+  imageUrl: resolveOrderProductImage(order.items?.[0]?.productId ?? 0),
+})
 
 Page({
   data: {
-    orders: [] as CustomerOrder[],
+    allOrders: [] as OrderCard[],
+    orders: [] as OrderCard[],
+    selectedStatus: 'ALL' as 'ALL' | OrderStatus,
     page: 1,
     loading: false,
     empty: false,
@@ -15,6 +37,18 @@ Page({
     error: '',
     orderStatusLabel,
     paymentStatusLabel,
+  },
+
+  onLoad(query: Record<string, string | undefined>) {
+    const status = query.status as OrderStatus | undefined
+    if (
+      status &&
+      ['PENDING_CONFIRMATION', 'PREPARING', 'READY_FOR_PICKUP', 'COMPLETED'].includes(
+        status,
+      )
+    ) {
+      this.setData({ selectedStatus: status })
+    }
   },
 
   onShow() {
@@ -33,10 +67,16 @@ Page({
     this.setData({ loading: true, error: '' })
     try {
       const result = await ordersService.list({ page, size: 10 })
-      const orders = reset
-        ? result.items
-        : [...this.data.orders, ...result.items]
+      const incoming = result.items.map(presentOrder)
+      const allOrders = reset
+        ? incoming
+        : [...this.data.allOrders, ...incoming]
+      const orders =
+        this.data.selectedStatus === 'ALL'
+          ? allOrders
+          : allOrders.filter((order) => order.status === this.data.selectedStatus)
       this.setData({
+        allOrders,
         orders,
         page: page + 1,
         empty: orders.length === 0,
@@ -56,5 +96,24 @@ Page({
     wx.navigateTo({
       url: `/pages/order-detail/index?orderNo=${encodeURIComponent(orderNo)}`,
     })
+  },
+
+  onFilterTap(event: WechatMiniprogram.TouchEvent) {
+    const selectedStatus = String(event.currentTarget.dataset.status) as
+      | 'ALL'
+      | OrderStatus
+    const orders =
+      selectedStatus === 'ALL'
+        ? this.data.allOrders
+        : this.data.allOrders.filter((order) => order.status === selectedStatus)
+    this.setData({
+      selectedStatus,
+      orders,
+      empty: orders.length === 0,
+    })
+  },
+
+  onGoShopping() {
+    wx.reLaunch({ url: '/pages/home/index' })
   },
 })

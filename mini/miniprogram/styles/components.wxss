@@ -1,11 +1,11 @@
 .page-shell {
   box-sizing: border-box;
   min-height: 100vh;
-  padding: var(--space-4) var(--space-4) calc(var(--space-8) + env(safe-area-inset-bottom));
+  padding: var(--space-5) var(--space-4) calc(var(--space-12) + env(safe-area-inset-bottom));
 }
 
 .card {
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-5);
   padding: var(--space-5);
   border: var(--border-width-default) solid var(--color-divider);
   border-radius: var(--radius-lg);
@@ -28,7 +28,7 @@
 }
 
 .price {
-  color: var(--primary-600);
+  color: var(--color-price);
   font-size: var(--type-money-size);
   font-weight: var(--weight-bold);
   font-variant-numeric: tabular-nums;
@@ -76,7 +76,10 @@
 .button-primary[disabled],
 .button-secondary[disabled],
 .button-danger[disabled] {
-  opacity: 0.5;
+  border-color: var(--color-border-default);
+  background: var(--color-disabled-bg);
+  color: var(--color-disabled-text);
+  opacity: 1;
 }
 
 .button-secondary {
@@ -133,6 +136,10 @@
   background: var(--color-bg-subtle);
   color: var(--color-text-secondary);
   text-align: center;
+}
+
+.state-panel button {
+  margin-top: var(--space-3);
 }
 
 .page-intro {
@@ -244,4 +251,10 @@
   border-color: var(--status-cancelled-border);
   background: var(--status-cancelled-bg);
   color: var(--status-cancelled-text);
+}
+
+.state-icon {
+  width: 72rpx;
+  height: 72rpx;
+  margin-bottom: var(--space-3);
 }

@@ -1,49 +1,61 @@
-# Mini 首页视觉 QA
+# 微信小程序 UI 验收记录
 
-## Comparison target
+## 验收基线
 
-- Source visual truth: `C:\Users\k\Documents\智慧超市平台\协助交接\UI\智慧超市小程序首页-深绛红效果图.png`
-- Implementation screenshot: `C:\Users\k\.codex\visualizations\2026\07\27\019fa457-8cd7-7bb3-90aa-99b41d395f18\mini-home-implementation.png`
-- Side-by-side evidence: `C:\Users\k\.codex\visualizations\2026\07\27\019fa457-8cd7-7bb3-90aa-99b41d395f18\mini-home-visual-comparison.png`
-- State: 微信开发者工具中的首页，9 个分类、8 个商品的运行时 mock 数据，深绛红主题，首页底栏选中。
-- CSS viewport: 微信开发者工具模拟器 `390 × 852` CSS px。
-- Source pixels: `852 × 1858`; implementation capture pixels: `363 × 789`.
-- Density normalization: source was downsampled to `363 × 789`; the implementation was cropped from the scaled simulator at the same aspect ratio and compared at equal pixel dimensions.
+- 唯一视觉来源：`navy-fresh-complete` 全套效果图及 `PAGE-LIST.md`。
+- 品牌体系：主色 `#082F6B`、页面背景 `#F7F9FC`、正文 `#0D1B36`、库存绿 `#2E9B62`、价格红 `#E5484D`。
+- 设备：微信开发者工具 Stable `v2.01.2510290`，iPhone 12/13 模拟器，输出画布 `390 × 844`。
+- 门店名称：所有正式字段统一为“鲁能超市李老家分店”。
+- 导航：首页 / 分类 / 购物车 / 我的，一级页使用悬浮胶囊导航；二级页使用返回导航或业务操作栏。
 
-## Findings
+## 页面与状态覆盖
 
-No actionable P0/P1/P2 differences remain.
+已在微信开发者工具逐页运行并截图：
 
-- Fonts and typography: both use the system Chinese sans-serif stack with the same strong white header hierarchy, dark section heading, burgundy price emphasis, and compact category labels. The implementation keeps slightly smaller dynamic-product metadata so API-provided names and units remain readable.
-- Spacing and layout rhythm: header, search, hero, two-row five-column category area, recommendation grid, and fixed four-item tab bar preserve the source order and visual rhythm. The implementation intentionally renders one API product per card instead of the source's marketing section cards, because the frozen MVP plan requires tappable product-summary cards.
-- Colors and tokens: the implementation maps primary `#8E2F3F`, hover `#762536`, pressed `#5E1D2B`, selected `#F5E7EA`, and page `#F8F5F1` through centralized WXSS tokens and TDesign variables.
-- Image quality: hero and category imagery are real raster assets with matching warm grocery subjects and crops. Navigation and location icons use official TDesign icon assets rather than text glyphs, CSS drawings, or mixed icon libraries.
-- Copy and content: the confirmed store title, search prompt, hero copy, category labels, recommendation heading, and 首页/分类/购物车/订单 navigation are present. The extra “全部商品” entry is intentional and preserves the MVP category-filter contract.
-- Accessibility and interaction: custom category entries expose `role="button"` and `aria-label`; the visible controls meet the existing touch-target tokens. The TDesign 分类 tab was exercised and scrolled to the category section while keeping 首页 selected.
+- 首页、分类、商品详情。
+- 搜索初始、搜索结果、搜索空结果、筛选弹层。
+- 购物车有商品、空购物车、删除确认、数量选中反馈。
+- 结算确认、表单校验、填写完成。
+- 提交成功、订单列表状态筛选、订单详情。
+- “我的”未登录/已登录、微信授权页。
+- 通用成功反馈、加载骨架、空状态、错误重试、禁用按钮等结构由 UI 合约测试覆盖。
 
-## Comparison history
+截图目录：`mini/screenshots/navy-fresh-final/`。其中 `_full/` 保存开发者工具原始窗口截图，根目录保存裁切后的 `390 × 844` 页面图；`reference-vs-implementation.png` 为基准稿与实现稿并排对照。
 
-1. Initial normalized comparison found a P2 horizontal overflow in the five-column category area: the rightmost category was clipped.
-   - Root cause evidence: 微信开发者工具 WXML inspector showed `.category-slot` at `73.2 × 79`, while its native `button.category-item` child was `184 × 79` because the injected `wx-button:not(.size-mini)` rule overrode the intended width.
-   - Fix: replaced native category buttons with custom `view` controls carrying `role="button"` and `aria-label`; retained the 20% flex slots.
-2. Post-fix comparison shows two complete rows of five evenly sized category entries, no clipping, stable hero/product grids, and an unobstructed fixed tab bar.
-3. Post-review runtime check injected 11 enabled categories. All entries rendered across additional rows, overflow entries received a cyclic local-image fallback, and the TDesign tab bar placeholder kept the end of the list clear of the fixed navigation.
+## 视觉对照结论
 
-## Focused region evidence
+- 首页：保留真实生鲜摄影、清晰门店与搜索区、五个高频分类（含烟酒）和双列商品卡。
+- 分类：采用正式 A 方案的紧凑横向分类带，首屏可见烟酒；商品列表为宽松单列快速加购。
+- 商品详情：大幅商品摄影、价格红、库存绿、到店自取信息与底部业务操作栏一致。
+- 一级页：统一白色大圆角悬浮胶囊导航，选中项使用浅海军蓝底；内容区保留底部安全空间。
+- “我的”：微信登录入口位于海军蓝个人信息头部；订单与门店服务自然上移。
+- 订单：筛选选中态为轻量浅蓝胶囊；商品快照按商品类别匹配摄影素材。
+- 触控与适配：主要按钮、筛选项、数量控件与导航点击区不小于常见 44px 触控标准；固定操作区包含安全区。
 
-A separate enlarged crop was not needed: the equal-size side-by-side comparison keeps the header/search, hero crop, all category labels, recommendation heading, product imagery, and all four tab labels readable. The WXML inspector was used separately to verify the category slot and control dimensions during the overflow fix.
+## 开发者工具验证
 
-## Primary interactions and runtime checks
+- “构建 npm”已成功完成，耗时 2190 ms。
+- 小程序重新编译通过；首页、分类、商品详情、搜索、购物车、结算、授权、个人中心、订单列表与详情均实际运行。
+- 登录 → 加购 → 购物车 → 结算 → 提交成功 → 订单详情主链路已在本地视觉夹具下完整走通。
+- 游客模式控制台仍显示微信开发者工具自身的 `wx.login` 模拟提示与 WAWorker 环境警告；未发现新的应用 WXML/WXSS 编译错误。
 
-- 微信开发者工具 npm build completed successfully for TDesign MiniProgram.
-- Home compiled after the final layout change.
-- TDesign search, button, icon, and tab bar rendered in the simulator.
-- 分类 tab scroll interaction passed.
-- More than 9 enabled categories remained visible and tappable in an additional row.
-- Console was cleared after validation; no current application error remained. Backend-unavailable and tourist-mode messages observed earlier were environmental and were not used as passing evidence.
+## 自动化验证
 
-## Follow-up polish
+最终提交前执行：
 
-- The source groups products into merchandising sections, while the MVP contract renders API product-summary cards. A future merchandising API could support those grouped cards without hard-coding presentation-only product relationships.
+- `npm test -- --run`
+- `npm run typecheck`
+- `git diff --check`
+- 微信开发者工具重新编译
+
+视觉夹具仅用于本地截图验收，沿用现有接口形状，不引入新的后端依赖。
+
+## 首页搜索与横幅回归验收（2026-07-28）
+
+- 将用户提供的微信截图与 iPhone 12/13 实现截图放在同一张对照图中检查：`screenshots/navy-fresh-final/home-search-revision/home-search-reference-vs-after.png`。
+- 搜索容器高度为 96rpx（48px）；搜索按钮宽 164rpx（82px），约占 358px 内容宽度的 23%，并保留 4px 内嵌间距。
+- 搜索栏已避开微信右上角原生胶囊，顶部至 Banner 的节奏保持紧凑。
+- Banner 徽标改为内容自适应的“今日精选”，不再重复门店名称，也不跨入右侧图片区。
+- 在 375px 与 390px 宽度下检查 rpx 布局和受限的左侧文案区；徽标、标题均不依赖溢出裁切。
 
 final result: passed

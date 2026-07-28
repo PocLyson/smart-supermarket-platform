@@ -1,13 +1,32 @@
 <view class="page-shell">
   <view class="page-intro orders-header">
     <text class="page-title">我的订单</text>
-    <text class="page-description">查看备货进度和取货状态</text>
+  </view>
+  <view class="order-filters">
+    <view class="order-filter {{selectedStatus === 'ALL' ? 'is-active' : ''}}" data-status="ALL" bindtap="onFilterTap">全部</view>
+    <view class="order-filter {{selectedStatus === 'PENDING_CONFIRMATION' ? 'is-active' : ''}}" data-status="PENDING_CONFIRMATION" bindtap="onFilterTap">待确认</view>
+    <view class="order-filter {{selectedStatus === 'PREPARING' ? 'is-active' : ''}}" data-status="PREPARING" bindtap="onFilterTap">备货中</view>
+    <view class="order-filter {{selectedStatus === 'READY_FOR_PICKUP' ? 'is-active' : ''}}" data-status="READY_FOR_PICKUP" bindtap="onFilterTap">待取货</view>
   </view>
   <view wx:if="{{error}}" class="state-panel">
-    <text>{{error}}</text>
-    <button class="button-secondary" size="mini" data-reset="true" bindtap="loadOrders">重试</button>
+    <image class="orders-state-icon" src="/assets/icons/close-circle.svg" mode="aspectFit" />
+    <text class="orders-state-title">订单加载失败</text>
+    <text class="orders-state-copy">{{error}}</text>
+    <button class="button-secondary orders-state-action" size="mini" data-reset="true" bindtap="loadOrders">重新加载</button>
   </view>
-  <view wx:elif="{{empty}}" class="state-panel">还没有订单</view>
+  <view wx:elif="{{loading && !orders.length}}" class="orders-skeleton">
+    <view wx:for="{{[1, 2, 3]}}" wx:key="*this" class="card skeleton-order">
+      <view class="skeleton-block skeleton-line"></view>
+      <view class="skeleton-block skeleton-line short"></view>
+      <view class="skeleton-block skeleton-total"></view>
+    </view>
+  </view>
+  <view wx:elif="{{empty}}" class="state-panel orders-empty">
+    <image class="orders-state-icon" src="/assets/icons/order.svg" mode="aspectFit" />
+    <text class="orders-state-title">还没有订单</text>
+    <text class="orders-state-copy">挑选商品并提交订单后，进度会显示在这里</text>
+    <button class="button-primary orders-state-action" bindtap="onGoShopping">去逛逛</button>
+  </view>
   <view wx:else>
     <view wx:for="{{orders}}" wx:key="orderNo" class="card order-card" hover-class="order-card-hover" data-order-no="{{item.orderNo}}" bindtap="onOpenOrder">
       <view class="row-between order-card-head">
@@ -15,9 +34,17 @@
         <text class="status-tag status-{{item.status}}">{{orderStatusLabel[item.status]}}</text>
       </view>
       <view class="order-divider"></view>
+      <view class="order-product-summary">
+        <image class="order-photo" src="{{item.imageUrl}}" mode="aspectFill" />
+        <view class="order-product-copy">
+          <text class="order-product-name">{{item.itemCount}} 种商品</text>
+          <text class="order-store">到店自取 · 鲁能超市李老家分店</text>
+          <text class="order-created">{{item.displayCreatedAt}}</text>
+        </view>
+      </view>
       <view class="row-between order-card-foot">
         <text class="payment-tag payment-{{item.paymentStatus}}">{{paymentStatusLabel[item.paymentStatus]}}</text>
-        <view><text class="order-total-label">合计</text><text class="price">¥{{item.totalCent / 100}}</text><text class="order-arrow">›</text></view>
+        <view><text class="order-total-label">合计</text><text class="price">{{item.displayTotal}}</text><text class="order-arrow">›</text></view>
       </view>
     </view>
     <view wx:if="{{loading}}" class="state-panel">加载中...</view>

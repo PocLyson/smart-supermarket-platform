@@ -5,6 +5,12 @@ import {
   paymentStatusLabel,
   type CustomerOrder,
 } from '../../types/order'
+import { formatMoney } from '../../utils/money'
+import {
+  buildOrderStatusPresentation,
+  resolveOrderProductImage,
+  type OrderStatusPresentation,
+} from './presentation'
 
 Page({
   data: {
@@ -14,6 +20,18 @@ Page({
     cancelling: false,
     canCancel: false,
     error: '',
+    displayTotal: '',
+    pickupCode: '',
+    displayItems: [] as Array<
+      CustomerOrder['items'][number] & {
+        displaySubtotal: string
+        imageUrl: string
+      }
+    >,
+    statusPresentation: {
+      title: '',
+      description: '',
+    } as OrderStatusPresentation,
     orderStatusLabel,
     paymentStatusLabel,
   },
@@ -35,6 +53,17 @@ Page({
       this.setData({
         order,
         canCancel: canCustomerCancel(order.status),
+        displayTotal: formatMoney(order.totalCent),
+        displayItems: order.items.map((item) => ({
+          ...item,
+          displaySubtotal: formatMoney(item.subtotalCent),
+          imageUrl: resolveOrderProductImage(item.productId),
+        })),
+        statusPresentation: buildOrderStatusPresentation(order.status),
+        pickupCode: order.orderNo
+          .replace(/\D/g, '')
+          .slice(-6)
+          .replace(/(\d{3})(\d{3})/, '$1 $2'),
       })
     } catch (error) {
       this.setData({
@@ -60,7 +89,11 @@ Page({
     this.setData({ cancelling: true, error: '' })
     try {
       const order = await ordersService.cancel(this.data.orderNo)
-      this.setData({ order, canCancel: false })
+      this.setData({
+        order,
+        canCancel: false,
+        statusPresentation: buildOrderStatusPresentation(order.status),
+      })
       wx.showToast({ title: '订单已取消', icon: 'success' })
     } catch (error) {
       this.setData({

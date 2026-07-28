@@ -1,4 +1,4 @@
-import { authService, profileService } from '../../services/auth'
+import { profileService } from '../../services/auth'
 import { sessionStore } from '../../store/session'
 import { buildProfileView, validateProfile } from './presentation'
 
@@ -12,6 +12,8 @@ Page({
     loading: false,
     saving: false,
     error: '',
+    pickupNameError: '',
+    phoneError: '',
   },
 
   onShow() {
@@ -46,32 +48,29 @@ Page({
     }
   },
 
-  async onLogin() {
-    this.setData({ loading: true, error: '' })
-    try {
-      await authService.loginWithWechat()
-      await this.loadProfile()
-    } catch (error) {
-      this.setData({
-        error: error instanceof Error ? error.message : '登录失败，请重试',
-      })
-    } finally {
-      this.setData({ loading: false })
-    }
+  onLogin() {
+    wx.navigateTo({ url: '/pages/auth/index?from=profile' })
   },
 
   onPickupNameInput(event: WechatMiniprogram.Input) {
-    this.setData({ pickupName: event.detail.value })
+    this.setData({ pickupName: event.detail.value, pickupNameError: '' })
   },
 
   onPhoneInput(event: WechatMiniprogram.Input) {
-    this.setData({ phone: event.detail.value })
+    this.setData({ phone: event.detail.value, phoneError: '' })
   },
 
   async onSave() {
     const error = validateProfile(this.data.pickupName, this.data.phone)
     if (error) {
-      wx.showToast({ title: error, icon: 'none' })
+      this.setData({
+        pickupNameError: !this.data.pickupName.trim()
+          ? '请输入取货人姓名'
+          : '',
+        phoneError: /^1\d{10}$/.test(this.data.phone)
+          ? ''
+          : '请输入正确的11位手机号',
+      })
       return
     }
     this.setData({ saving: true, error: '' })
@@ -97,6 +96,13 @@ Page({
     wx.redirectTo({ url: '/pages/orders/index' })
   },
 
+  onOrderStatus(event: WechatMiniprogram.TouchEvent) {
+    const status = String(event.currentTarget.dataset.status || '')
+    wx.navigateTo({
+      url: `/pages/orders/index${status ? `?status=${status}` : ''}`,
+    })
+  },
+
   onLogout() {
     wx.showModal({
       title: '退出登录',
@@ -112,5 +118,9 @@ Page({
         })
       },
     })
+  },
+
+  onRetry() {
+    void this.loadProfile()
   },
 })

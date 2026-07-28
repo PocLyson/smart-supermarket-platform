@@ -1,6 +1,18 @@
-<t-tab-bar value="{{value}}" fixed placeholder split="{{false}}" bind:change="onChange">
-  <t-tab-bar-item value="home" icon="/assets/icons/home-filled.svg">首页</t-tab-bar-item>
-  <t-tab-bar-item value="category" icon="/assets/icons/view-module.svg">分类</t-tab-bar-item>
-  <t-tab-bar-item value="cart" icon="/assets/icons/cart.svg">购物车</t-tab-bar-item>
-  <t-tab-bar-item value="profile" icon="/assets/icons/user.svg">我的</t-tab-bar-item>
-</t-tab-bar>
+<view class="app-tab-bar" aria-label="主导航">
+  <view class="tab-item {{value === 'home' ? 'is-active' : ''}}" data-value="home" bindtap="onTabTap">
+    <image class="tab-icon" src="{{value === 'home' ? '/assets/icons/home-filled.svg' : '/assets/icons/home.svg'}}" mode="aspectFit" />
+    <text class="tab-label {{value === 'home' ? 'is-visible' : ''}}">首页</text>
+  </view>
+  <view class="tab-item {{value === 'category' ? 'is-active' : ''}}" data-value="category" bindtap="onTabTap">
+    <image class="tab-icon" src="{{value === 'category' ? '/assets/icons/view-module-active.svg' : '/assets/icons/view-module.svg'}}" mode="aspectFit" />
+    <text class="tab-label {{value === 'category' ? 'is-visible' : ''}}">分类</text>
+  </view>
+  <view class="tab-item {{value === 'cart' ? 'is-active' : ''}}" data-value="cart" bindtap="onTabTap">
+    <image class="tab-icon" src="{{value === 'cart' ? '/assets/icons/cart-active.svg' : '/assets/icons/cart.svg'}}" mode="aspectFit" />
+    <text class="tab-label {{value === 'cart' ? 'is-visible' : ''}}">购物车</text>
+  </view>
+  <view class="tab-item {{value === 'profile' ? 'is-active' : ''}}" data-value="profile" bindtap="onTabTap">
+    <image class="tab-icon" src="{{value === 'profile' ? '/assets/icons/user-active.svg' : '/assets/icons/user.svg'}}" mode="aspectFit" />
+    <text class="tab-label {{value === 'profile' ? 'is-visible' : ''}}">我的</text>
+  </view>
+</view>

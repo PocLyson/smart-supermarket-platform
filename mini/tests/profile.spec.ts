@@ -9,8 +9,8 @@ describe('profile presentation', () => {
   it('shows an actionable logged-out state when no session exists', () => {
     expect(buildProfileView(false)).toEqual({
       loggedIn: false,
-      displayName: '微信用户',
-      pickupSummary: '登录后完善取货信息',
+      displayName: '登录 / 注册',
+      pickupSummary: '同步订单与购物车',
     })
   })
 
@@ -41,8 +41,8 @@ describe('four-item primary navigation', () => {
       url: '/pages/home/index',
     })
     expect(resolveTabNavigation('profile', 'category')).toEqual({
-      method: 'reLaunch',
-      url: '/pages/home/index?section=category',
+      method: 'redirectTo',
+      url: '/pages/category/index',
     })
     expect(resolveTabNavigation('home', 'cart')).toEqual({
       method: 'redirectTo',
