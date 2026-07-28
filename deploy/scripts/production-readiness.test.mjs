@@ -1,10 +1,14 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { fileURLToPath } from 'node:url'
 import {
   main,
   parseDotEnv,
+  validateDeploymentFiles,
   validateEnvironment,
 } from './production-readiness.mjs'
+
+const repositoryRoot = fileURLToPath(new URL('../..', import.meta.url))
 
 const validEnvironment = {
   PUBLIC_HOST: 'shop.registered-domain.cn',
@@ -94,4 +98,8 @@ test('CLI rejects tracked production env files and missing certificates', () => 
   assert.equal(exitCode, 1)
   assert.ok(messages.includes('生产环境文件不得被 Git 跟踪'))
   assert.ok(messages.includes('TLS 证书文件缺失'))
+})
+
+test('deployment files force the public hostname and disable local login mock', () => {
+  assert.deepEqual(validateDeploymentFiles(repositoryRoot), [])
 })

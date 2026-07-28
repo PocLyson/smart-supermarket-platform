@@ -4,7 +4,7 @@ import {
   readFileSync,
   statSync,
 } from 'node:fs'
-import { dirname, relative, resolve } from 'node:path'
+import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const requiredKeys = [
@@ -84,6 +84,64 @@ export function validateEnvironment(env) {
   return [...new Set(errors)]
 }
 
+export function validateDeploymentFiles(rootDir) {
+  const errors = []
+  let compose = ''
+  let nginxTemplate = ''
+
+  try {
+    compose = readFileSync(
+      join(rootDir, 'deploy', 'compose.production.yaml'),
+      'utf8',
+    )
+  } catch {
+    errors.push('缺少生产 Compose 配置')
+  }
+
+  try {
+    nginxTemplate = readFileSync(
+      join(rootDir, 'deploy', 'nginx', 'default.conf.template'),
+      'utf8',
+    )
+  } catch {
+    errors.push('缺少 Nginx 生产模板')
+  }
+
+  const composeContracts = [
+    'WECHAT_LOCAL_MOCK_ENABLED: "false"',
+    'CORS_ALLOWED_ORIGINS: https://${PUBLIC_HOST}',
+    'PUBLIC_HOST: ${PUBLIC_HOST:?PUBLIC_HOST is required}',
+    'NGINX_ENVSUBST_FILTER: ^PUBLIC_HOST$',
+    './nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro',
+  ]
+  if (composeContracts.some((contract) => !compose.includes(contract))) {
+    errors.push('生产 Compose 配置未满足公网部署契约')
+  }
+
+  if (!nginxTemplate.includes('server_name ${PUBLIC_HOST};')) {
+    errors.push('Nginx 模板未使用 PUBLIC_HOST')
+  }
+
+  for (const variable of [
+    '$host',
+    '$request_uri',
+    '$request_id',
+    '$remote_addr',
+    '$proxy_add_x_forwarded_for',
+  ]) {
+    if (!nginxTemplate.includes(variable)) {
+      errors.push('Nginx 模板未保留运行时变量')
+      break
+    }
+  }
+
+  if (existsSync(join(rootDir, 'deploy', 'nginx', 'smart-store.conf'))) {
+    errors.push('旧 Nginx 配置仍然存在')
+  }
+
+  return errors
+}
+
 const defaultRepositoryRoot = fileURLToPath(new URL('../..', import.meta.url))
 
 function parseArguments(args) {
@@ -131,7 +189,10 @@ export function main(args, dependencies = {}) {
   }
 
   const environment = parseDotEnv(environmentText)
-  const errors = validateEnvironment(environment)
+  const errors = [
+    ...validateEnvironment(environment),
+    ...validateDeploymentFiles(repositoryRoot),
+  ]
 
   if (platform !== 'win32') {
     try {

@@ -5,14 +5,14 @@ map $http_x_request_id $smart_store_request_id {
 
 server {
     listen 80;
-    server_name _;
+    server_name ${PUBLIC_HOST};
     return 301 https://$host$request_uri;
 }
 
 server {
     listen 443 ssl;
     http2 on;
-    server_name _;
+    server_name ${PUBLIC_HOST};
 
     ssl_certificate /etc/nginx/certs/fullchain.pem;
     ssl_certificate_key /etc/nginx/certs/privkey.pem;
