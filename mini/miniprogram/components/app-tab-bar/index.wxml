@@ -1,0 +1,7 @@
+<t-tab-bar value="{{value}}" fixed placeholder split="{{false}}" bind:change="onChange">
+  <t-tab-bar-item value="home" icon="/assets/icons/home-filled.svg">首页</t-tab-bar-item>
+  <t-tab-bar-item value="category" icon="/assets/icons/view-module.svg">分类</t-tab-bar-item>
+  <t-tab-bar-item value="cart" icon="/assets/icons/cart.svg">购物车</t-tab-bar-item>
+  <t-tab-bar-item value="orders" icon="/assets/icons/order.svg">订单</t-tab-bar-item>
+  <t-tab-bar-item value="profile" icon="/assets/icons/user.svg">我的</t-tab-bar-item>
+</t-tab-bar>

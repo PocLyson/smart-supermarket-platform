@@ -67,7 +67,7 @@
   position: fixed;
   z-index: 20;
   right: 0;
-  bottom: 0;
+  bottom: calc(112rpx + env(safe-area-inset-bottom));
   left: 0;
   display: flex;
   box-sizing: border-box;

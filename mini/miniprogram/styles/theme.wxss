@@ -1,29 +1,29 @@
 page {
-  /* Brand: UI UX Pro Max "暖红零售" */
-  --primary-50: #FEF2F2;
-  --primary-100: #FEE2E2;
-  --primary-200: #FECACA;
-  --primary-300: #FCA5A5;
-  --primary-400: #F87171;
-  --primary-500: #EF4444;
-  --primary-600: #DC2626;
-  --primary-700: #B91C1C;
-  --primary-800: #991B1B;
-  --primary-900: #7F1D1D;
+  /* Brand: UI UX Pro Max "统一酒红" */
+  --primary-50: #FCF6F7;
+  --primary-100: #F5E7EA;
+  --primary-200: #E9C8CE;
+  --primary-300: #D79DA7;
+  --primary-400: #BC6C7A;
+  --primary-500: #A34B5C;
+  --primary-600: #8E2F3F;
+  --primary-700: #762536;
+  --primary-800: #5E1D2B;
+  --primary-900: #48151F;
   --color-accent-gold: #A16207;
   --color-accent-gold-bg: #FEF3C7;
 
   /* TDesign MiniProgram theme mapping */
-  --td-brand-color-1: #FEF2F2;
-  --td-brand-color-2: #FEE2E2;
-  --td-brand-color-3: #FECACA;
-  --td-brand-color-4: #FCA5A5;
-  --td-brand-color-5: #F87171;
-  --td-brand-color-6: #EF4444;
-  --td-brand-color-7: #DC2626;
-  --td-brand-color-8: #B91C1C;
-  --td-brand-color-9: #991B1B;
-  --td-brand-color-10: #7F1D1D;
+  --td-brand-color-1: #FCF6F7;
+  --td-brand-color-2: #F5E7EA;
+  --td-brand-color-3: #E9C8CE;
+  --td-brand-color-4: #D79DA7;
+  --td-brand-color-5: #BC6C7A;
+  --td-brand-color-6: #A34B5C;
+  --td-brand-color-7: #8E2F3F;
+  --td-brand-color-8: #762536;
+  --td-brand-color-9: #5E1D2B;
+  --td-brand-color-10: #48151F;
   --td-primary-color-1: var(--td-brand-color-1);
   --td-primary-color-2: var(--td-brand-color-2);
   --td-primary-color-3: var(--td-brand-color-3);
@@ -36,41 +36,41 @@ page {
   --td-brand-color-disabled: var(--primary-200);
   --td-brand-color-light: var(--primary-100);
   --td-brand-color-light-active: var(--primary-200);
-  --td-bg-color-page: #FFF8F6;
+  --td-bg-color-page: #F8F5F1;
   --td-bg-color-container: #FFFFFF;
-  --td-bg-color-secondarycontainer: #FFF1ED;
-  --td-bg-color-container-active: #FEE2E2;
-  --td-text-color-primary: #2B1919;
-  --td-text-color-secondary: #665252;
-  --td-text-color-placeholder: #8A7474;
-  --td-border-level-1-color: #F5DEDA;
-  --td-border-level-2-color: #EBCBC6;
-  --td-component-border: #EBCBC6;
+  --td-bg-color-secondarycontainer: #F3EEEB;
+  --td-bg-color-container-active: #F5E7EA;
+  --td-text-color-primary: #292326;
+  --td-text-color-secondary: #595054;
+  --td-text-color-placeholder: #82787C;
+  --td-border-level-1-color: #E7DFE1;
+  --td-border-level-2-color: #D8CFD2;
+  --td-component-border: #D8CFD2;
   --td-radius-default: 8rpx;
   --td-radius-medium: 16rpx;
   --td-radius-large: 24rpx;
   --td-tab-bar-bg-color: #FFFFFF;
-  --td-tab-bar-border-color: #F5DEDA;
-  --td-tab-bar-active-color: #DC2626;
-  --td-tab-bar-color: #2B1919;
+  --td-tab-bar-border-color: #E7DFE1;
+  --td-tab-bar-active-color: #8E2F3F;
+  --td-tab-bar-color: #292326;
   --td-tab-bar-height: 112rpx;
 
   /* Neutral surfaces and content */
-  --color-bg-page: #FFF8F6;
+  --color-bg-page: #F8F5F1;
   --color-bg-surface: #FFFFFF;
   --color-bg-overlay: #FFFFFF;
-  --color-bg-subtle: #FFF1ED;
-  --color-bg-hover: #FEE2E2;
-  --color-text-primary: #2B1919;
-  --color-text-secondary: #665252;
-  --color-text-tertiary: #806A6A;
-  --color-text-placeholder: #8A7474;
-  --color-border-default: #EBCBC6;
-  --color-border-control: #B99A95;
-  --color-divider: #F5DEDA;
-  --color-mask: rgba(43, 25, 25, 0.48);
-  --color-disabled-bg: #F1E8E5;
-  --color-disabled-text: #806F6B;
+  --color-bg-subtle: #F3EEEB;
+  --color-bg-hover: #F5E7EA;
+  --color-text-primary: #292326;
+  --color-text-secondary: #595054;
+  --color-text-tertiary: #776E72;
+  --color-text-placeholder: #82787C;
+  --color-border-default: #D8CFD2;
+  --color-border-control: #9B8F94;
+  --color-divider: #E7DFE1;
+  --color-mask: rgba(41, 35, 38, 0.48);
+  --color-disabled-bg: #EDE8E6;
+  --color-disabled-text: #7A7175;
 
   /* Semantic feedback */
   --color-success: #1F7A5A;
@@ -169,14 +169,14 @@ page {
 
   /* Borders, focus, elevation and mask */
   --border-width-default: 2rpx;
-  --border-color-default: #EBCBC6;
-  --border-color-control: #B99A95;
-  --border-color-focus: #DC2626;
-  --shadow-focus: 0 0 0 4rpx #FFFFFF, 0 0 0 8rpx #DC2626;
-  --shadow-card: 0 4rpx 16rpx rgba(127, 29, 29, 0.06);
-  --shadow-dropdown: 0 16rpx 48rpx rgba(127, 29, 29, 0.12);
-  --shadow-modal: 0 32rpx 80rpx rgba(127, 29, 29, 0.16);
-  --overlay-mask: rgba(43, 25, 25, 0.48);
+  --border-color-default: #D8CFD2;
+  --border-color-control: #9B8F94;
+  --border-color-focus: #8E2F3F;
+  --shadow-focus: 0 0 0 4rpx #FFFFFF, 0 0 0 8rpx #8E2F3F;
+  --shadow-card: 0 4rpx 16rpx rgba(72, 21, 31, 0.06);
+  --shadow-dropdown: 0 16rpx 48rpx rgba(72, 21, 31, 0.12);
+  --shadow-modal: 0 32rpx 80rpx rgba(72, 21, 31, 0.16);
+  --overlay-mask: rgba(41, 35, 38, 0.48);
 
   /* Controls, media and motion */
   --size-touch-min: 88rpx;

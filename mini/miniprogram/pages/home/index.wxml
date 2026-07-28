@@ -94,10 +94,5 @@
     </view>
   </view>
 
-  <t-tab-bar value="{{homeTab}}" fixed placeholder split="{{false}}" bind:change="onTabChange">
-    <t-tab-bar-item value="home" icon="/assets/icons/home-filled.svg">首页</t-tab-bar-item>
-    <t-tab-bar-item value="category" icon="/assets/icons/view-module.svg">分类</t-tab-bar-item>
-    <t-tab-bar-item value="cart" icon="/assets/icons/cart.svg" url="/pages/cart/index" link-type="navigateTo">购物车</t-tab-bar-item>
-    <t-tab-bar-item value="orders" icon="/assets/icons/order.svg" url="/pages/orders/index" link-type="navigateTo">订单</t-tab-bar-item>
-  </t-tab-bar>
+  <app-tab-bar value="home" />
 </view>

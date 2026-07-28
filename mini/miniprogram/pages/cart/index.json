@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "购物车",
+  "backgroundColor": "#F8F5F1",
+  "usingComponents": {
+    "app-tab-bar": "../../components/app-tab-bar/index"
+  }
+}

@@ -1,12 +1,11 @@
 {
   "navigationStyle": "custom",
-  "backgroundColor": "#FFF8F6",
+  "backgroundColor": "#F8F5F1",
   "backgroundTextStyle": "dark",
   "usingComponents": {
     "t-button": "tdesign-miniprogram/button/button",
     "t-icon": "tdesign-miniprogram/icon/icon",
     "t-search": "tdesign-miniprogram/search/search",
-    "t-tab-bar": "tdesign-miniprogram/tab-bar/tab-bar",
-    "t-tab-bar-item": "tdesign-miniprogram/tab-bar-item/tab-bar-item"
+    "app-tab-bar": "../../components/app-tab-bar/index"
   }
 }

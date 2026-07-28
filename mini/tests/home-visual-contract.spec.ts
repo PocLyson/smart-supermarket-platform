@@ -8,26 +8,28 @@ function read(relativePath: string) {
   return readFileSync(resolve(miniRoot, relativePath), 'utf8')
 }
 
-describe('warm red retail visual contract', () => {
-  it('publishes the UI UX Pro Max retail palette', () => {
+describe('burgundy retail visual contract', () => {
+  it('publishes one unified burgundy retail palette', () => {
     const theme = read('styles/theme.wxss')
     const appConfig = JSON.parse(read('app.json')) as {
       window?: { navigationBarTitleText?: string }
     }
 
-    expect(theme).toContain('--primary-600: #DC2626;')
-    expect(theme).toContain('--primary-700: #B91C1C;')
-    expect(theme).toContain('--primary-800: #991B1B;')
-    expect(theme).toContain('--primary-100: #FEE2E2;')
-    expect(theme).toContain('--color-bg-page: #FFF8F6;')
-    expect(theme).toContain('--color-text-primary: #2B1919;')
+    expect(theme).toContain('--primary-600: #8E2F3F;')
+    expect(theme).toContain('--primary-700: #762536;')
+    expect(theme).toContain('--primary-800: #5E1D2B;')
+    expect(theme).toContain('--primary-100: #F5E7EA;')
+    expect(theme).toContain('--color-bg-page: #F8F5F1;')
+    expect(theme).toContain('--color-text-primary: #292326;')
     expect(theme).toContain('--color-accent-gold: #A16207;')
+    expect(theme).not.toContain('#DC2626')
     expect(theme).not.toContain('#2F7046')
     expect(appConfig.window?.navigationBarTitleText).toBe('智慧超市')
   })
 
   it('keeps every required home region and excludes the AI assistant', () => {
     const home = read('pages/home/index.wxml')
+    const navigation = read('components/app-tab-bar/index.wxml')
 
     expect(home).toContain('鲁能超市李老家分店')
     expect(home).toContain('home-hero')
@@ -35,10 +37,11 @@ describe('warm red retail visual contract', () => {
     expect(home).toContain('category-grid')
     expect(home).toContain('product-grid')
     expect(home).toContain('今日好价')
-    expect(home).toContain('首页')
-    expect(home).toContain('分类')
-    expect(home).toContain('购物车')
-    expect(home).toContain('订单')
+    expect(navigation).toContain('首页')
+    expect(navigation).toContain('分类')
+    expect(navigation).toContain('购物车')
+    expect(navigation).toContain('订单')
+    expect(navigation).toContain('我的')
     expect(home).not.toContain('AI 助手')
   })
 
@@ -58,16 +61,24 @@ describe('warm red retail visual contract', () => {
 
     expect(home).toContain('<t-search')
     expect(home).toContain('<t-button')
-    expect(home).toContain('<t-tab-bar')
-    expect(home).toMatch(/<t-tab-bar[^>]*\splaceholder(?:\s|>)/)
+    expect(home).toContain('<app-tab-bar')
     expect(home).toContain('<t-icon')
     expect(pageConfig.usingComponents).toMatchObject({
       't-button': 'tdesign-miniprogram/button/button',
       't-icon': 'tdesign-miniprogram/icon/icon',
       't-search': 'tdesign-miniprogram/search/search',
-      't-tab-bar': 'tdesign-miniprogram/tab-bar/tab-bar',
-      't-tab-bar-item': 'tdesign-miniprogram/tab-bar-item/tab-bar-item',
+      'app-tab-bar': '../../components/app-tab-bar/index',
     })
+  })
+
+  it('registers a real profile page', () => {
+    const appConfig = JSON.parse(read('app.json')) as { pages: string[] }
+    const profile = read('pages/profile/index.wxml')
+
+    expect(appConfig.pages).toContain('pages/profile/index')
+    expect(profile).toContain('默认取货信息')
+    expect(profile).toContain('我的订单')
+    expect(profile).toContain('<app-tab-bar value="profile"')
   })
 
   it('constrains native category buttons to the five-column grid', () => {

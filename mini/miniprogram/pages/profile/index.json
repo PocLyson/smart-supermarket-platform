@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "我的",
+  "backgroundColor": "#F8F5F1",
+  "usingComponents": {
+    "app-tab-bar": "../../components/app-tab-bar/index",
+    "t-button": "tdesign-miniprogram/button/button"
+  }
+}

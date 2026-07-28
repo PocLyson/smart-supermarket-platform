@@ -5,13 +5,14 @@
     "pages/cart/index",
     "pages/checkout/index",
     "pages/orders/index",
-    "pages/order-detail/index"
+    "pages/order-detail/index",
+    "pages/profile/index"
   ],
   "window": {
     "navigationBarTitleText": "智慧超市",
-    "navigationBarBackgroundColor": "#DC2626",
+    "navigationBarBackgroundColor": "#8E2F3F",
     "navigationBarTextStyle": "white",
-    "backgroundColor": "#FFF8F6",
+    "backgroundColor": "#F8F5F1",
     "backgroundTextStyle": "dark"
   },
   "style": "v2",

@@ -31,4 +31,5 @@
     </view>
     <button class="button-primary checkout-button" bindtap="onCheckout">去结算</button>
   </view>
+  <app-tab-bar value="cart" />
 </view>

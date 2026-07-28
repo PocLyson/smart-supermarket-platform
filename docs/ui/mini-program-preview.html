@@ -3,17 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>鲁能智慧超市小程序 · UI UX Pro Max 红色方案</title>
+    <title>鲁能智慧超市小程序 · 统一酒红方案</title>
     <style>
       * { box-sizing: border-box; }
       :root {
-        --red: #dc2626;
-        --red-deep: #991b1b;
-        --red-soft: #fee2e2;
-        --warm: #fff8f6;
-        --ink: #2b1919;
-        --muted: #806a6a;
-        --line: #f5deda;
+        --red: #8e2f3f;
+        --red-deep: #5e1d2b;
+        --red-soft: #f5e7ea;
+        --warm: #f8f5f1;
+        --ink: #292326;
+        --muted: #776e72;
+        --line: #e7dfe1;
         --gold: #a16207;
       }
       body {
@@ -21,7 +21,7 @@
         min-height: 100vh;
         padding: 36px 20px;
         background:
-          radial-gradient(circle at 15% 15%, rgba(220, 38, 38, .10), transparent 26%),
+          radial-gradient(circle at 15% 15%, rgba(142, 47, 63, .12), transparent 26%),
           #f7f2f0;
         color: var(--ink);
         font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
@@ -130,11 +130,26 @@
       .price { color: var(--red); font-size: 19px; font-weight: 800; }
       .unit { color: var(--muted); font-size: 9px; }
       .go { display: grid; width: 27px; height: 27px; border-radius: 50%; background: var(--red); color: #fff; place-items: center; font-size: 22px; line-height: 1; }
-      nav { position: absolute; right: 0; bottom: 0; left: 0; display: grid; height: 70px; padding: 8px 10px 10px; border-top: 1px solid var(--line); background: rgba(255,255,255,.97); grid-template-columns: repeat(4, 1fr); }
-      nav div { display: flex; color: #7d6c6c; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 10px; }
-      nav div:first-child { color: var(--red); font-weight: 700; }
+      nav { position: absolute; right: 0; bottom: 0; left: 0; display: grid; height: 70px; padding: 8px 8px 10px; border-top: 1px solid var(--line); background: rgba(255,255,255,.97); grid-template-columns: repeat(5, 1fr); }
+      nav button { display: flex; margin: 0; padding: 0; border: 0; background: transparent; color: #7d6c6c; font: inherit; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 10px; cursor: pointer; }
+      nav button.active { color: var(--red); font-weight: 700; }
       .nav-icon { width: 20px; height: 20px; border: 2px solid currentColor; border-radius: 7px; }
-      nav div:first-child .nav-icon { border-radius: 50% 50% 7px 7px; background: var(--red); }
+      nav button.active .nav-icon { border-color: var(--red); background: var(--red); }
+      .profile-view { display: none; min-height: 100%; background: var(--warm); }
+      .profile-view.active { display: block; }
+      .home-view.is-hidden { display: none; }
+      .profile-hero { display: flex; min-height: 170px; padding: 40px 18px 24px; background: var(--red); color: #fff; align-items: center; gap: 14px; }
+      .avatar { display: grid; width: 66px; height: 66px; flex: none; border: 2px solid rgba(255,255,255,.72); border-radius: 50%; background: rgba(255,255,255,.14); place-items: center; font-size: 25px; font-weight: 800; }
+      .profile-name { display: block; font-size: 20px; font-weight: 800; }
+      .profile-summary { display: block; margin-top: 5px; color: rgba(255,255,255,.78); font-size: 11px; }
+      .profile-content { padding: 14px; }
+      .profile-card { margin-bottom: 12px; padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: #fff; box-shadow: 0 3px 12px rgba(72,21,31,.05); }
+      .profile-card h3 { margin: 0; font-size: 16px; }
+      .profile-card p { margin: 6px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+      .profile-entry { display: flex; align-items: center; justify-content: space-between; }
+      .profile-entry b { color: var(--red); font-size: 25px; }
+      .profile-row { display: flex; min-height: 43px; border-top: 1px solid var(--line); align-items: center; justify-content: space-between; color: #665c60; font-size: 12px; }
+      .profile-card h3 + .profile-row { margin-top: 10px; }
       @media (max-width: 780px) {
         body { padding: 18px 0; }
         .stage { display: flex; flex-direction: column; align-items: center; gap: 24px; }
@@ -146,25 +161,26 @@
   <body>
     <div class="stage">
       <aside class="brief">
-        <div class="eyebrow">UI UX PRO MAX · RED RETAIL</div>
+        <div class="eyebrow">UI UX PRO MAX · BURGUNDY RETAIL</div>
         <h1>鲁能智慧超市<br />小程序视觉方案</h1>
-        <p>暖红色建立门店识别，米白背景降低长列表疲劳。商品和价格是视觉中心，服务承诺紧跟活动图，减少顾客对库存与取货方式的疑问。</p>
+        <p>全局统一使用酒红色建立门店识别，与活动图保持同一气质。底部补齐“我的”，形成五个清晰的一级入口。</p>
         <div class="palette">
-          <div class="swatch" style="background:#dc2626"></div>
-          <div class="swatch" style="background:#991b1b"></div>
-          <div class="swatch" style="background:#fff8f6"></div>
+          <div class="swatch" style="background:#8e2f3f"></div>
+          <div class="swatch" style="background:#5e1d2b"></div>
+          <div class="swatch" style="background:#f8f5f1"></div>
           <div class="swatch" style="background:#a16207"></div>
         </div>
         <div class="spec">
           <div><b>触控</b>最小 44px / 88rpx</div>
           <div><b>圆角</b>8 / 12 / 16px</div>
           <div><b>间距</b>4 / 8px 节奏</div>
-          <div><b>导航</b>4 个一级入口</div>
+          <div><b>导航</b>5 个一级入口</div>
         </div>
       </aside>
       <section class="phone" aria-label="小程序首页效果图">
         <div class="screen">
           <div class="status"><span>9:41</span><span>● ●●</span></div>
+          <div id="homeView" class="home-view">
           <header>
             <div class="store">
               <div class="store-name"><span class="pin"></span>鲁能超市李老家分店</div>
@@ -186,15 +202,54 @@
               <div class="category"><img src="/mini/miniprogram/assets/categories/grain-oil.jpg" alt="" />粮油日用</div>
               <div class="category"><img src="/mini/miniprogram/assets/categories/beverages.jpg" alt="" />水饮专区</div>
             </div>
-            <div class="section-head"><b>精选好物</b><span style="color:#dc2626">到店自取 放心选购</span></div>
+            <div class="section-head"><b>精选好物</b><span style="color:var(--red)">到店自取 放心选购</span></div>
             <div class="products">
               <article class="product"><img src="/mini/miniprogram/assets/categories/dairy.jpg" alt="" /><div class="product-body"><span class="product-name">纯牛奶 250ml</span><span class="deal">今日好价</span><div class="product-foot"><div><span class="price">¥3.20</span><span class="unit">/盒</span></div><span class="go">›</span></div></div></article>
               <article class="product"><img src="/mini/miniprogram/assets/categories/snacks.jpg" alt="" /><div class="product-body"><span class="product-name">原味薯片 70g</span><span class="deal">今日好价</span><div class="product-foot"><div><span class="price">¥6.50</span><span class="unit">/袋</span></div><span class="go">›</span></div></div></article>
             </div>
           </main>
+          </div>
+          <div id="profileView" class="profile-view">
+            <div class="profile-hero">
+              <div class="avatar">我</div>
+              <div><span class="profile-name">李先生</span><span class="profile-summary">138****8000</span></div>
+            </div>
+            <div class="profile-content">
+              <div class="profile-card profile-entry"><div><h3>我的订单</h3><p>查看备货、付款和取货状态</p></div><b>›</b></div>
+              <div class="profile-card">
+                <h3>默认取货信息</h3>
+                <div class="profile-row"><span>取货人</span><span>李先生</span></div>
+                <div class="profile-row"><span>手机号</span><span>138****8000</span></div>
+              </div>
+              <div class="profile-card">
+                <h3>门店服务</h3>
+                <div class="profile-row"><span>当前门店</span><span>鲁能超市李老家分店</span></div>
+                <div class="profile-row"><span>取货方式</span><span>到店自取</span></div>
+              </div>
+            </div>
+          </div>
         </div>
-        <nav><div><span class="nav-icon"></span>首页</div><div><span class="nav-icon"></span>分类</div><div><span class="nav-icon"></span>购物车</div><div><span class="nav-icon"></span>订单</div></nav>
+        <nav>
+          <button class="active" data-view="home"><span class="nav-icon"></span>首页</button>
+          <button data-view="home"><span class="nav-icon"></span>分类</button>
+          <button data-view="home"><span class="nav-icon"></span>购物车</button>
+          <button data-view="home"><span class="nav-icon"></span>订单</button>
+          <button data-view="profile"><span class="nav-icon"></span>我的</button>
+        </nav>
       </section>
     </div>
+    <script>
+      const homeView = document.querySelector("#homeView");
+      const profileView = document.querySelector("#profileView");
+      document.querySelectorAll("nav button").forEach((button) => {
+        button.addEventListener("click", () => {
+          document.querySelectorAll("nav button").forEach((item) => item.classList.remove("active"));
+          button.classList.add("active");
+          const showProfile = button.dataset.view === "profile";
+          homeView.classList.toggle("is-hidden", showProfile);
+          profileView.classList.toggle("active", showProfile);
+        });
+      });
+    </script>
   </body>
 </html>
