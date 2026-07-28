@@ -1,6 +1,36 @@
 import { createHttpClient, NetworkUncertainError } from '../miniprogram/services/http'
 
 describe('mini HTTP client', () => {
+  it('omits undefined query values before sending a GET request', async () => {
+    let sentData: unknown
+    const client = createHttpClient({
+      apiBaseUrl: () => 'https://api.test',
+      showError: vi.fn(),
+      onUnauthorized: vi.fn(),
+      transport: (options) => {
+        sentData = options.data
+        options.success({
+          statusCode: 200,
+          data: {
+            code: 'OK',
+            message: '成功',
+            requestId: 'request-query',
+            data: [],
+          },
+        })
+      },
+    })
+
+    await client.get('/api/mini/products', {
+      categoryId: undefined,
+      keyword: undefined,
+      page: 1,
+      size: 10,
+    })
+
+    expect(sentData).toStrictEqual({ page: 1, size: 10 })
+  })
+
   it('rejects a malformed backend response instead of leaving the request pending', async () => {
     const showError = vi.fn()
     const client = createHttpClient({

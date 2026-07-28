@@ -60,6 +60,15 @@ const isApiResponse = (value: unknown): value is ApiResponse<unknown> => {
   )
 }
 
+const compactQuery = (
+  query?: Record<string, unknown>,
+): Record<string, unknown> | undefined => {
+  if (!query) return undefined
+  return Object.fromEntries(
+    Object.entries(query).filter(([, value]) => value !== undefined),
+  )
+}
+
 export const createHttpClient = (
   dependencies: HttpClientDependencies,
 ): HttpClient => {
@@ -126,7 +135,7 @@ export const createHttpClient = (
       path: string,
       query?: Record<string, unknown>,
       headers?: Record<string, string>,
-    ) => request<T>(path, 'GET', query, headers),
+    ) => request<T>(path, 'GET', compactQuery(query), headers),
     post: <T>(
       path: string,
       data?: unknown,
