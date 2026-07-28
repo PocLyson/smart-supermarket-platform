@@ -60,9 +60,35 @@
   --td-search-square-radius: var(--radius-sm);
 }
 
-.home-search {
+.search-field {
+  display: flex;
   min-width: 0;
   flex: 1;
+  align-items: center;
+}
+
+.search-input-wrap {
+  min-width: 0;
+  flex: 1;
+}
+
+.home-search {
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.search-clear {
+  display: flex;
+  flex: none;
+  width: 56rpx;
+  height: 56rpx;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-clear-icon {
+  width: 36rpx;
+  height: 36rpx;
 }
 
 .search-button {

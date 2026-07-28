@@ -9,13 +9,22 @@
     </view>
 
     <view class="search-card">
-      <t-search
-        t-class="home-search"
-        value="{{keyword}}"
-        placeholder="搜索店内商品"
-        bind:change="onKeywordInput"
-        bind:submit="onSearch"
-      />
+      <view class="search-field">
+        <view class="search-input-wrap">
+          <t-search
+            t-class="home-search"
+            value="{{keyword}}"
+            left-icon="/assets/icons/search.svg"
+            clearable="{{false}}"
+            placeholder="搜索店内商品"
+            bind:change="onKeywordInput"
+            bind:submit="onSearch"
+          />
+        </view>
+        <view wx:if="{{keyword}}" class="search-clear" role="button" aria-label="清空搜索内容" bindtap="onClearSearch">
+          <image class="search-clear-icon" src="/assets/icons/close-circle.svg" mode="aspectFit" />
+        </view>
+      </view>
       <t-button t-class="search-button" theme="primary" size="medium" bind:tap="onSearch">搜索</t-button>
     </view>
   </view>

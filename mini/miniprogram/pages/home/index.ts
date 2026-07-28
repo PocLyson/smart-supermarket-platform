@@ -91,6 +91,11 @@ Page({
     void this.loadProducts(true)
   },
 
+  onClearSearch() {
+    this.setData({ keyword: '' })
+    void this.loadProducts(true)
+  },
+
   onCategoryNav() {
     wx.pageScrollTo({
       selector: '#category-section',

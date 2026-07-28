@@ -120,6 +120,15 @@ docker compose \
 
 种子脚本创建 30 个上架商品及线上库存。随后必须在后台核对价格、图片和实际可售数量。
 
+在 Windows PowerShell 中不要通过 `Get-Content ... | mysql` 导入含中文的 SQL。应先把原始 UTF-8 文件复制进容器，再让容器内的 MySQL 客户端读取：
+
+```powershell
+docker compose -f deploy/compose.production.yaml --env-file deploy/.env.production `
+  cp database/seed/010_trial_catalog.sql mysql:/tmp/010_trial_catalog.sql
+docker compose -f deploy/compose.production.yaml --env-file deploy/.env.production `
+  exec -T mysql sh -lc 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE" -e "source /tmp/010_trial_catalog.sql"'
+```
+
 ## 7. HTTPS 与安全检查
 
 ```bash

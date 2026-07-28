@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
+    "postinstall": "node scripts/remove-tdesign-font-face.mjs",
     "test": "vitest",
     "typecheck": "tsc --noEmit"
   },

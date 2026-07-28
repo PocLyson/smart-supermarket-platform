@@ -39,6 +39,13 @@ $env:DB_URL = "jdbc:mysql://localhost:3307/smart_store"
 
 服务端支持通过环境变量覆盖数据库、Redis、JWT、微信登录和上传目录配置。生产环境必须设置强随机 `JWT_SECRET`、数据库密码、Redis 密码，并配置真实微信凭据。
 
+首次准备本地试营业商品时，请让 MySQL 在容器内直接读取 UTF-8 文件。不要使用 PowerShell 的 `Get-Content ... | mysql` 文本管道，它可能把中文替换为问号。
+
+```powershell
+docker compose cp database/seed/010_trial_catalog.sql mysql:/tmp/010_trial_catalog.sql
+docker compose exec -T mysql mysql -uroot -proot_dev_only smart_store -e "source /tmp/010_trial_catalog.sql"
+```
+
 ## 测试
 
 ```powershell

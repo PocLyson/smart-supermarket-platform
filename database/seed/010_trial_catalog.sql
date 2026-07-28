@@ -1,4 +1,5 @@
 -- Run once after Flyway migration on a disposable or freshly initialized trial database.
+SET NAMES utf8mb4;
 START TRANSACTION;
 
 INSERT INTO category(name, sort_order, enabled) VALUES ('乳品饮料', 10, TRUE);
