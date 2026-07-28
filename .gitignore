@@ -15,3 +15,8 @@ mini/node_modules/
 uploads/
 backups/
 *.log
+
+deploy/.env.production
+deploy/.env.*.local
+deploy/certs/
+deploy/backups/
