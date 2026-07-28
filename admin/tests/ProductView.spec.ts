@@ -97,4 +97,32 @@ describe('product money and editor behavior', () => {
     )
     expect(wrapper.text()).toContain('图片上传完成后才能关闭编辑器')
   })
+
+  it('renders a mobile product card and recovers from a broken thumbnail', async () => {
+    vi.mocked(catalogApi.listProducts).mockResolvedValueOnce({
+      items: [
+        {
+          id: 1,
+          name: '蒙牛纯牛奶 250ml',
+          categoryId: 1,
+          categoryName: '乳品',
+          priceCent: 590,
+          unit: '盒',
+          coverImageUrl: '/files/milk.webp',
+          description: '',
+          onShelf: true,
+          updatedAt: '2026-07-28T10:00:00Z',
+        },
+      ],
+      page: 0,
+      size: 20,
+      total: 1,
+    })
+    const wrapper = mount(ProductView)
+    await flushPromises()
+
+    expect(wrapper.find('[data-test="product-mobile-list"]').exists()).toBe(true)
+    await wrapper.get('[data-test="product-image-1"]').trigger('error')
+    expect(wrapper.find('[data-test="product-image-fallback-1"]').exists()).toBe(true)
+  })
 })

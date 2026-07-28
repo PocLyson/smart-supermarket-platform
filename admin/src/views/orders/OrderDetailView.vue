@@ -16,12 +16,16 @@ import { centToYuan } from '@/utils/money'
 import { reportUnexpectedError } from '@/utils/errors'
 import { formatDateTime } from '@/utils/date'
 import { orderStatusLabel, paymentStatusLabel } from './orderPresentation'
+import UiStatePanel from '@/components/UiStatePanel.vue'
+import AppIcon from '@/components/AppIcon.vue'
+import { ElMessage } from 'element-plus'
 
 type MutationKind = 'accept' | 'reject' | 'ready' | 'pay' | 'complete' | 'cancel'
 
 const props = defineProps<{ orderNo: string }>()
 const order = ref<AdminOrderDetail>()
 const loading = ref(false)
+const loadError = ref('')
 const dialogVisible = ref(false)
 const pending = ref(false)
 const mutationError = ref('')
@@ -50,9 +54,11 @@ const actorLabel = (actorType: 'CUSTOMER' | 'STAFF' | 'SYSTEM', actorId: number)
 
 const load = async (): Promise<void> => {
   loading.value = true
+  loadError.value = ''
   try {
     order.value = await getOrder(props.orderNo)
   } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '订单详情加载失败'
     reportUnexpectedError(error, '订单详情加载失败')
   } finally {
     loading.value = false
@@ -79,12 +85,12 @@ const executeMutation = async (): Promise<void> => {
     if (form.kind === 'accept') await acceptOrder(orderNo)
     else if (form.kind === 'reject') await rejectOrder(orderNo, { reason: form.reason.trim() })
     else if (form.kind === 'ready') await markOrderReady(orderNo)
-    else if (form.kind === 'pay')
-      await markOrderPaid(orderNo, { method: form.paymentMethod })
+    else if (form.kind === 'pay') await markOrderPaid(orderNo, { method: form.paymentMethod })
     else if (form.kind === 'complete') await completeOrder(orderNo)
     else await cancelOrder(orderNo, { reason: form.reason.trim() })
     dialogVisible.value = false
     await load()
+    ElMessage.success(`${actionMeta[form.kind].title}已完成`)
   } catch (error) {
     mutationError.value =
       error instanceof ApiError || error instanceof Error ? error.message : '操作失败'
@@ -100,7 +106,10 @@ onMounted(load)
   <section v-loading="loading" class="page-stack">
     <header class="page-header">
       <div>
-        <RouterLink to="/orders">← 返回订单</RouterLink>
+        <RouterLink class="back-link" to="/orders">
+          <AppIcon name="chevron-left" />返回订单列表
+        </RouterLink>
+        <p class="page-kicker">订单履约</p>
         <h1>订单 {{ props.orderNo }}</h1>
       </div>
       <div v-if="order" class="toolbar">
@@ -144,7 +153,17 @@ onMounted(load)
       </div>
     </header>
 
-    <template v-if="order">
+    <UiStatePanel
+      v-if="!loading && loadError"
+      class="surface-card"
+      kind="error"
+      title="订单详情加载失败"
+      :description="loadError"
+      action-label="重新加载"
+      @action="load"
+    />
+
+    <template v-if="!loading && order">
       <div class="summary-grid">
         <article class="surface-card">
           <span>订单状态</span>
@@ -171,32 +190,88 @@ onMounted(load)
           <strong>¥{{ centToYuan(order.totalCent) }}</strong>
         </article>
       </div>
-      <div class="surface-card">
-        <h2>商品明细</h2>
-        <el-table :data="order.items">
-          <el-table-column prop="productName" label="商品" />
-          <el-table-column prop="unit" label="单位" width="90" />
-          <el-table-column label="单价" width="120">
-            <template #default="{ row }">¥{{ centToYuan(row.unitPriceCent) }}</template>
-          </el-table-column>
-          <el-table-column prop="quantity" label="数量" width="90" />
-          <el-table-column label="小计" width="120">
-            <template #default="{ row }">¥{{ centToYuan(row.subtotalCent) }}</template>
-          </el-table-column>
-        </el-table>
-      </div>
-      <div class="surface-card">
-        <h2>状态记录</h2>
-        <el-timeline>
-          <el-timeline-item
-            v-for="item in order.history"
-            :key="`${item.toStatus}-${item.createdAt}`"
-            :timestamp="formatDateTime(item.createdAt)"
-          >
-            {{ orderStatusLabel[item.toStatus] }} · {{ actorLabel(item.actorType, item.actorId) }}
-            <p v-if="item.remark">{{ item.remark }}</p>
-          </el-timeline-item>
-        </el-timeline>
+      <div class="detail-grid">
+        <div class="surface-card detail-main">
+          <div class="section-heading">
+            <div>
+              <h2>商品明细</h2>
+              <p>共 {{ order.items.length }} 种商品</p>
+            </div>
+          </div>
+          <div class="responsive-table has-mobile-cards">
+            <el-table :data="order.items">
+              <el-table-column prop="productName" label="商品" />
+              <el-table-column prop="unit" label="单位" width="90" />
+              <el-table-column label="单价" width="120">
+                <template #default="{ row }">¥{{ centToYuan(row.unitPriceCent) }}</template>
+              </el-table-column>
+              <el-table-column prop="quantity" label="数量" width="90" />
+              <el-table-column label="小计" width="120">
+                <template #default="{ row }">¥{{ centToYuan(row.subtotalCent) }}</template>
+              </el-table-column>
+            </el-table>
+          </div>
+          <div class="mobile-card-list order-item-cards" data-test="order-item-mobile-list">
+            <article v-for="item in order.items" :key="item.productId" class="mobile-data-card">
+              <div class="mobile-data-card__header">
+                <strong>{{ item.productName }}</strong>
+                <span class="price-text">¥{{ centToYuan(item.subtotalCent) }}</span>
+              </div>
+              <div class="mobile-data-card__row mobile-data-card__meta">
+                <span>¥{{ centToYuan(item.unitPriceCent) }} / {{ item.unit }}</span>
+                <span>× {{ item.quantity }}</span>
+              </div>
+            </article>
+          </div>
+          <dl class="amount-summary">
+            <div>
+              <dt>订单合计</dt>
+              <dd>¥{{ centToYuan(order.totalCent) }}</dd>
+            </div>
+          </dl>
+        </div>
+        <div class="surface-card detail-side">
+          <h2>取货信息</h2>
+          <dl class="info-list">
+            <div>
+              <dt>取货门店</dt>
+              <dd>鲁能超市李老家分店</dd>
+            </div>
+            <div>
+              <dt>取货人</dt>
+              <dd>{{ order.pickupName }}</dd>
+            </div>
+            <div>
+              <dt>手机号</dt>
+              <dd>{{ order.phone }}</dd>
+            </div>
+            <div>
+              <dt>下单时间</dt>
+              <dd>{{ formatDateTime(order.createdAt) }}</dd>
+            </div>
+            <div v-if="order.paymentMethod">
+              <dt>付款方式</dt>
+              <dd>{{ order.paymentMethod === 'CASH' ? '现金' : '门店微信收款码' }}</dd>
+            </div>
+            <div v-if="order.cancelReason">
+              <dt>取消原因</dt>
+              <dd>{{ order.cancelReason }}</dd>
+            </div>
+          </dl>
+        </div>
+        <div class="surface-card detail-history">
+          <h2>状态记录</h2>
+          <el-timeline>
+            <el-timeline-item
+              v-for="item in order.history"
+              :key="`${item.toStatus}-${item.createdAt}`"
+              :timestamp="formatDateTime(item.createdAt)"
+            >
+              {{ orderStatusLabel[item.toStatus] }} · {{ actorLabel(item.actorType, item.actorId) }}
+              <p v-if="item.remark">{{ item.remark }}</p>
+            </el-timeline-item>
+          </el-timeline>
+        </div>
       </div>
     </template>
 
@@ -205,28 +280,35 @@ onMounted(load)
       :teleported="false"
       :title="actionMeta[form.kind].title"
       width="500"
+      style="--dialog-width: 500px"
     >
       <p>
         订单 <strong>{{ props.orderNo }}</strong> 将变更为
         <strong>{{ actionMeta[form.kind].nextState }}</strong>
       </p>
       <div v-if="requiresReason" class="form-field">
-        <label>原因</label>
-        <textarea v-model="form.reason" data-test="order-mutation-reason" class="text-control" />
+        <label for="order-reason">原因</label>
+        <textarea
+          id="order-reason"
+          v-model="form.reason"
+          data-test="order-mutation-reason"
+          class="text-control"
+        />
+        <p class="helper-text">原因会保留在订单状态记录中，请填写便于追溯的说明。</p>
       </div>
       <div v-if="form.kind === 'pay'" class="form-field">
-        <label>付款方式</label>
-        <select v-model="form.paymentMethod" class="text-control">
+        <label for="payment-method">付款方式</label>
+        <select id="payment-method" v-model="form.paymentMethod" class="text-control">
           <option value="CASH">现金</option>
           <option value="WECHAT_QR">门店微信收款码</option>
         </select>
       </div>
-      <p v-if="mutationError" class="error-text">{{ mutationError }}</p>
+      <p v-if="mutationError" class="inline-alert" role="alert">{{ mutationError }}</p>
       <template #footer>
         <el-button :disabled="pending" @click="dialogVisible = false">取消</el-button>
         <el-button
           data-test="order-mutation-submit"
-          type="primary"
+          :type="form.kind === 'reject' || form.kind === 'cancel' ? 'danger' : 'primary'"
           :loading="pending"
           :disabled="pending"
           @click="executeMutation"
@@ -255,9 +337,96 @@ onMounted(load)
   font-size: 13px;
 }
 
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+  text-decoration: none;
+}
+.detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  gap: var(--space-4);
+}
+.detail-main {
+  grid-column: 1;
+}
+.detail-side {
+  grid-column: 2;
+}
+.detail-history {
+  grid-column: 1 / -1;
+}
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.section-heading h2 {
+  margin-bottom: 0;
+}
+.section-heading p {
+  margin: var(--space-1) 0 var(--space-4);
+  color: var(--color-text-secondary);
+}
+.amount-summary {
+  margin: 0;
+  padding: var(--space-4) 0 0;
+  border-top: 1px solid var(--color-divider);
+}
+.amount-summary div {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-6);
+}
+.amount-summary dd {
+  margin: 0;
+  color: var(--primary-800);
+  font-size: var(--font-size-data);
+  font-weight: 700;
+}
+.info-list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+}
+.info-list div {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-divider);
+}
+.info-list div:last-child {
+  border-bottom: 0;
+}
+.info-list dt {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-helper);
+}
+.info-list dd {
+  margin: 0;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 960px) {
   .summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+  .detail-main,
+  .detail-side,
+  .detail-history {
+    grid-column: 1;
+  }
+}
+@media (max-width: 560px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

@@ -23,44 +23,50 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: '',
-        redirect: () => {
-          const auth = useAuthStore()
-          return auth.isOwner ? '/products' : '/orders'
-        },
+        redirect: '/orders',
       },
       {
         path: 'products',
         component: () => import('@/views/catalog/ProductView.vue'),
-        meta: { ownerOnly: true },
+        meta: { ownerOnly: true, title: '商品管理' },
       },
       {
         path: 'categories',
         component: () => import('@/views/catalog/CategoryView.vue'),
-        meta: { ownerOnly: true },
+        meta: { ownerOnly: true, title: '分类管理' },
       },
       {
         path: 'inventory',
         component: () => import('@/views/inventory/InventoryView.vue'),
-        meta: { ownerOnly: true },
+        meta: { ownerOnly: true, title: '线上库存' },
       },
       {
         path: 'orders',
+        name: 'orders',
         component: () => import('@/views/orders/OrderListView.vue'),
+        meta: { title: '订单管理' },
       },
       {
         path: 'orders/:orderNo',
         component: () => import('@/views/orders/OrderDetailView.vue'),
         props: true,
+        meta: { title: '订单详情' },
       },
       {
         path: 'staff',
         component: () => import('@/views/staff/StaffView.vue'),
-        meta: { ownerOnly: true },
+        meta: { ownerOnly: true, title: '员工账号' },
       },
       {
         path: 'audit',
         component: () => import('@/views/audit/AuditLogView.vue'),
-        meta: { ownerOnly: true },
+        meta: { ownerOnly: true, title: '操作审计' },
+      },
+      {
+        path: 'forbidden',
+        name: 'forbidden',
+        component: () => import('@/views/ForbiddenView.vue'),
+        meta: { title: '访问受限' },
       },
     ],
   },
@@ -81,7 +87,7 @@ export const createAdminRouter = (): Router => {
       (to.meta.ownerOnly || ownerOnlyRoutes.some((path) => to.path.startsWith(path))) &&
       !auth.isOwner
     ) {
-      return '/orders'
+      return '/forbidden'
     }
     return true
   })

@@ -24,7 +24,7 @@ describe('admin route permissions', () => {
       await router.push(path)
       await router.isReady()
 
-      expect(router.currentRoute.value.path).toBe('/orders')
+      expect(router.currentRoute.value.path).toBe('/forbidden')
     },
   )
 })

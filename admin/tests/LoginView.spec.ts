@@ -21,6 +21,8 @@ describe('LoginView', () => {
   it('blocks submission until username and password are present', async () => {
     const wrapper = mount(LoginView)
 
+    expect(wrapper.text()).toContain('鲁能超市李老家分店')
+    expect(wrapper.text()).not.toContain('智慧超市')
     await wrapper.get('form').trigger('submit')
 
     expect(wrapper.text()).toContain('请输入用户名')
@@ -43,5 +45,15 @@ describe('LoginView', () => {
     await flushPromises()
 
     expect(localStorage.getItem('smart-store-admin-session')).toContain('owner-token')
+  })
+
+  it('lets staff verify the password they entered', async () => {
+    const wrapper = mount(LoginView)
+    const password = wrapper.get('[data-test="login-password"]')
+
+    expect(password.attributes('type')).toBe('password')
+    await wrapper.get('[data-test="password-toggle"]').trigger('click')
+    expect(password.attributes('type')).toBe('text')
+    expect(wrapper.get('[data-test="password-toggle"]').attributes('aria-label')).toContain('隐藏')
   })
 })

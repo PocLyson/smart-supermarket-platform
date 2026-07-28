@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import {
   adjustInventory,
@@ -9,6 +9,8 @@ import {
 } from '@/api/inventory'
 import { reportUnexpectedError } from '@/utils/errors'
 import { formatDateTime } from '@/utils/date'
+import UiStatePanel from '@/components/UiStatePanel.vue'
+import AppIcon from '@/components/AppIcon.vue'
 
 const items = ref<InventoryItem[]>([])
 const dialogVisible = ref(false)
@@ -16,12 +18,26 @@ const pending = ref(false)
 const selected = ref<InventoryItem>()
 const form = reactive<{ delta: string; reason: string }>({ delta: '', reason: '' })
 const errorMessage = ref('')
+const loading = ref(false)
+const loadError = ref('')
+const keyword = ref('')
+const filteredItems = computed(() => {
+  const value = keyword.value.trim().toLowerCase()
+  return value
+    ? items.value.filter((item) => item.productName.toLowerCase().includes(value))
+    : items.value
+})
 
 const load = async (): Promise<void> => {
+  loading.value = true
+  loadError.value = ''
   try {
     items.value = (await listInventory()).items
   } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '库存加载失败'
     reportUnexpectedError(error, '库存加载失败')
+  } finally {
+    loading.value = false
   }
 }
 
@@ -65,32 +81,99 @@ onMounted(load)
   <section class="page-stack">
     <header class="page-header">
       <div>
+        <p class="page-kicker">商品与售卖</p>
         <h1>线上库存</h1>
         <p>此处仅管理小程序可售数量，不会自动同步线下收银库存。</p>
       </div>
+      <el-button :loading="loading" @click="load"><AppIcon name="refresh" />刷新库存</el-button>
     </header>
-    <div class="surface-card">
-      <el-table :data="items">
-        <el-table-column prop="productName" label="商品" min-width="200" />
-        <el-table-column label="可售库存" width="150">
-          <template #default="{ row }">{{ row.availableQuantity }} {{ row.unit }}</template>
-        </el-table-column>
-        <el-table-column label="更新时间" min-width="180">
-          <template #default="{ row }">{{ formatDateTime(row.updatedAt) }}</template>
-        </el-table-column>
-        <el-table-column label="操作" width="120">
-          <template #default="{ row }">
-            <el-button
-              :data-test="`adjust-${row.productId}`"
-              link
-              type="primary"
-              @click="openAdjustment(row)"
-            >
-              调整库存
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
+    <div class="inventory-note">
+      <strong>仅影响线上可售数量</strong>
+      <span>这里的调整不会同步线下收银库存；减少库存时请确认调整后数量不会小于 0。</span>
+    </div>
+    <form class="surface-card filter-panel" @submit.prevent>
+      <div class="filter-field is-wide">
+        <label for="inventory-keyword">查找商品</label>
+        <input
+          id="inventory-keyword"
+          v-model="keyword"
+          class="text-control"
+          placeholder="输入商品名称"
+        />
+      </div>
+      <div class="filter-actions">
+        <el-button native-type="button" :disabled="!keyword" @click="keyword = ''">清除</el-button>
+      </div>
+    </form>
+    <div class="surface-card data-region">
+      <div class="data-region__summary">
+        <span>共 {{ filteredItems.length }} 件商品</span><span>库存数量以商品单位计</span>
+      </div>
+      <div v-if="loading" class="skeleton-stack">
+        <div v-for="i in 8" :key="i" class="skeleton-row" />
+      </div>
+      <UiStatePanel
+        v-else-if="loadError"
+        kind="error"
+        title="库存加载失败"
+        :description="loadError"
+        action-label="重新加载"
+        @action="load"
+      />
+      <UiStatePanel
+        v-else-if="!filteredItems.length"
+        kind="empty"
+        :title="keyword ? '没有匹配的商品' : '还没有线上库存记录'"
+        :description="keyword ? '请尝试其他商品名称。' : '商品创建后会显示在这里。'"
+        :action-label="keyword ? '清除搜索' : '刷新'"
+        @action="keyword ? (keyword = '') : load()"
+      />
+      <div v-else class="responsive-table has-mobile-cards">
+        <el-table :data="filteredItems">
+          <el-table-column prop="productName" label="商品" min-width="200" />
+          <el-table-column label="可售库存" width="150" align="right">
+            <template #default="{ row }">
+              <strong class="stock-number">{{ row.availableQuantity }}</strong>
+              {{ row.unit }}
+            </template>
+          </el-table-column>
+          <el-table-column label="更新时间" min-width="180">
+            <template #default="{ row }">{{ formatDateTime(row.updatedAt) }}</template>
+          </el-table-column>
+          <el-table-column label="操作" width="120">
+            <template #default="{ row }">
+              <el-button
+                :data-test="`adjust-${row.productId}`"
+                link
+                type="primary"
+                @click="openAdjustment(row)"
+              >
+                调整库存
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+      <div
+        v-if="!loading && !loadError && filteredItems.length"
+        class="mobile-card-list"
+        data-test="inventory-mobile-list"
+      >
+        <article v-for="item in filteredItems" :key="item.productId" class="mobile-data-card">
+          <div class="mobile-data-card__header">
+            <strong>{{ item.productName }}</strong>
+            <span class="status-tag" data-status="COMPLETED">库存正常</span>
+          </div>
+          <div class="mobile-data-card__row">
+            <span class="mobile-data-card__meta">线上可售库存</span>
+            <strong class="stock-number">{{ item.availableQuantity }} {{ item.unit }}</strong>
+          </div>
+          <div class="mobile-data-card__footer">
+            <span class="mobile-data-card__meta">{{ formatDateTime(item.updatedAt) }}</span>
+            <el-button type="primary" @click="openAdjustment(item)">调整库存</el-button>
+          </div>
+        </article>
+      </div>
     </div>
     <el-dialog
       v-model="dialogVisible"
@@ -98,21 +181,33 @@ onMounted(load)
       width="480"
     >
       <div class="form-grid">
+        <div v-if="selected" class="current-stock">
+          <span>当前线上库存</span
+          ><strong>{{ selected.availableQuantity }} {{ selected.unit }}</strong>
+        </div>
         <div class="form-field">
-          <label>调整数量（增加填正数，减少填负数）</label>
+          <label for="adjust-delta">调整数量</label>
           <input
+            id="adjust-delta"
             v-model="form.delta"
             data-test="adjust-delta"
             class="text-control"
             type="number"
             step="1"
           />
+          <p class="helper-text">增加填正数，减少填负数，例如补货 10 件填写 10。</p>
         </div>
         <div class="form-field">
-          <label>调整原因</label>
-          <input v-model="form.reason" data-test="adjust-reason" class="text-control" />
+          <label for="adjust-reason">调整原因</label>
+          <input
+            id="adjust-reason"
+            v-model="form.reason"
+            data-test="adjust-reason"
+            class="text-control"
+            placeholder="例如：门店补货入库"
+          />
         </div>
-        <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
+        <p v-if="errorMessage" class="inline-alert" role="alert">{{ errorMessage }}</p>
       </div>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -123,3 +218,35 @@ onMounted(load)
     </el-dialog>
   </section>
 </template>
+
+<style scoped>
+.inventory-note {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--warning-border);
+  border-radius: var(--radius-md);
+  color: var(--warning-text);
+  background: var(--warning-bg);
+}
+.inventory-note span {
+  color: var(--color-text-secondary);
+}
+.stock-number {
+  font-size: var(--font-size-card-title);
+  font-variant-numeric: tabular-nums;
+}
+.current-stock {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-subtle);
+}
+@media (max-width: 760px) {
+  .inventory-note {
+    flex-direction: column;
+  }
+}
+</style>

@@ -124,4 +124,14 @@ describe('admin order workflow', () => {
       size: 20,
     })
   })
+
+  it('renders order cards on narrow screens and the formal pickup store on detail', async () => {
+    const list = mount(OrderListView)
+    await flushPromises()
+    expect(list.find('[data-test="order-mobile-list"]').exists()).toBe(true)
+
+    const detail = mount(OrderDetailView, { props: { orderNo: pendingOrder.orderNo } })
+    await flushPromises()
+    expect(detail.text()).toContain('鲁能超市李老家分店')
+  })
 })

@@ -24,6 +24,14 @@ vi.mock('@/api/audit', () => ({
 }))
 
 describe('AuditLogView', () => {
+  it('renders audit records as cards for narrow screens', async () => {
+    const wrapper = mount(AuditLogView)
+    await flushPromises()
+
+    expect(wrapper.find('[data-test="audit-mobile-list"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('更新商品')
+  })
+
   it('filters audit records by actor, action, and object type', async () => {
     const wrapper = mount(AuditLogView)
     await flushPromises()
