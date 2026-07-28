@@ -18,7 +18,7 @@ defineEmits<{ action: [] }>()
 <template>
   <section
     class="ui-state"
-    :class="{ 'is-compact': compact }"
+    :class="[`is-${props.kind}`, { 'is-compact': compact }]"
     :role="props.kind === 'error' ? 'alert' : 'status'"
     :aria-labelledby="`state-${props.kind}-title`"
   >

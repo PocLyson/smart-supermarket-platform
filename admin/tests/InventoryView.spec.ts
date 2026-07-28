@@ -22,6 +22,14 @@ vi.mock('@/api/inventory', () => ({
 }))
 
 describe('InventoryView', () => {
+  it('renders inventory as cards for narrow screens', async () => {
+    const wrapper = mount(InventoryView)
+    await flushPromises()
+
+    expect(wrapper.find('[data-test="inventory-mobile-list"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('纯牛奶')
+  })
+
   it('submits stock adjustment in whole units', async () => {
     const wrapper = mount(InventoryView)
     await flushPromises()

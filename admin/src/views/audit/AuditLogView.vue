@@ -167,7 +167,7 @@ onMounted(load)
         action-label="清除筛选"
         @action="reset"
       />
-      <div v-else class="responsive-table">
+      <div v-else class="responsive-table has-mobile-cards">
         <el-table :data="items">
           <el-table-column label="时间" min-width="180">
             <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
@@ -190,6 +190,26 @@ onMounted(load)
           </el-table-column>
           <el-table-column prop="requestId" label="请求 ID" min-width="180" />
         </el-table>
+      </div>
+      <div
+        v-if="!loading && !loadError && items.length"
+        class="mobile-card-list"
+        data-test="audit-mobile-list"
+      >
+        <article v-for="item in items" :key="item.requestId" class="mobile-data-card">
+          <div class="mobile-data-card__header">
+            <strong>{{ actionLabels[item.action] ?? item.action }}</strong>
+            <span class="mobile-data-card__meta">{{ formatDateTime(item.createdAt) }}</span>
+          </div>
+          <div class="mobile-data-card__row">
+            <span>{{ actorLabel(item) }}</span>
+            <span>
+              {{ objectLabels[item.objectType] ?? item.objectType }} · {{ item.objectId }}
+            </span>
+          </div>
+          <span>{{ summaryLabels[item.resultSummary] ?? item.resultSummary }}</span>
+          <span class="mobile-data-card__meta">请求 ID：{{ item.requestId }}</span>
+        </article>
       </div>
       <div v-if="!loading && !loadError && total > 0" class="pagination-bar">
         <span>第 {{ page }} 页，每页 {{ pageSize }} 条</span>

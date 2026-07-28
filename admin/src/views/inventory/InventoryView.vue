@@ -128,7 +128,7 @@ onMounted(load)
         :action-label="keyword ? '清除搜索' : '刷新'"
         @action="keyword ? (keyword = '') : load()"
       />
-      <div v-else class="responsive-table">
+      <div v-else class="responsive-table has-mobile-cards">
         <el-table :data="filteredItems">
           <el-table-column prop="productName" label="商品" min-width="200" />
           <el-table-column label="可售库存" width="150" align="right">
@@ -153,6 +153,26 @@ onMounted(load)
             </template>
           </el-table-column>
         </el-table>
+      </div>
+      <div
+        v-if="!loading && !loadError && filteredItems.length"
+        class="mobile-card-list"
+        data-test="inventory-mobile-list"
+      >
+        <article v-for="item in filteredItems" :key="item.productId" class="mobile-data-card">
+          <div class="mobile-data-card__header">
+            <strong>{{ item.productName }}</strong>
+            <span class="status-tag" data-status="COMPLETED">库存正常</span>
+          </div>
+          <div class="mobile-data-card__row">
+            <span class="mobile-data-card__meta">线上可售库存</span>
+            <strong class="stock-number">{{ item.availableQuantity }} {{ item.unit }}</strong>
+          </div>
+          <div class="mobile-data-card__footer">
+            <span class="mobile-data-card__meta">{{ formatDateTime(item.updatedAt) }}</span>
+            <el-button type="primary" @click="openAdjustment(item)">调整库存</el-button>
+          </div>
+        </article>
       </div>
     </div>
     <el-dialog

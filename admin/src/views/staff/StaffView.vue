@@ -165,7 +165,7 @@ onMounted(load)
         :action-label="keyword || statusFilter ? '清除筛选' : '新增收银员'"
         @action="handleEmptyAction"
       />
-      <div v-else class="responsive-table">
+      <div v-else class="responsive-table has-mobile-cards">
         <el-table :data="filteredItems">
           <el-table-column prop="username" label="用户名" />
           <el-table-column label="角色" width="120">
@@ -204,6 +204,30 @@ onMounted(load)
             </template>
           </el-table-column>
         </el-table>
+      </div>
+      <div
+        v-if="!loading && !loadError && filteredItems.length"
+        class="mobile-card-list"
+        data-test="staff-mobile-list"
+      >
+        <article v-for="staff in filteredItems" :key="staff.id" class="mobile-data-card">
+          <div class="mobile-data-card__header">
+            <strong>{{ staff.username }}</strong>
+            <el-tag :type="staff.enabled ? 'success' : 'info'">
+              {{ staff.enabled ? '启用' : '停用' }}
+            </el-tag>
+          </div>
+          <div class="mobile-data-card__row">
+            <span>{{ staff.role === 'OWNER' ? '老板' : '收银员' }}</span>
+            <span class="mobile-data-card__meta">{{ formatDateTime(staff.lastLoginAt) }}</span>
+          </div>
+          <div v-if="staff.role === 'CASHIER'" class="mobile-data-card__footer">
+            <el-button @click="toggleEnabled(staff)">
+              <span>{{ staff.enabled ? '停用' : '启用' }}</span>
+            </el-button>
+            <el-button type="primary" @click="resetPassword(staff)">重置密码</el-button>
+          </div>
+        </article>
       </div>
     </div>
     <el-dialog v-model="dialogVisible" :teleported="false" title="新增收银员" width="480">

@@ -42,6 +42,7 @@ const page = ref(1)
 const pageSize = 20
 const filters = reactive({ keyword: '', categoryId: '', shelf: '' })
 const productFormRef = ref<FormInstance>()
+const brokenImageIds = ref<Set<number>>(new Set())
 const form = reactive<ProductForm>({
   name: '',
   categoryId: '',
@@ -109,6 +110,10 @@ const reset = async (): Promise<void> => {
 const changePage = async (value: number): Promise<void> => {
   page.value = value
   await load()
+}
+
+const markImageBroken = (productId: number): void => {
+  brokenImageIds.value = new Set(brokenImageIds.value).add(productId)
 }
 
 const openEditor = (product?: Product): void => {
@@ -289,18 +294,28 @@ onMounted(load)
         "
         @action="filters.keyword || filters.categoryId || filters.shelf ? reset() : openEditor()"
       />
-      <div v-else class="responsive-table">
+      <div v-else class="responsive-table has-mobile-cards">
         <el-table :data="products">
           <el-table-column label="商品" min-width="220">
             <template #default="{ row }">
               <div class="product-cell">
                 <img
-                  v-if="row.coverImageUrl"
+                  v-if="row.coverImageUrl && !brokenImageIds.has(row.id)"
                   :src="row.coverImageUrl"
-                  alt=""
+                  :alt="`${row.name}商品缩略图`"
                   width="44"
                   height="44"
+                  :data-test="`product-image-${row.id}`"
+                  @error="markImageBroken(row.id)"
                 />
+                <span
+                  v-else
+                  class="product-image-fallback"
+                  :data-test="`product-image-fallback-${row.id}`"
+                  aria-label="商品图片暂不可用"
+                >
+                  <AppIcon name="products" :size="20" />
+                </span>
                 <div>
                   <strong>{{ row.name }}</strong
                   ><span>{{ row.unit }}</span>
@@ -328,6 +343,42 @@ onMounted(load)
             </template>
           </el-table-column>
         </el-table>
+      </div>
+      <div
+        v-if="!loading && !loadError && products.length"
+        class="mobile-card-list"
+        data-test="product-mobile-list"
+      >
+        <article v-for="product in products" :key="product.id" class="mobile-data-card">
+          <div class="product-mobile-card__main">
+            <img
+              v-if="product.coverImageUrl && !brokenImageIds.has(product.id)"
+              :src="product.coverImageUrl"
+              :alt="`${product.name}商品缩略图`"
+              width="64"
+              height="64"
+              @error="markImageBroken(product.id)"
+            />
+            <span v-else class="product-image-fallback" aria-label="商品图片暂不可用">
+              <AppIcon name="products" :size="24" />
+            </span>
+            <div>
+              <div class="mobile-data-card__header">
+                <strong>{{ product.name }}</strong>
+                <el-tag :type="product.onShelf ? 'success' : 'info'">
+                  {{ product.onShelf ? '已上架' : '已下架' }}
+                </el-tag>
+              </div>
+              <span class="mobile-data-card__meta">
+                {{ product.categoryName }} · {{ product.unit }}
+              </span>
+              <div class="product-mobile-card__price">
+                <span class="price-text">¥{{ centToYuan(product.priceCent) }}</span>
+                <el-button link type="primary" @click="openEditor(product)">编辑</el-button>
+              </div>
+            </div>
+          </div>
+        </article>
       </div>
       <div v-if="!loading && !loadError && total > 0" class="pagination-bar">
         <span>第 {{ page }} 页，每页 {{ pageSize }} 条</span>
@@ -424,6 +475,45 @@ onMounted(load)
   border: 1px solid var(--color-divider);
   border-radius: var(--radius-sm);
   object-fit: cover;
+}
+
+.product-image-fallback {
+  display: grid;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  color: var(--color-text-tertiary);
+  background: var(--color-bg-subtle);
+  place-items: center;
+}
+
+.product-mobile-card__main {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+.product-mobile-card__main > img,
+.product-mobile-card__main > .product-image-fallback {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+}
+
+.product-mobile-card__main > div {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.product-mobile-card__price {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
 }
 .product-cell div {
   display: grid;

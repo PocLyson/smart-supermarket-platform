@@ -189,7 +189,7 @@ onMounted(load)
         "
         @action="filters.status || filters.paymentStatus || filters.keyword ? reset() : load()"
       />
-      <div v-else class="responsive-table">
+      <div v-else class="responsive-table has-mobile-cards">
         <el-table :data="items">
           <el-table-column prop="orderNo" label="订单号" min-width="160" />
           <el-table-column label="下单时间" min-width="150">
@@ -222,6 +222,29 @@ onMounted(load)
             </template>
           </el-table-column>
         </el-table>
+      </div>
+      <div
+        v-if="!loading && !loadError && items.length"
+        class="mobile-card-list"
+        data-test="order-mobile-list"
+      >
+        <article v-for="order in items" :key="order.orderNo" class="mobile-data-card">
+          <div class="mobile-data-card__header">
+            <strong>{{ order.orderNo }}</strong>
+            <span class="status-tag" :data-status="order.status">
+              {{ statusText(order.status) }}
+            </span>
+          </div>
+          <div class="mobile-data-card__row">
+            <span>{{ order.pickupName }}</span>
+            <span class="price-text">¥{{ centToYuan(order.totalCent) }}</span>
+          </div>
+          <span class="mobile-data-card__meta"> {{ order.phone }} · 鲁能超市李老家分店 </span>
+          <div class="mobile-data-card__footer">
+            <span class="mobile-data-card__meta">{{ formatDateTime(order.createdAt) }}</span>
+            <RouterLink :to="`/orders/${order.orderNo}`">查看详情</RouterLink>
+          </div>
+        </article>
       </div>
       <div v-if="!loading && !loadError && total > 0" class="pagination-bar">
         <span>第 {{ page }} 页，每页 {{ pageSize }} 条</span>

@@ -55,6 +55,14 @@ describe('StaffView', () => {
     expect(wrapper.find('[data-test="staff-reset-2"]').exists()).toBe(true)
   })
 
+  it('renders employee accounts as cards for narrow screens', async () => {
+    const wrapper = mount(StaffView)
+    await flushPromises()
+
+    expect(wrapper.find('[data-test="staff-mobile-list"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('cashier01')
+  })
+
   it('creates a cashier and refreshes the account list', async () => {
     vi.mocked(staffApi.createCashier).mockResolvedValue({
       id: 3,

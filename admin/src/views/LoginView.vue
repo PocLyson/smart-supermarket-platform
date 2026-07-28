@@ -39,14 +39,14 @@ const submit = async (): Promise<void> => {
 <template>
   <main class="login-page">
     <div class="login-brand" aria-hidden="true">
-      <span>智慧超市</span>
+      <span>鲁能超市 · 李老家分店管理后台</span>
       <strong>让门店经营更清楚、更高效</strong>
       <p>订单、商品与线上库存集中管理，服务鲁能超市李老家分店日常运营。</p>
     </div>
     <section class="login-card" aria-labelledby="login-title">
-      <div class="brand-sign" aria-hidden="true">智</div>
+      <div class="brand-sign" aria-hidden="true">鲁</div>
       <p class="eyebrow">鲁能超市李老家分店</p>
-      <h1 id="login-title">智慧超市管理后台</h1>
+      <h1 id="login-title">门店管理后台</h1>
       <p class="subtitle">老板与收银员使用各自账号登录</p>
       <div v-if="serverError" class="inline-alert" role="alert">
         <div>
@@ -118,14 +118,14 @@ const submit = async (): Promise<void> => {
 <style scoped>
 .login-page {
   display: grid;
-  grid-template-columns: minmax(280px, 440px) minmax(360px, 480px);
+  grid-template-columns: minmax(420px, 640px) minmax(380px, 464px);
   gap: clamp(48px, 8vw, 120px);
   min-height: 100dvh;
   padding: var(--space-6);
   place-items: center;
   place-content: center;
   background:
-    linear-gradient(90deg, var(--primary-800) 0 38%, transparent 38%), var(--color-bg-page);
+    linear-gradient(90deg, var(--primary-900) 0 52%, transparent 52%), var(--color-bg-page);
 }
 
 .login-brand {
@@ -141,20 +141,20 @@ const submit = async (): Promise<void> => {
 
 .login-brand strong {
   display: block;
-  max-width: 380px;
-  font-size: clamp(30px, 4vw, 44px);
+  max-width: 560px;
+  font-size: clamp(32px, 4vw, 48px);
   line-height: 1.3;
 }
 
 .login-brand p {
-  max-width: 380px;
+  max-width: 540px;
   color: rgb(255 255 255 / 76%);
   font-size: 15px;
 }
 
 .login-card {
   width: min(100%, 440px);
-  padding: var(--space-8);
+  padding: var(--space-10);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-bg-surface);
@@ -237,6 +237,15 @@ h1 {
   }
 
   .login-brand {
+    display: block;
+    width: 100%;
+    padding: var(--space-6);
+    border-radius: var(--radius-xl);
+    background: var(--primary-900);
+  }
+
+  .login-brand strong,
+  .login-brand p {
     display: none;
   }
 }

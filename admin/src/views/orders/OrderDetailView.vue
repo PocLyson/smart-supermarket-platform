@@ -198,7 +198,7 @@ onMounted(load)
               <p>共 {{ order.items.length }} 种商品</p>
             </div>
           </div>
-          <div class="responsive-table">
+          <div class="responsive-table has-mobile-cards">
             <el-table :data="order.items">
               <el-table-column prop="productName" label="商品" />
               <el-table-column prop="unit" label="单位" width="90" />
@@ -211,6 +211,18 @@ onMounted(load)
               </el-table-column>
             </el-table>
           </div>
+          <div class="mobile-card-list order-item-cards" data-test="order-item-mobile-list">
+            <article v-for="item in order.items" :key="item.productId" class="mobile-data-card">
+              <div class="mobile-data-card__header">
+                <strong>{{ item.productName }}</strong>
+                <span class="price-text">¥{{ centToYuan(item.subtotalCent) }}</span>
+              </div>
+              <div class="mobile-data-card__row mobile-data-card__meta">
+                <span>¥{{ centToYuan(item.unitPriceCent) }} / {{ item.unit }}</span>
+                <span>× {{ item.quantity }}</span>
+              </div>
+            </article>
+          </div>
           <dl class="amount-summary">
             <div>
               <dt>订单合计</dt>
@@ -221,6 +233,10 @@ onMounted(load)
         <div class="surface-card detail-side">
           <h2>取货信息</h2>
           <dl class="info-list">
+            <div>
+              <dt>取货门店</dt>
+              <dd>鲁能超市李老家分店</dd>
+            </div>
             <div>
               <dt>取货人</dt>
               <dd>{{ order.pickupName }}</dd>

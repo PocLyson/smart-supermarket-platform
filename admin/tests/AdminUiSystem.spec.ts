@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import UiStatePanel from '@/components/UiStatePanel.vue'
 import AdminLayout from '@/layouts/AdminLayout.vue'
+import ForbiddenView from '@/views/ForbiddenView.vue'
 import { useAuthStore } from '@/stores/auth'
 
 describe('admin UI system', () => {
@@ -25,6 +26,31 @@ describe('admin UI system', () => {
     expect(wrapper.get('[role="status"]').text()).toContain('暂无订单')
     await wrapper.get('button').trigger('click')
     expect(wrapper.emitted('action')).toHaveLength(1)
+  })
+
+  it('exposes the error state through a semantic visual class', () => {
+    const wrapper = mount(UiStatePanel, {
+      props: {
+        kind: 'error',
+        title: '订单加载失败',
+        description: '请检查网络后重试。',
+      },
+    })
+
+    expect(wrapper.get('[role="alert"]').classes()).toContain('is-error')
+  })
+
+  it('explains the 403 boundary and provides a recovery action', () => {
+    const wrapper = mount(ForbiddenView, {
+      global: {
+        mocks: {
+          $router: { replace: () => undefined },
+        },
+      },
+    })
+
+    expect(wrapper.text()).toContain('403')
+    expect(wrapper.text()).toContain('返回订单管理')
   })
 
   it('renders the role-aware shell with order-first navigation', () => {
@@ -54,6 +80,9 @@ describe('admin UI system', () => {
     const labels = wrapper.findAll('nav a').map((item) => item.text())
     expect(labels[0]).toBe('订单管理')
     expect(wrapper.text()).toContain('老板')
+    expect(wrapper.text()).toContain('鲁能超市')
+    expect(wrapper.text()).toContain('李老家分店管理后台')
+    expect(wrapper.text()).not.toContain('智慧超市')
     expect(wrapper.get('main').attributes('id')).toBe('main-content')
   })
 })

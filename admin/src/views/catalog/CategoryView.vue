@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import {
   createCategory,
@@ -20,6 +20,30 @@ const loadError = ref('')
 const formError = ref('')
 const editingId = ref<number>()
 const form = reactive<CategoryWriteRequest>({ name: '', sortOrder: 0, enabled: true })
+const keyword = ref('')
+const statusFilter = ref('')
+
+const filteredCategories = computed(() => {
+  const normalizedKeyword = keyword.value.trim().toLowerCase()
+
+  return categories.value.filter((category) => {
+    const matchesKeyword =
+      !normalizedKeyword ||
+      category.name.toLowerCase().includes(normalizedKeyword) ||
+      String(category.id).includes(normalizedKeyword)
+    const matchesStatus =
+      !statusFilter.value ||
+      (statusFilter.value === 'enabled' && category.enabled) ||
+      (statusFilter.value === 'disabled' && !category.enabled)
+
+    return matchesKeyword && matchesStatus
+  })
+})
+
+const clearFilters = (): void => {
+  keyword.value = ''
+  statusFilter.value = ''
+}
 
 const load = async (): Promise<void> => {
   loading.value = true
@@ -80,9 +104,31 @@ onMounted(load)
       </div>
       <el-button type="primary" @click="openEditor()"><AppIcon name="plus" />新增分类</el-button>
     </header>
+    <form class="surface-card filter-panel" @submit.prevent>
+      <label class="filter-field is-wide">
+        <span>搜索分类</span>
+        <input
+          v-model="keyword"
+          class="text-control"
+          data-test="category-keyword"
+          placeholder="输入分类名称或编号"
+        />
+      </label>
+      <label class="filter-field">
+        <span>启用状态</span>
+        <select v-model="statusFilter" class="text-control" data-test="category-status">
+          <option value="">全部状态</option>
+          <option value="enabled">已启用</option>
+          <option value="disabled">已停用</option>
+        </select>
+      </label>
+      <div class="filter-actions">
+        <el-button :disabled="!keyword && !statusFilter" @click="clearFilters">重置</el-button>
+      </div>
+    </form>
     <div class="surface-card data-region">
       <div class="data-region__summary">
-        <span>共 {{ categories.length }} 个分类</span><span>排序数字越小越靠前</span>
+        <span>共 {{ filteredCategories.length }} 个分类</span><span>排序数字越小越靠前</span>
       </div>
       <div v-if="loading" class="skeleton-stack">
         <div v-for="i in 6" :key="i" class="skeleton-row" />
@@ -103,8 +149,16 @@ onMounted(load)
         action-label="新增分类"
         @action="openEditor()"
       />
-      <div v-else class="responsive-table">
-        <el-table :data="categories">
+      <UiStatePanel
+        v-else-if="!filteredCategories.length"
+        kind="empty"
+        title="未找到匹配分类"
+        description="请调整搜索词或启用状态后重试。"
+        action-label="清除筛选"
+        @action="clearFilters"
+      />
+      <div v-else class="responsive-table has-mobile-cards">
+        <el-table :data="filteredCategories">
           <el-table-column prop="name" label="分类名称" />
           <el-table-column prop="sortOrder" label="排序" width="100" />
           <el-table-column label="状态" width="100">
@@ -120,6 +174,24 @@ onMounted(load)
             </template>
           </el-table-column>
         </el-table>
+      </div>
+      <div
+        v-if="!loading && !loadError && filteredCategories.length"
+        class="mobile-card-list"
+        data-test="category-mobile-list"
+      >
+        <article v-for="category in filteredCategories" :key="category.id" class="mobile-data-card">
+          <div class="mobile-data-card__header">
+            <strong>{{ category.name }}</strong>
+            <el-tag :type="category.enabled ? 'success' : 'info'">
+              {{ category.enabled ? '启用' : '停用' }}
+            </el-tag>
+          </div>
+          <div class="mobile-data-card__footer">
+            <span class="mobile-data-card__meta">排序 {{ category.sortOrder }}</span>
+            <el-button type="primary" @click="openEditor(category)">编辑分类</el-button>
+          </div>
+        </article>
       </div>
     </div>
     <el-dialog v-model="dialogVisible" :title="editingId ? '编辑分类' : '新增分类'" width="460">

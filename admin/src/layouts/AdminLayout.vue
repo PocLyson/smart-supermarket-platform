@@ -39,14 +39,14 @@ const logout = async (): Promise<void> => {
         <AppIcon name="menu" />
       </button>
       <div class="mobile-brand">
-        <strong>智慧超市</strong><span>{{ pageTitle }}</span>
+        <strong>鲁能超市</strong><span>{{ pageTitle }}</span>
       </div>
     </header>
     <div v-if="mobileOpen" class="sidebar-scrim" aria-hidden="true" @click="mobileOpen = false" />
     <aside id="admin-sidebar" class="sidebar" :class="{ 'is-open': mobileOpen }">
       <div class="brand-block">
-        <div class="brand-mark" aria-hidden="true">智</div>
-        <div><strong>智慧超市</strong><span>鲁能超市李老家分店</span></div>
+        <div class="brand-mark" aria-hidden="true">鲁</div>
+        <div><strong>鲁能超市</strong><span>李老家分店管理后台</span></div>
         <button
           class="icon-button sidebar-close"
           type="button"
@@ -104,7 +104,7 @@ const logout = async (): Promise<void> => {
   flex-direction: column;
   gap: var(--space-5);
   height: 100dvh;
-  padding: var(--space-5) var(--space-3) var(--space-4);
+  padding: var(--space-6) var(--space-4) var(--space-4);
   color: var(--color-text-inverse);
   background: var(--color-bg-sidebar);
   z-index: 60;
@@ -113,7 +113,7 @@ const logout = async (): Promise<void> => {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: 0 var(--space-2) var(--space-4);
+  padding: 0 var(--space-2) var(--space-5);
   border-bottom: 1px solid rgb(255 255 255 / 12%);
 }
 .brand-block > div:not(.brand-mark),
@@ -141,13 +141,13 @@ const logout = async (): Promise<void> => {
 }
 .nav-list {
   display: grid;
-  gap: var(--space-1);
+  gap: var(--space-2);
 }
 .nav-list a {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  min-height: 44px;
+  min-height: 46px;
   padding: 0 var(--space-3);
   border-left: 3px solid transparent;
   border-radius: var(--radius-sm);
@@ -163,9 +163,9 @@ const logout = async (): Promise<void> => {
   background: rgb(255 255 255 / 8%);
 }
 .nav-list a.router-link-active {
-  border-left-color: var(--primary-300);
+  border-left-color: #65a5ff;
   color: #fff;
-  background: var(--primary-700);
+  background: var(--primary-600);
   font-weight: 600;
 }
 .account {
@@ -222,7 +222,7 @@ const logout = async (): Promise<void> => {
   width: min(100%, calc(var(--layout-content-max) + var(--space-12)));
   min-width: 0;
   margin-inline: auto;
-  padding: var(--space-6);
+  padding: var(--space-6) var(--space-8) var(--space-8);
 }
 .mobile-header,
 .sidebar-close,
@@ -239,14 +239,15 @@ const logout = async (): Promise<void> => {
     display: flex;
     align-items: center;
     gap: var(--space-3);
-    min-height: 60px;
+    min-height: 64px;
     padding: var(--space-2) var(--space-4);
     border-bottom: 1px solid var(--color-divider);
-    background: var(--color-bg-surface);
+    color: #fff;
+    background: var(--primary-700);
     z-index: 40;
   }
   .mobile-brand span {
-    color: var(--color-text-secondary);
+    color: rgb(255 255 255 / 72%);
     font-size: 12px;
   }
   .sidebar {
