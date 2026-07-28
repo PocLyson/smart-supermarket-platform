@@ -59,10 +59,20 @@ cd server
 
 - [MVP API 契约](docs/api/mvp-api.md)
 - [生产部署](docs/operations/deployment.md)
+- [域名、备案与微信体验版](docs/operations/domain-and-wechat-trial.md)
 - [备份与恢复](docs/operations/backup-and-restore.md)
 - [试运营验收](docs/operations/trial-acceptance.md)
 
-生产配置可先用示例环境文件做静态校验：
+真实生产配置必须先运行就绪检查，再渲染 Compose：
+
+```powershell
+node deploy/scripts/production-readiness.mjs `
+  --env-file deploy/.env.production
+docker compose -f deploy/compose.production.yaml `
+  --env-file deploy/.env.production config
+```
+
+在尚未取得备案域名、证书和生产密钥时，可用示例环境文件做 Compose 静态校验：
 
 ```powershell
 docker compose -f deploy/compose.production.yaml --env-file deploy/env.example config

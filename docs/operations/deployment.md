@@ -20,6 +20,8 @@ npm --prefix admin run build
 
 `admin/dist` 必须存在，Nginx 容器会只读挂载该目录。
 
+购买域名、ICP 备案、微信合法域名和体验版上传必须先按 [域名与微信体验版操作手册](domain-and-wechat-trial.md) 执行。备案、DNS、证书和微信公众平台操作需要相应账号负责人在外部平台完成，不能由本地仓库命令代办。
+
 ## 3. 配置环境
 
 ```bash
@@ -41,6 +43,9 @@ install -m 600 /secure/path/privkey.pem deploy/certs/privkey.pem
 部署前校验：
 
 ```bash
+node deploy/scripts/production-readiness.mjs \
+  --env-file deploy/.env.production
+
 docker compose \
   -f deploy/compose.production.yaml \
   --env-file deploy/.env.production \
