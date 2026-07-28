@@ -1,9 +1,8 @@
 .order-status-hero {
-  margin-bottom: var(--space-4);
-  padding: var(--space-5);
+  margin-bottom: var(--space-5);
+  padding: var(--space-3) 0;
   border-radius: var(--radius-lg);
-  background: var(--primary-700);
-  color: #FFFFFF;
+  color: var(--color-text-primary);
 }
 
 .status-hero-title {
@@ -17,17 +16,47 @@
 .status-hero-description {
   display: block;
   margin-top: var(--space-1);
-  color: rgba(255, 255, 255, 0.86);
+  color: var(--color-text-secondary);
   font-size: var(--type-helper-size);
   line-height: var(--type-helper-line);
 }
 
 .status-hero-meta {
   margin-top: var(--space-2);
-  color: rgba(255, 255, 255, 0.78);
+  color: var(--color-text-tertiary);
   font-size: var(--type-caption-size);
   font-variant-numeric: tabular-nums;
   line-height: var(--type-caption-line);
+}
+
+.pickup-code-card {
+  background: var(--primary-50);
+}
+
+.pickup-code-label,
+.pickup-code,
+.pickup-code-store {
+  display: block;
+}
+
+.pickup-code-label {
+  color: var(--color-text-tertiary);
+  font-size: var(--type-caption-size);
+}
+
+.pickup-code {
+  margin-top: var(--space-1);
+  color: var(--primary-600);
+  font-size: 72rpx;
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 6rpx;
+}
+
+.pickup-code-store {
+  margin-top: var(--space-1);
+  color: var(--color-text-secondary);
+  font-size: var(--type-helper-size);
 }
 
 .detail-row {
@@ -41,7 +70,7 @@
   gap: var(--space-3);
 }
 
-.detail-row text:last-child {
+.detail-value {
   color: var(--color-text-primary);
   text-align: right;
 }
@@ -58,6 +87,17 @@
 .detail-product-copy {
   min-width: 0;
   flex: 1;
+}
+
+.detail-product-image {
+  width: 144rpx;
+  height: 144rpx;
+  flex: none;
+  border-radius: var(--radius-md);
+}
+
+.detail-product {
+  gap: var(--space-3);
 }
 
 .detail-product-name {

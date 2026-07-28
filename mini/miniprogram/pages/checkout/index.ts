@@ -20,6 +20,8 @@ Page({
     error: '',
     pickupNameError: '',
     phoneError: '',
+    imageFailed: false,
+    fallbackImage: '/assets/icons/image-placeholder.svg',
   },
 
   onShow() {
@@ -60,10 +62,18 @@ Page({
       })
     } catch (error) {
       const message = error instanceof Error ? error.message : '提交订单失败'
+      if (message.includes('尚未确认')) {
+        wx.redirectTo({ url: '/pages/submit-result/index?uncertain=1' })
+        return
+      }
       this.setData({ error: message })
       wx.showToast({ title: message, icon: 'none' })
     } finally {
       this.setData({ submitting: false })
     }
+  },
+
+  onImageError() {
+    this.setData({ imageFailed: true })
   },
 })

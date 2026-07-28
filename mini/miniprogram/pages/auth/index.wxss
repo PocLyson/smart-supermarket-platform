@@ -1,0 +1,109 @@
+.auth-page {
+  display: flex;
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: var(--space-8) var(--space-4) calc(var(--space-8) + env(safe-area-inset-bottom));
+  background: var(--color-bg-page);
+  align-items: center;
+}
+
+.auth-card {
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--space-7) var(--space-5);
+  border: var(--border-width-default) solid var(--color-divider);
+  border-radius: var(--radius-xl);
+  background: #FFFFFF;
+  box-shadow: var(--shadow-card);
+  text-align: center;
+}
+
+.wechat-mark {
+  display: flex;
+  width: 144rpx;
+  height: 144rpx;
+  margin: 0 auto var(--space-5);
+  border-radius: var(--radius-round);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+  font-size: 36rpx;
+  font-weight: var(--weight-bold);
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-title,
+.auth-copy {
+  display: block;
+}
+
+.auth-title {
+  color: var(--color-text-primary);
+  font-size: var(--type-page-title-size);
+  font-weight: var(--weight-bold);
+  line-height: var(--type-page-title-line);
+}
+
+.auth-copy {
+  margin: var(--space-2) auto var(--space-6);
+  color: var(--color-text-tertiary);
+  font-size: var(--type-helper-size);
+  line-height: var(--type-helper-line);
+}
+
+.permission-list {
+  margin-bottom: var(--space-6);
+  padding: 0 var(--space-4);
+  border: var(--border-width-default) solid var(--color-divider);
+  border-radius: var(--radius-lg);
+  text-align: left;
+}
+
+.permission-row {
+  display: flex;
+  min-height: 120rpx;
+  border-bottom: var(--border-width-default) solid var(--color-divider);
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.permission-row:last-child {
+  border-bottom: 0;
+}
+
+.permission-icon {
+  width: 48rpx;
+  height: 48rpx;
+}
+
+.permission-title,
+.permission-copy {
+  display: block;
+  color: var(--color-text-primary);
+  font-size: var(--type-helper-size);
+}
+
+.permission-copy {
+  color: var(--color-text-tertiary);
+  font-size: var(--type-caption-size);
+}
+
+.auth-primary,
+.auth-secondary {
+  width: 100%;
+  margin: 0 0 var(--space-3);
+}
+
+.auth-error {
+  display: block;
+  margin: var(--space-2) 0;
+  color: var(--color-error-text);
+  font-size: var(--type-helper-size);
+}
+
+.auth-legal {
+  display: block;
+  margin-top: var(--space-4);
+  color: var(--color-text-tertiary);
+  font-size: 22rpx;
+}

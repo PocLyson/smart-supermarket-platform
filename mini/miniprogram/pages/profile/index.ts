@@ -1,4 +1,4 @@
-import { authService, profileService } from '../../services/auth'
+import { profileService } from '../../services/auth'
 import { sessionStore } from '../../store/session'
 import { buildProfileView, validateProfile } from './presentation'
 
@@ -48,18 +48,8 @@ Page({
     }
   },
 
-  async onLogin() {
-    this.setData({ loading: true, error: '' })
-    try {
-      await authService.loginWithWechat()
-      await this.loadProfile()
-    } catch (error) {
-      this.setData({
-        error: error instanceof Error ? error.message : '登录失败，请重试',
-      })
-    } finally {
-      this.setData({ loading: false })
-    }
+  onLogin() {
+    wx.navigateTo({ url: '/pages/auth/index?from=profile' })
   },
 
   onPickupNameInput(event: WechatMiniprogram.Input) {
@@ -104,6 +94,13 @@ Page({
 
   onOrders() {
     wx.redirectTo({ url: '/pages/orders/index' })
+  },
+
+  onOrderStatus(event: WechatMiniprogram.TouchEvent) {
+    const status = String(event.currentTarget.dataset.status || '')
+    wx.navigateTo({
+      url: `/pages/orders/index${status ? `?status=${status}` : ''}`,
+    })
   },
 
   onLogout() {

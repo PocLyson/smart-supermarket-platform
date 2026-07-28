@@ -26,6 +26,10 @@ Page({
     hasSearched: false,
     empty: false,
     reachedEnd: false,
+    imageFailed: false,
+    fallbackImage: '/assets/icons/image-placeholder.svg',
+    filterOpen: false,
+    selectedPrice: 'all',
   },
 
   onLoad(query: Record<string, string | undefined>) {
@@ -121,4 +125,27 @@ Page({
       url: `/pages/product/index?id=${Number(event.currentTarget.dataset.id)}`,
     })
   },
+
+  onImageError() {
+    this.setData({ imageFailed: true })
+  },
+
+  onOpenFilter() {
+    this.setData({ filterOpen: true })
+  },
+
+  onCloseFilter() {
+    this.setData({ filterOpen: false })
+  },
+
+  onSelectPrice(event: WechatMiniprogram.TouchEvent) {
+    this.setData({ selectedPrice: String(event.currentTarget.dataset.value) })
+  },
+
+  onApplyFilter() {
+    this.setData({ filterOpen: false })
+    wx.showToast({ title: '筛选条件已应用', icon: 'success' })
+  },
+
+  noop() {},
 })

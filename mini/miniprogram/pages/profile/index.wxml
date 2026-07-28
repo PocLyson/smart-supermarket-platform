@@ -1,23 +1,45 @@
 <view class="profile-page">
   <view class="profile-hero">
-    <view class="profile-avatar" aria-label="用户头像">我</view>
-    <view class="profile-copy">
-      <text class="profile-name">{{displayName}}</text>
-      <text class="profile-summary">{{pickupSummary}}</text>
+    <view class="profile-title">我的</view>
+    <view class="profile-identity">
+      <view class="profile-avatar" aria-label="用户头像"><image class="profile-avatar-icon" src="/assets/icons/user.svg" mode="aspectFit" /></view>
+      <view class="profile-copy">
+        <text class="profile-name">{{displayName}}</text>
+        <text class="profile-summary">{{pickupSummary}}</text>
+      </view>
+      <button wx:if="{{!loggedIn}}" class="profile-login-button" loading="{{loading}}" disabled="{{loading}}" bindtap="onLogin">微信登录</button>
     </view>
-    <t-button wx:if="{{!loggedIn}}" t-class="login-button" theme="light" loading="{{loading}}" disabled="{{loading}}" bind:tap="onLogin">微信登录</t-button>
   </view>
 
   <view class="profile-content">
-    <view class="profile-card order-entry" role="button" aria-label="查看我的订单" hover-class="profile-card-hover" bindtap="onOrders">
-      <view>
+    <view class="profile-card orders-card">
+      <view class="row-between order-card-heading" role="button" bindtap="onOrders">
         <text class="card-title">我的订单</text>
-        <text class="card-description">查看备货、付款和取货状态</text>
+        <view class="all-orders">全部订单 <image class="all-orders-icon" src="/assets/icons/chevron-right.svg" mode="aspectFit" /></view>
       </view>
-      <text class="entry-arrow">›</text>
+      <view class="order-status-grid">
+        <view class="order-status-item" role="button" data-status="PENDING_CONFIRMATION" bindtap="onOrderStatus">
+          <image class="order-status-icon" src="/assets/icons/order.svg" mode="aspectFit" /><text>待确认</text>
+        </view>
+        <view class="order-status-item" role="button" data-status="PREPARING" bindtap="onOrderStatus">
+          <image class="order-status-icon" src="/assets/icons/order.svg" mode="aspectFit" /><text>备货中</text>
+        </view>
+        <view class="order-status-item is-highlight" role="button" data-status="READY_FOR_PICKUP" bindtap="onOrderStatus">
+          <image class="order-status-icon" src="/assets/icons/order.svg" mode="aspectFit" /><text>待取货</text>
+        </view>
+        <view class="order-status-item" role="button" data-status="COMPLETED" bindtap="onOrderStatus">
+          <image class="order-status-icon" src="/assets/icons/order.svg" mode="aspectFit" /><text>已完成</text>
+        </view>
+      </view>
     </view>
 
-    <view wx:if="{{loggedIn}}" class="profile-card">
+    <view class="profile-card store-service">
+      <text class="card-title">门店服务</text>
+      <view class="service-row"><text>当前门店</text><text class="service-value">鲁能超市李老家分店</text></view>
+      <view class="service-row"><text>取货方式</text><text class="service-value">到店自取</text></view>
+    </view>
+
+    <view wx:if="{{loggedIn}}" class="profile-card pickup-card">
       <text class="card-title">默认取货信息</text>
       <text class="card-description">下单时自动填写，也可以随时修改</text>
       <label class="field-label">取货人姓名</label>
@@ -27,18 +49,6 @@
       <input class="field profile-field {{phoneError ? 'field-error' : ''}}" value="{{phone}}" type="number" maxlength="11" placeholder="请输入11位手机号" placeholder-class="field-placeholder" bindinput="onPhoneInput" />
       <text wx:if="{{phoneError}}" class="field-error-copy" role="alert">{{phoneError}}</text>
       <t-button t-class="save-button" theme="primary" block loading="{{saving}}" disabled="{{saving}}" bind:tap="onSave">保存取货信息</t-button>
-    </view>
-
-    <view wx:else class="profile-card login-guide">
-      <text class="card-title">登录后享受完整服务</text>
-      <text class="card-description">保存取货信息、查看历史订单，购物更省心</text>
-      <t-button theme="primary" block loading="{{loading}}" disabled="{{loading}}" bind:tap="onLogin">微信一键登录</t-button>
-    </view>
-
-    <view class="profile-card store-service">
-      <text class="card-title">门店服务</text>
-      <view class="service-row"><text>当前门店</text><text>鲁能超市李老家分店</text></view>
-      <view class="service-row"><text>取货方式</text><text>到店自取</text></view>
     </view>
 
     <view wx:if="{{error}}" class="profile-error" role="alert">

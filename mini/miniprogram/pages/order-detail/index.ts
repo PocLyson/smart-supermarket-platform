@@ -8,6 +8,7 @@ import {
 import { formatMoney } from '../../utils/money'
 import {
   buildOrderStatusPresentation,
+  resolveOrderProductImage,
   type OrderStatusPresentation,
 } from './presentation'
 
@@ -20,8 +21,12 @@ Page({
     canCancel: false,
     error: '',
     displayTotal: '',
+    pickupCode: '',
     displayItems: [] as Array<
-      CustomerOrder['items'][number] & { displaySubtotal: string }
+      CustomerOrder['items'][number] & {
+        displaySubtotal: string
+        imageUrl: string
+      }
     >,
     statusPresentation: {
       title: '',
@@ -52,8 +57,13 @@ Page({
         displayItems: order.items.map((item) => ({
           ...item,
           displaySubtotal: formatMoney(item.subtotalCent),
+          imageUrl: resolveOrderProductImage(item.productId),
         })),
         statusPresentation: buildOrderStatusPresentation(order.status),
+        pickupCode: order.orderNo
+          .replace(/\D/g, '')
+          .slice(-6)
+          .replace(/(\d{3})(\d{3})/, '$1 $2'),
       })
     } catch (error) {
       this.setData({

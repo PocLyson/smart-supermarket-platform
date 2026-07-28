@@ -17,6 +17,8 @@ Page({
     error: '',
     empty: false,
     reachedEnd: false,
+    imageFailed: false,
+    fallbackImage: '/assets/icons/image-placeholder.svg',
   },
 
   onLoad(query: Record<string, string | undefined>) {
@@ -88,11 +90,20 @@ Page({
 
   onSelectCategory(event: WechatMiniprogram.TouchEvent) {
     const rawId = event.currentTarget.dataset.id
-    const categoryId = rawId === 'all' ? undefined : Number(rawId)
-    const selected = this.data.categories.find((item) => item.id === categoryId)
+    const name = String(event.currentTarget.dataset.name || '')
+    const selectedByName = name
+      ? this.data.categories.find((item) => item.name === name)
+      : undefined
+    const categoryId =
+      rawId === 'all'
+        ? undefined
+        : selectedByName?.id ?? Number(rawId)
+    const selected =
+      selectedByName ??
+      this.data.categories.find((item) => item.id === categoryId)
     this.setData({
       selectedCategoryId: categoryId,
-      selectedCategoryName: selected?.name || '全部商品',
+      selectedCategoryName: name || selected?.name || '全部商品',
     })
     void this.loadProducts(true)
   },
@@ -105,5 +116,9 @@ Page({
     wx.navigateTo({
       url: `/pages/product/index?id=${Number(event.currentTarget.dataset.id)}`,
     })
+  },
+
+  onImageError() {
+    this.setData({ imageFailed: true })
   },
 })

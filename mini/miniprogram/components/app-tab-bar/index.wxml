@@ -1,18 +1,18 @@
 <view class="app-tab-bar" aria-label="主导航">
   <view class="tab-item {{value === 'home' ? 'is-active' : ''}}" data-value="home" bindtap="onTabTap">
     <image class="tab-icon" src="{{value === 'home' ? '/assets/icons/home-filled.svg' : '/assets/icons/home.svg'}}" mode="aspectFit" />
-    <text class="tab-label">首页</text>
+    <text class="tab-label {{value === 'home' ? 'is-visible' : ''}}">首页</text>
   </view>
   <view class="tab-item {{value === 'category' ? 'is-active' : ''}}" data-value="category" bindtap="onTabTap">
     <image class="tab-icon" src="{{value === 'category' ? '/assets/icons/view-module-active.svg' : '/assets/icons/view-module.svg'}}" mode="aspectFit" />
-    <text class="tab-label">分类</text>
+    <text class="tab-label {{value === 'category' ? 'is-visible' : ''}}">分类</text>
   </view>
   <view class="tab-item {{value === 'cart' ? 'is-active' : ''}}" data-value="cart" bindtap="onTabTap">
     <image class="tab-icon" src="{{value === 'cart' ? '/assets/icons/cart-active.svg' : '/assets/icons/cart.svg'}}" mode="aspectFit" />
-    <text class="tab-label">购物车</text>
+    <text class="tab-label {{value === 'cart' ? 'is-visible' : ''}}">购物车</text>
   </view>
   <view class="tab-item {{value === 'profile' ? 'is-active' : ''}}" data-value="profile" bindtap="onTabTap">
     <image class="tab-icon" src="{{value === 'profile' ? '/assets/icons/user-active.svg' : '/assets/icons/user.svg'}}" mode="aspectFit" />
-    <text class="tab-label">我的</text>
+    <text class="tab-label {{value === 'profile' ? 'is-visible' : ''}}">我的</text>
   </view>
 </view>

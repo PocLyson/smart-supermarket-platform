@@ -32,7 +32,7 @@
   justify-content: center;
 }
 
-.clear-button image {
+.clear-button-icon {
   width: 36rpx;
   height: 36rpx;
 }
@@ -123,6 +123,23 @@
   justify-content: space-between;
 }
 
+.filter-entry {
+  min-width: 96rpx;
+  min-height: 72rpx;
+  margin: 0;
+  padding: 0 var(--space-2);
+  border: var(--border-width-default) solid var(--color-divider);
+  border-radius: var(--radius-round);
+  background: #FFFFFF;
+  color: var(--primary-600);
+  font-size: var(--type-caption-size);
+}
+
+.filter-entry::after,
+.filter-close::after {
+  border: 0;
+}
+
 .result-keyword {
   margin-left: var(--space-2);
   color: var(--primary-700);
@@ -183,14 +200,98 @@
 }
 
 .result-price-line {
+  display: flex;
+  align-items: center;
   margin-top: var(--space-2);
 }
 
 .result-price {
-  color: var(--primary-600);
+  color: var(--color-price);
   font-size: 40rpx;
   font-weight: var(--weight-bold);
   font-variant-numeric: tabular-nums;
+}
+
+.result-add {
+  display: flex;
+  width: 64rpx;
+  height: 64rpx;
+  margin-left: auto;
+  border: 3rpx solid var(--primary-600);
+  border-radius: var(--radius-round);
+  align-items: center;
+  justify-content: center;
+}
+
+.result-add-icon {
+  width: 34rpx;
+  height: 34rpx;
+}
+
+.filter-overlay {
+  position: fixed;
+  z-index: 80;
+  inset: 0;
+  display: flex;
+  background: var(--overlay-mask);
+  align-items: flex-end;
+}
+
+.filter-sheet {
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--space-6) var(--space-4) calc(var(--space-5) + env(safe-area-inset-bottom));
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  background: #FFFFFF;
+}
+
+.filter-sheet-heading {
+  margin-bottom: var(--space-5);
+}
+
+.filter-close {
+  min-width: 88rpx;
+  min-height: 88rpx;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-tertiary);
+}
+
+.filter-label {
+  display: block;
+  margin-bottom: var(--space-3);
+  color: var(--color-text-secondary);
+  font-size: var(--type-helper-size);
+}
+
+.filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.filter-option {
+  display: flex;
+  min-width: 144rpx;
+  min-height: 72rpx;
+  padding: 0 var(--space-3);
+  border: var(--border-width-default) solid var(--color-divider);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  align-items: center;
+  justify-content: center;
+}
+
+.filter-option.is-selected {
+  border-color: var(--primary-400);
+  background: var(--primary-100);
+  color: var(--primary-600);
+}
+
+.filter-apply {
+  width: 100%;
+  margin: var(--space-6) 0 0;
 }
 
 .result-unit {

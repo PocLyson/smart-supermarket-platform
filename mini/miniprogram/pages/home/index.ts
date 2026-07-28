@@ -18,6 +18,8 @@ Page({
     error: '',
     empty: false,
     reachedEnd: false,
+    imageFailed: false,
+    fallbackImage: '/assets/icons/image-placeholder.svg',
     categoryImages: [
       '/assets/categories/fruit.jpg',
       '/assets/categories/vegetables.jpg',
@@ -101,7 +103,11 @@ Page({
   },
 
   onSelectCategory(event: WechatMiniprogram.TouchEvent) {
-    const value = event.currentTarget.dataset.id
+    const categoryName = String(event.currentTarget.dataset.name || '')
+    const matched = categoryName
+      ? this.data.categories.find((item) => item.name === categoryName)
+      : undefined
+    const value = matched?.id ?? event.currentTarget.dataset.id
     const categoryId = value === 'all' ? '' : String(Number(value))
     wx.navigateTo({
       url: `/pages/category/index${categoryId ? `?categoryId=${categoryId}` : ''}`,
@@ -112,5 +118,9 @@ Page({
     wx.navigateTo({
       url: `/pages/product/index?id=${Number(event.currentTarget.dataset.id)}`,
     })
+  },
+
+  onImageError() {
+    this.setData({ imageFailed: true })
   },
 })

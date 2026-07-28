@@ -9,8 +9,8 @@ describe('profile presentation', () => {
   it('shows an actionable logged-out state when no session exists', () => {
     expect(buildProfileView(false)).toEqual({
       loggedIn: false,
-      displayName: '微信用户',
-      pickupSummary: '登录后完善取货信息',
+      displayName: '登录 / 注册',
+      pickupSummary: '同步订单与购物车',
     })
   })
 

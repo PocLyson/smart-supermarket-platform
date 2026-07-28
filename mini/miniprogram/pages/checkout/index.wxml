@@ -20,7 +20,7 @@
       <text class="muted">共 {{items.length}} 种</text>
     </view>
     <view wx:for="{{items}}" wx:key="productId" class="row-between order-line">
-      <image class="checkout-product-image" src="{{item.coverImageUrl}}" mode="aspectFill" lazy-load />
+      <image class="checkout-product-image" src="{{imageFailed ? '/assets/icons/image-placeholder.svg' : (item.coverImageUrl || '/assets/icons/image-placeholder.svg')}}" mode="aspectFill" lazy-load binderror="onImageError" />
       <view class="checkout-product-copy">
         <text class="checkout-product-name">{{item.name}}</text>
         <text class="muted">数量 × {{item.quantity}}</text>

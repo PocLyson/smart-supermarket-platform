@@ -1,5 +1,5 @@
 .cart-page {
-  padding-bottom: calc(280rpx + env(safe-area-inset-bottom));
+  padding-bottom: calc(352rpx + env(safe-area-inset-bottom));
 }
 
 .cart-item {
@@ -53,7 +53,7 @@
 
 .cart-price {
   margin-top: auto;
-  color: var(--primary-600);
+  color: var(--color-price);
   font-size: 38rpx;
   font-weight: var(--weight-bold);
   font-variant-numeric: tabular-nums;
@@ -113,7 +113,7 @@
   position: fixed;
   z-index: 20;
   right: 0;
-  bottom: calc(112rpx + env(safe-area-inset-bottom));
+  bottom: calc(172rpx + env(safe-area-inset-bottom));
   left: 0;
   display: flex;
   box-sizing: border-box;

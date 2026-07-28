@@ -7,15 +7,16 @@
     "pages/cart/index",
     "pages/checkout/index",
     "pages/submit-result/index",
+    "pages/auth/index",
     "pages/orders/index",
     "pages/order-detail/index",
     "pages/profile/index"
   ],
   "window": {
-    "navigationBarTitleText": "智慧超市",
-    "navigationBarBackgroundColor": "#8E2F3F",
+    "navigationBarTitleText": "鲁能超市李老家分店",
+    "navigationBarBackgroundColor": "#082F6B",
     "navigationBarTextStyle": "white",
-    "backgroundColor": "#F8F5F1",
+    "backgroundColor": "#F7F9FC",
     "backgroundTextStyle": "dark"
   },
   "style": "v2",

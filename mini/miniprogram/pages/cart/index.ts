@@ -17,6 +17,8 @@ Page({
   data: {
     ...presentCart(),
     totalCent: cart.selectedTotalCent(),
+    imageFailed: false,
+    fallbackImage: '/assets/icons/image-placeholder.svg',
   },
 
   onShow() {
@@ -55,8 +57,19 @@ Page({
   },
 
   onRemove(event: WechatMiniprogram.TouchEvent) {
-    cart.remove([Number(event.currentTarget.dataset.id)])
-    this.refresh()
+    const productId = Number(event.currentTarget.dataset.id)
+    wx.showModal({
+      title: '删除这件商品？',
+      content: '删除后可以重新加入购物车。',
+      confirmText: '确认删除',
+      confirmColor: '#E5484D',
+      success: ({ confirm }) => {
+        if (!confirm) return
+        cart.remove([productId])
+        this.refresh()
+        wx.showToast({ title: '已删除', icon: 'success' })
+      },
+    })
   },
 
   onCheckout() {
@@ -75,5 +88,9 @@ Page({
     wx.navigateTo({
       url: `/pages/product/index?id=${Number(event.currentTarget.dataset.id)}`,
     })
+  },
+
+  onImageError() {
+    this.setData({ imageFailed: true })
   },
 })

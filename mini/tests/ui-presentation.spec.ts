@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { resolveTabNavigation } from '../miniprogram/components/app-tab-bar/navigation'
 import { validateCheckoutFields } from '../miniprogram/pages/checkout/presentation'
-import { buildOrderStatusPresentation } from '../miniprogram/pages/order-detail/presentation'
+import {
+  buildOrderStatusPresentation,
+  resolveOrderProductImage,
+} from '../miniprogram/pages/order-detail/presentation'
 import { formatMoney } from '../miniprogram/utils/money'
 
 describe('mini-program UI presentation', () => {
@@ -33,5 +36,12 @@ describe('mini-program UI presentation', () => {
   it('formats every customer-facing amount with two decimals', () => {
     expect(formatMoney(590)).toBe('¥5.90')
     expect(formatMoney(128000)).toBe('¥1,280.00')
+  })
+  it('uses product-appropriate photography in order snapshots', () => {
+    expect(resolveOrderProductImage(101)).toBe('/assets/categories/dairy.jpg')
+    expect(resolveOrderProductImage(201)).toBe('/assets/categories/snacks.jpg')
+    expect(resolveOrderProductImage(301)).toBe('/assets/categories/grain-oil.jpg')
+    expect(resolveOrderProductImage(401)).toBe('/assets/categories/beverages.jpg')
+    expect(resolveOrderProductImage(501)).toBe('/assets/categories/meat-eggs.jpg')
   })
 })

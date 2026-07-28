@@ -10,7 +10,7 @@
         bind:submit="onSubmitSearch"
       />
       <view wx:if="{{keyword}}" class="clear-button" role="button" aria-label="清空搜索内容" bindtap="onClearKeyword">
-        <image src="/assets/icons/close-circle.svg" mode="aspectFit" />
+        <image class="clear-button-icon" src="/assets/icons/close-circle.svg" mode="aspectFit" />
       </view>
     </view>
     <t-button t-class="search-submit" theme="primary" bind:tap="onSubmitSearch">搜索</t-button>
@@ -57,22 +57,41 @@
           <text class="result-keyword">“{{searchedKeyword}}”</text>
         </view>
         <text class="result-count">已找到 {{products.length}} 件</text>
+        <button class="filter-entry" bindtap="onOpenFilter">筛选</button>
       </view>
       <view class="result-grid">
         <view wx:for="{{products}}" wx:key="id" class="result-card" role="button" aria-label="查看商品 {{item.name}}" data-id="{{item.id}}" hover-class="result-card-hover" bindtap="onOpenProduct">
-          <image class="result-image" src="{{item.coverImageUrl}}" mode="aspectFill" lazy-load />
+          <image class="result-image" src="{{imageFailed ? '/assets/icons/image-placeholder.svg' : (item.coverImageUrl || '/assets/icons/image-placeholder.svg')}}" mode="aspectFill" lazy-load binderror="onImageError" />
           <view class="result-copy">
             <text class="result-name">{{item.name}}</text>
             <text class="result-service">门店现货 · 到店自取</text>
             <view class="result-price-line">
               <text class="result-price">{{item.displayPrice}}</text>
               <text class="result-unit">/{{item.unit}}</text>
+              <view class="result-add"><image class="result-add-icon" src="/assets/icons/plus.svg" mode="aspectFit" /></view>
             </view>
           </view>
         </view>
       </view>
       <view wx:if="{{loading}}" class="list-feedback">正在加载更多结果…</view>
       <view wx:elif="{{reachedEnd}}" class="list-feedback">已展示全部搜索结果</view>
+    </view>
+  </view>
+
+  <view wx:if="{{filterOpen}}" class="filter-overlay" bindtap="onCloseFilter">
+    <view class="filter-sheet" catchtap="noop">
+      <view class="row-between filter-sheet-heading">
+        <text class="section-title">筛选商品</text>
+        <button class="filter-close" bindtap="onCloseFilter">关闭</button>
+      </view>
+      <text class="filter-label">价格区间</text>
+      <view class="filter-options">
+        <view class="filter-option {{selectedPrice === 'all' ? 'is-selected' : ''}}" data-value="all" bindtap="onSelectPrice">全部</view>
+        <view class="filter-option {{selectedPrice === '0-10' ? 'is-selected' : ''}}" data-value="0-10" bindtap="onSelectPrice">¥0–10</view>
+        <view class="filter-option {{selectedPrice === '10-30' ? 'is-selected' : ''}}" data-value="10-30" bindtap="onSelectPrice">¥10–30</view>
+        <view class="filter-option {{selectedPrice === '30+' ? 'is-selected' : ''}}" data-value="30+" bindtap="onSelectPrice">¥30以上</view>
+      </view>
+      <button class="button-primary filter-apply" bindtap="onApplyFilter">查看商品</button>
     </view>
   </view>
 </view>

@@ -11,6 +11,9 @@ Page({
     productId: 0,
     displayPrice: '',
     outOfStock: false,
+    quantity: 1,
+    imageFailed: false,
+    fallbackImage: '/assets/icons/image-placeholder.svg',
   },
 
   onLoad(query: Record<string, string | undefined>) {
@@ -44,12 +47,14 @@ Page({
   onAddToCart() {
     const product = this.data.product
     if (!product || this.data.outOfStock) return
-    cart.add({
-      productId: product.id,
-      name: product.name,
-      coverImageUrl: product.coverImageUrl,
-      unitPriceCent: product.priceCent,
-    })
+    for (let count = 0; count < this.data.quantity; count += 1) {
+      cart.add({
+        productId: product.id,
+        name: product.name,
+        coverImageUrl: product.coverImageUrl,
+        unitPriceCent: product.priceCent,
+      })
+    }
     wx.showToast({ title: '已加入购物车', icon: 'success' })
   },
 
@@ -59,5 +64,19 @@ Page({
 
   onRetry() {
     if (this.data.productId) void this.loadProduct(this.data.productId)
+  },
+
+  onDecreaseQuantity() {
+    if (this.data.quantity > 1) {
+      this.setData({ quantity: this.data.quantity - 1 })
+    }
+  },
+
+  onIncreaseQuantity() {
+    this.setData({ quantity: this.data.quantity + 1 })
+  },
+
+  onImageError() {
+    this.setData({ imageFailed: true })
   },
 })

@@ -1,29 +1,29 @@
 page {
-  /* Brand: UI UX Pro Max "统一酒红" */
-  --primary-50: #FCF5F6;
-  --primary-100: #F5E7EA;
-  --primary-200: #EACBD1;
-  --primary-300: #D9A6B0;
-  --primary-400: #C57584;
-  --primary-500: #AD4B5E;
-  --primary-600: #8E2F3F;
-  --primary-700: #762536;
-  --primary-800: #5E1D2B;
-  --primary-900: #451520;
+  /* Brand: approved navy fresh direction */
+  --primary-50: #F4F7FC;
+  --primary-100: #EAF2FF;
+  --primary-200: #CFE0F7;
+  --primary-300: #9EBDE5;
+  --primary-400: #5D8BC8;
+  --primary-500: #245B9E;
+  --primary-600: #082F6B;
+  --primary-700: #082F6B;
+  --primary-800: #062654;
+  --primary-900: #041A3B;
   --color-accent-gold: #A16207;
   --color-accent-gold-bg: #FEF3C7;
 
   /* TDesign MiniProgram theme mapping */
-  --td-brand-color-1: #FCF6F7;
-  --td-brand-color-2: #F5E7EA;
-  --td-brand-color-3: #E9C8CE;
-  --td-brand-color-4: #D79DA7;
-  --td-brand-color-5: #BC6C7A;
-  --td-brand-color-6: #A34B5C;
-  --td-brand-color-7: #8E2F3F;
-  --td-brand-color-8: #762536;
-  --td-brand-color-9: #5E1D2B;
-  --td-brand-color-10: #48151F;
+  --td-brand-color-1: #F4F7FC;
+  --td-brand-color-2: #EAF2FF;
+  --td-brand-color-3: #CFE0F7;
+  --td-brand-color-4: #9EBDE5;
+  --td-brand-color-5: #5D8BC8;
+  --td-brand-color-6: #245B9E;
+  --td-brand-color-7: #082F6B;
+  --td-brand-color-8: #062654;
+  --td-brand-color-9: #041A3B;
+  --td-brand-color-10: #021126;
   --td-primary-color-1: var(--td-brand-color-1);
   --td-primary-color-2: var(--td-brand-color-2);
   --td-primary-color-3: var(--td-brand-color-3);
@@ -36,48 +36,49 @@ page {
   --td-brand-color-disabled: var(--primary-200);
   --td-brand-color-light: var(--primary-100);
   --td-brand-color-light-active: var(--primary-200);
-  --td-bg-color-page: #F8F5F1;
+  --td-bg-color-page: #F7F9FC;
   --td-bg-color-container: #FFFFFF;
-  --td-bg-color-secondarycontainer: #F3EDEE;
-  --td-bg-color-container-active: #F5E7EA;
-  --td-text-color-primary: #292326;
-  --td-text-color-secondary: #595054;
-  --td-text-color-placeholder: #71686C;
-  --td-border-level-1-color: #E8E1E3;
-  --td-border-level-2-color: #D8CFD2;
-  --td-component-border: #D8CFD2;
+  --td-bg-color-secondarycontainer: #F1F4F8;
+  --td-bg-color-container-active: #EAF2FF;
+  --td-text-color-primary: #0D1B36;
+  --td-text-color-secondary: #52617A;
+  --td-text-color-placeholder: #8290A4;
+  --td-border-level-1-color: #E7ECF3;
+  --td-border-level-2-color: #D7E0EB;
+  --td-component-border: #D7E0EB;
   --td-radius-default: 8rpx;
   --td-radius-medium: 16rpx;
   --td-radius-large: 24rpx;
   --td-tab-bar-bg-color: #FFFFFF;
-  --td-tab-bar-border-color: #E8E1E3;
-  --td-tab-bar-active-color: #8E2F3F;
-  --td-tab-bar-color: #292326;
-  --td-tab-bar-height: 112rpx;
+  --td-tab-bar-border-color: #E7ECF3;
+  --td-tab-bar-active-color: #082F6B;
+  --td-tab-bar-color: #718096;
+  --td-tab-bar-height: 132rpx;
 
   /* Neutral surfaces and content */
-  --color-bg-page: #F8F5F1;
+  --color-bg-page: #F7F9FC;
   --color-bg-surface: #FFFFFF;
   --color-bg-overlay: #FFFFFF;
-  --color-bg-subtle: #F3EDEE;
-  --color-bg-hover: #F5E7EA;
-  --color-text-primary: #292326;
-  --color-text-secondary: #595054;
-  --color-text-tertiary: #6F666A;
-  --color-text-placeholder: #71686C;
-  --color-border-default: #D8CFD2;
-  --color-border-control: #877D81;
-  --color-divider: #E8E1E3;
-  --color-mask: rgba(41, 35, 38, 0.48);
-  --color-disabled-bg: #E9E4E5;
-  --color-disabled-text: #746C6F;
+  --color-bg-subtle: #F1F4F8;
+  --color-bg-hover: #EAF2FF;
+  --color-text-primary: #0D1B36;
+  --color-text-secondary: #52617A;
+  --color-text-tertiary: #718096;
+  --color-text-placeholder: #8290A4;
+  --color-border-default: #E7ECF3;
+  --color-border-control: #C9D4E2;
+  --color-divider: #E7ECF3;
+  --color-mask: rgba(13, 27, 54, 0.48);
+  --color-disabled-bg: #E9EEF5;
+  --color-disabled-text: #8B98AA;
+  --color-price: #E5484D;
 
   /* Semantic feedback */
-  --color-success: #1F7A5A;
+  --color-success: #2E9B62;
   --color-success-bg: #ECF8F2;
-  --color-success-border: #86C7AD;
-  --color-success-text: #15543E;
-  --color-success-icon: #1F7A5A;
+  --color-success-border: #9BD4B7;
+  --color-success-text: #1D7146;
+  --color-success-icon: #2E9B62;
   --color-warning: #B16A00;
   --color-warning-bg: #FFF7E6;
   --color-warning-border: #E6B866;
@@ -169,14 +170,14 @@ page {
 
   /* Borders, focus, elevation and mask */
   --border-width-default: 2rpx;
-  --border-color-default: #D8CFD2;
-  --border-color-control: #877D81;
-  --border-color-focus: #8E2F3F;
-  --shadow-focus: 0 0 0 4rpx #FFFFFF, 0 0 0 8rpx #8E2F3F;
-  --shadow-card: 0 4rpx 16rpx rgba(72, 21, 31, 0.06);
-  --shadow-dropdown: 0 16rpx 48rpx rgba(72, 21, 31, 0.12);
-  --shadow-modal: 0 32rpx 80rpx rgba(72, 21, 31, 0.16);
-  --overlay-mask: rgba(41, 35, 38, 0.48);
+  --border-color-default: #E7ECF3;
+  --border-color-control: #C9D4E2;
+  --border-color-focus: #082F6B;
+  --shadow-focus: 0 0 0 4rpx #FFFFFF, 0 0 0 8rpx #9EBDE5;
+  --shadow-card: 0 6rpx 20rpx rgba(13, 27, 54, 0.06);
+  --shadow-dropdown: 0 16rpx 48rpx rgba(13, 27, 54, 0.12);
+  --shadow-modal: 0 32rpx 80rpx rgba(13, 27, 54, 0.18);
+  --overlay-mask: rgba(13, 27, 54, 0.48);
 
   /* Controls, media and motion */
   --size-touch-min: 88rpx;

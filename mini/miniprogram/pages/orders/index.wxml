@@ -1,7 +1,12 @@
 <view class="page-shell">
   <view class="page-intro orders-header">
     <text class="page-title">我的订单</text>
-    <text class="page-description">查看备货进度和取货状态</text>
+  </view>
+  <view class="order-filters">
+    <view class="order-filter {{selectedStatus === 'ALL' ? 'is-active' : ''}}" data-status="ALL" bindtap="onFilterTap">全部</view>
+    <view class="order-filter {{selectedStatus === 'PENDING_CONFIRMATION' ? 'is-active' : ''}}" data-status="PENDING_CONFIRMATION" bindtap="onFilterTap">待确认</view>
+    <view class="order-filter {{selectedStatus === 'PREPARING' ? 'is-active' : ''}}" data-status="PREPARING" bindtap="onFilterTap">备货中</view>
+    <view class="order-filter {{selectedStatus === 'READY_FOR_PICKUP' ? 'is-active' : ''}}" data-status="READY_FOR_PICKUP" bindtap="onFilterTap">待取货</view>
   </view>
   <view wx:if="{{error}}" class="state-panel">
     <image class="orders-state-icon" src="/assets/icons/close-circle.svg" mode="aspectFit" />
@@ -29,9 +34,13 @@
         <text class="status-tag status-{{item.status}}">{{orderStatusLabel[item.status]}}</text>
       </view>
       <view class="order-divider"></view>
-      <view class="order-summary-line">
-        <text>{{item.itemCount}} 种商品</text>
-        <text>{{item.displayCreatedAt}}</text>
+      <view class="order-product-summary">
+        <image class="order-photo" src="{{item.imageUrl}}" mode="aspectFill" />
+        <view class="order-product-copy">
+          <text class="order-product-name">{{item.itemCount}} 种商品</text>
+          <text class="order-store">到店自取 · 鲁能超市李老家分店</text>
+          <text class="order-created">{{item.displayCreatedAt}}</text>
+        </view>
       </view>
       <view class="row-between order-card-foot">
         <text class="payment-tag payment-{{item.paymentStatus}}">{{paymentStatusLabel[item.paymentStatus]}}</text>

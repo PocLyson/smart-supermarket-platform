@@ -1,0 +1,23 @@
+<view class="auth-page">
+  <view class="auth-card">
+    <view class="wechat-mark"><text>WX</text></view>
+    <text class="auth-title">登录后享受完整服务</text>
+    <text class="auth-copy">同步订单与购物车，保存取货信息，并查看历史订单。</text>
+
+    <view class="permission-list">
+      <view class="permission-row">
+        <image class="permission-icon" src="/assets/icons/user.svg" mode="aspectFit" />
+        <view><text class="permission-title">微信头像和昵称</text><text class="permission-copy">用于账号展示</text></view>
+      </view>
+      <view class="permission-row">
+        <image class="permission-icon" src="/assets/icons/order.svg" mode="aspectFit" />
+        <view><text class="permission-title">订单与取货信息</text><text class="permission-copy">用于同步进度和到店取货</text></view>
+      </view>
+    </view>
+
+    <button class="button-primary auth-primary" loading="{{loading}}" disabled="{{loading}}" bindtap="onAuthorize">{{loading ? '正在登录' : '微信登录'}}</button>
+    <button class="button-secondary auth-secondary" disabled="{{loading}}" bindtap="onCancel">暂不登录</button>
+    <text wx:if="{{error}}" class="auth-error" role="alert">{{error}}</text>
+    <text class="auth-legal">登录即表示同意《用户服务协议》和《隐私政策》</text>
+  </view>
+</view>

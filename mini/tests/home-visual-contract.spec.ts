@@ -8,23 +8,24 @@ function read(relativePath: string) {
   return readFileSync(resolve(miniRoot, relativePath), 'utf8')
 }
 
-describe('burgundy retail visual contract', () => {
-  it('publishes one unified burgundy retail palette', () => {
+describe('navy fresh retail visual contract', () => {
+  it('publishes the approved navy fresh retail palette', () => {
     const theme = read('styles/theme.wxss')
     const appConfig = JSON.parse(read('app.json')) as {
       window?: { navigationBarTitleText?: string }
     }
 
-    expect(theme).toContain('--primary-600: #8E2F3F;')
-    expect(theme).toContain('--primary-700: #762536;')
-    expect(theme).toContain('--primary-800: #5E1D2B;')
-    expect(theme).toContain('--primary-100: #F5E7EA;')
-    expect(theme).toContain('--color-bg-page: #F8F5F1;')
-    expect(theme).toContain('--color-text-primary: #292326;')
-    expect(theme).toContain('--color-accent-gold: #A16207;')
-    expect(theme).not.toContain('#DC2626')
-    expect(theme).not.toContain('#2F7046')
-    expect(appConfig.window?.navigationBarTitleText).toBe('智慧超市')
+    expect(theme).toContain('--primary-600: #082F6B;')
+    expect(theme).toContain('--primary-700: #082F6B;')
+    expect(theme).toContain('--primary-100: #EAF2FF;')
+    expect(theme).toContain('--color-bg-page: #F7F9FC;')
+    expect(theme).toContain('--color-text-primary: #0D1B36;')
+    expect(theme).toContain('--color-success: #2E9B62;')
+    expect(theme).toContain('--color-price: #E5484D;')
+    expect(theme).not.toContain('#8E2F3F')
+    expect(appConfig.window?.navigationBarTitleText).toBe(
+      '鲁能超市李老家分店',
+    )
   })
 
   it('keeps every required home region and excludes the AI assistant', () => {
@@ -33,10 +34,9 @@ describe('burgundy retail visual contract', () => {
 
     expect(home).toContain('鲁能超市李老家分店')
     expect(home).toContain('home-hero')
-    expect(home).toContain('service-strip')
     expect(home).toContain('category-grid')
     expect(home).toContain('product-grid')
-    expect(home).toContain('今日好价')
+    expect(home).toContain('精选商品')
     expect(navigation).toContain('首页')
     expect(navigation).toContain('分类')
     expect(navigation).toContain('购物车')
@@ -107,6 +107,7 @@ describe('burgundy retail visual contract', () => {
     expect(appConfig.pages).toContain('pages/category/index')
     expect(appConfig.pages).toContain('pages/search/index')
     expect(appConfig.pages).toContain('pages/submit-result/index')
+    expect(appConfig.pages).toContain('pages/auth/index')
   })
 
   it('constrains native category buttons to the five-column grid', () => {
@@ -117,12 +118,13 @@ describe('burgundy retail visual contract', () => {
     expect(home).toContain('role="button"')
     expect(home).not.toContain('<button class="category-item')
     expect(home).not.toContain('index < 9')
-    expect(home).toContain('categoryImages[index % categoryImages.length]')
+    expect(home.match(/class="category-slot"/g)).toHaveLength(5)
+    expect(home).toContain('烟酒')
     expect(homeStyles).toMatch(
-      /\.category-grid\s*\{[\s\S]*?display:\s*flex;[\s\S]*?flex-wrap:\s*wrap;/,
+      /\.category-grid\s*\{[\s\S]*?display:\s*flex;[\s\S]*?flex-wrap:\s*nowrap;/,
     )
     expect(homeStyles).toMatch(
-      /\.category-slot\s*\{[\s\S]*?box-sizing:\s*border-box;[\s\S]*?width:\s*20%;/,
+      /\.category-slot\s*\{[\s\S]*?box-sizing:\s*border-box;[\s\S]*?width:\s*calc\(\(100% - 64rpx\) \/ 5\);/,
     )
     expect(homeStyles).toMatch(
       /\.category-item\s*\{[\s\S]*?box-sizing:\s*border-box;[\s\S]*?width:\s*100%;/,

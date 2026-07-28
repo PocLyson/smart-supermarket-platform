@@ -1,0 +1,118 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { describe, expect, it } from 'vitest'
+
+const miniRoot = resolve(__dirname, '..', 'miniprogram')
+const read = (relativePath: string) =>
+  readFileSync(resolve(miniRoot, relativePath), 'utf8')
+
+const braceBalance = (source: string) =>
+  [...source].reduce(
+    (balance, character) =>
+      character === '{' ? balance + 1 : character === '}' ? balance - 1 : balance,
+    0,
+  )
+
+describe('approved navy fresh UI structure', () => {
+  it('uses a floating four-item capsule with a safe-area offset', () => {
+    const markup = read('components/app-tab-bar/index.wxml')
+    const styles = read('components/app-tab-bar/index.wxss')
+
+    expect(braceBalance(styles)).toBe(0)
+    expect(markup.match(/class="tab-item/g)).toHaveLength(4)
+    expect(styles).toMatch(/\.app-tab-bar\s*\{[\s\S]*?left:\s*36rpx;/)
+    expect(styles).toMatch(
+      /\.app-tab-bar\s*\{[\s\S]*?right:\s*36rpx;[\s\S]*?border-radius:\s*var\(--radius-round\);/,
+    )
+    expect(styles).toContain('env(safe-area-inset-bottom)')
+    expect(styles).toMatch(/\.tab-item\s*\{[\s\S]*?min-height:\s*88rpx;/)
+    expect(styles).toMatch(
+      /\.tab-item\.is-active\s*\{[\s\S]*?background:\s*var\(--primary-100\);/,
+    )
+  })
+
+  it('implements the approved compact category strip and order filters', () => {
+    const category = read('pages/category/index.wxml')
+    const categoryStyles = read('pages/category/index.wxss')
+    const orders = read('pages/orders/index.wxml')
+
+    expect(category).toContain('category-strip')
+    expect(category).not.toContain('category-rail')
+    expect(category).toContain('烟酒')
+    expect(category.indexOf('烟酒')).toBeLessThan(category.indexOf('蛋奶食品'))
+    expect(categoryStyles).toMatch(
+      /\.category-chip\s*\{[\s\S]*?width:\s*108rpx;/,
+    )
+    expect(orders).toContain('order-filters')
+    expect(orders).toContain('全部')
+    expect(orders).toContain('待确认')
+    expect(orders).toContain('备货中')
+    expect(orders).toContain('待取货')
+  })
+
+  it('places logged-out WeChat login in the profile header only', () => {
+    const profile = read('pages/profile/index.wxml')
+    const presentation = read('pages/profile/presentation.ts')
+
+    expect(presentation).toContain("displayName: '登录 / 注册'")
+    expect(presentation).toContain("pickupSummary: '同步订单与购物车'")
+    expect(profile).toContain('profile-login-button')
+    expect(profile).not.toContain('login-guide')
+    expect(profile).not.toContain('微信用户')
+    expect(profile).toContain('order-status-grid')
+  })
+
+  it('provides local image error recovery on every product-heavy page', () => {
+    for (const page of ['home', 'category', 'search', 'product', 'cart', 'checkout']) {
+      const markup = read(`pages/${page}/index.wxml`)
+      expect(markup, page).toContain('binderror="onImageError"')
+      expect(markup, page).toContain('image-placeholder.svg')
+    }
+  })
+
+  it('uses the official store name wherever a specific store is shown', () => {
+    const files = [
+      'pages/home/index.wxml',
+      'pages/product/index.wxml',
+      'pages/checkout/index.wxml',
+      'pages/submit-result/index.wxml',
+      'pages/orders/index.wxml',
+      'pages/order-detail/index.wxml',
+      'pages/profile/index.wxml',
+    ]
+    const customerCopy = files.map(read).join('\n')
+
+    expect(customerCopy).toContain('鲁能超市李老家分店')
+    expect(customerCopy).not.toMatch(/(?<!鲁能超市)李老家分店/)
+  })
+
+  it('registers explicit auth and all approved secondary states', () => {
+    const appConfig = JSON.parse(read('app.json')) as { pages: string[] }
+    const auth = read('pages/auth/index.wxml')
+    const submitResult = read('pages/submit-result/index.wxml')
+
+    expect(appConfig.pages).toContain('pages/auth/index')
+    expect(auth).toContain('微信登录')
+    expect(auth).toContain('同步订单与购物车')
+    expect(submitResult).toContain('订单提交成功')
+    expect(submitResult).toContain('订单结果确认中')
+  })
+
+  it('uses class selectors that the WeChat component compiler accepts', () => {
+    const styleFiles = [
+      'pages/home/index.wxss',
+      'pages/category/index.wxss',
+      'pages/search/index.wxss',
+      'pages/product/index.wxss',
+      'pages/auth/index.wxss',
+      'pages/profile/index.wxss',
+      'pages/order-detail/index.wxss',
+    ]
+
+    for (const file of styleFiles) {
+      expect(read(file), file).not.toMatch(
+        /\.[A-Za-z0-9_-]+\s+(?:image|text|view|button)(?::[A-Za-z-]+)?\s*\{/,
+      )
+    }
+  })
+})

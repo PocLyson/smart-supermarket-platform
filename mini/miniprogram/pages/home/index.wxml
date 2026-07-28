@@ -31,44 +31,51 @@
 
   <view class="home-content">
     <view class="home-hero">
-      <image class="hero-image" src="/assets/home/burgundy-grocery-hero.jpg" mode="aspectFill" />
+      <image class="hero-image" src="/assets/home/navy-fresh-grocery-hero.png" mode="aspectFill" />
       <view class="hero-copy">
-        <text class="hero-kicker">李老家分店 · 今日精选</text>
-        <text class="hero-title">新鲜好物 就在家门口</text>
-        <text class="hero-subtitle">线上选购 · 到店自取 · 省时省心</text>
+        <text class="hero-kicker">鲁能超市李老家分店 · 今日精选</text>
+        <text class="hero-title">新鲜好物
+到店即取</text>
+        <text class="hero-subtitle">门店现货 · 省时省心</text>
       </view>
     </view>
 
-    <view class="service-strip" aria-label="门店服务">
-      <view class="service-item"><text class="service-dot"></text><text>门店现货</text></view>
-      <view class="service-item"><text class="service-dot"></text><text>到店自取</text></view>
-      <view class="service-item"><text class="service-dot"></text><text>价格透明</text></view>
-    </view>
-
     <view class="category-heading">
-      <text class="category-title">逛分类</text>
-      <text class="category-tip">快速找到想买的</text>
+      <text class="category-title">热门分类</text>
+      <text class="category-tip">全部 ›</text>
     </view>
 
     <view id="category-section" class="category-grid">
       <view class="category-slot">
-        <view class="category-item {{selectedCategoryId == null ? 'is-selected' : ''}}" role="button" aria-label="全部商品" data-id="all" hover-class="category-hover" bindtap="onSelectCategory">
-          <view class="category-image-wrap">
-            <image class="category-image" src="{{categoryImages[0]}}" mode="aspectFill" />
-          </view>
-          <text class="category-name">全部商品</text>
+        <view class="category-item" role="button" aria-label="乳品饮料" data-name="乳品饮料" hover-class="category-hover" bindtap="onSelectCategory">
+          <view class="category-image-wrap"><image class="category-image" src="/assets/categories/dairy.jpg" mode="aspectFill" /></view>
+          <text class="category-name">乳品饮料</text>
         </view>
       </view>
-      <block wx:for="{{categories}}" wx:key="id">
-        <view class="category-slot">
-          <view class="category-item {{selectedCategoryId === item.id ? 'is-selected' : ''}}" role="button" aria-label="{{item.name}}" data-id="{{item.id}}" hover-class="category-hover" bindtap="onSelectCategory">
-            <view class="category-image-wrap">
-              <image class="category-image" src="{{categoryImages[index % categoryImages.length]}}" mode="aspectFill" />
-            </view>
-            <text class="category-name">{{item.name}}</text>
-          </view>
+      <view class="category-slot">
+        <view class="category-item" role="button" aria-label="休闲零食" data-name="休闲零食" hover-class="category-hover" bindtap="onSelectCategory">
+          <view class="category-image-wrap"><image class="category-image" src="/assets/categories/snacks.jpg" mode="aspectFill" /></view>
+          <text class="category-name">休闲零食</text>
         </view>
-      </block>
+      </view>
+      <view class="category-slot">
+        <view class="category-item" role="button" aria-label="粮油日用" data-name="粮油日用" hover-class="category-hover" bindtap="onSelectCategory">
+          <view class="category-image-wrap"><image class="category-image" src="/assets/categories/grain-oil.jpg" mode="aspectFill" /></view>
+          <text class="category-name">粮油日用</text>
+        </view>
+      </view>
+      <view class="category-slot">
+        <view class="category-item" role="button" aria-label="烟酒" data-name="烟酒" hover-class="category-hover" bindtap="onSelectCategory">
+          <view class="category-image-wrap"><image class="category-image" src="/assets/categories/beverages.jpg" mode="aspectFill" /></view>
+          <text class="category-name">烟酒</text>
+        </view>
+      </view>
+      <view class="category-slot">
+        <view class="category-item" role="button" aria-label="全部分类" data-id="all" hover-class="category-hover" bindtap="onSelectCategory">
+          <view class="category-image-wrap"><image class="category-image" src="/assets/categories/vegetables.jpg" mode="aspectFill" /></view>
+          <text class="category-name">全部分类</text>
+        </view>
+      </view>
     </view>
 
     <view wx:if="{{error && !products.length}}" class="state-panel home-state">
@@ -85,7 +92,7 @@
 
     <view wx:elif="{{loading && !products.length}}" class="recommend-section">
       <view class="section-heading">
-        <text class="section-title">精选好物</text>
+        <text class="section-title">精选商品</text>
         <text class="section-subtitle">正在准备商品</text>
       </view>
       <view class="product-grid">
@@ -102,21 +109,21 @@
 
     <view wx:else class="recommend-section">
       <view class="section-heading">
-        <text class="section-title">精选好物</text>
-        <text class="section-subtitle">到店自取 放心选购</text>
+        <text class="section-title">精选商品</text>
+        <text class="section-subtitle">门店现货 · 到店自取</text>
       </view>
       <view class="product-grid">
         <view wx:for="{{products}}" wx:key="id" class="product-card" data-id="{{item.id}}" hover-class="product-card-hover" bindtap="onOpenProduct">
-          <image class="product-image" src="{{item.coverImageUrl}}" mode="aspectFill" />
+          <image class="product-image" src="{{imageFailed ? '/assets/icons/image-placeholder.svg' : (item.coverImageUrl || '/assets/icons/image-placeholder.svg')}}" mode="aspectFill" binderror="onImageError" />
           <view class="product-content">
             <text class="product-name">{{item.name}}</text>
-            <text class="deal-tag">今日好价</text>
+            <text class="deal-tag">门店精选</text>
             <view class="product-meta">
               <view>
                 <text class="product-price">{{item.displayPrice}}</text>
                 <text class="product-unit">/{{item.unit}}</text>
               </view>
-              <view class="product-action" aria-label="查看商品">›</view>
+              <view class="product-action" aria-label="查看商品"><image class="product-action-icon" src="/assets/icons/plus.svg" mode="aspectFit" /></view>
             </view>
           </view>
         </view>

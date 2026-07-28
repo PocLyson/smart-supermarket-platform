@@ -31,3 +31,15 @@ const presentations: Record<OrderStatus, OrderStatusPresentation> = {
 export const buildOrderStatusPresentation = (
   status: OrderStatus,
 ): OrderStatusPresentation => presentations[status]
+
+const orderProductImages: Record<number, string> = {
+  1: '/assets/categories/dairy.jpg',
+  2: '/assets/categories/snacks.jpg',
+  3: '/assets/categories/grain-oil.jpg',
+  4: '/assets/categories/beverages.jpg',
+  5: '/assets/categories/meat-eggs.jpg',
+}
+
+export const resolveOrderProductImage = (productId: number): string =>
+  orderProductImages[Math.floor(productId / 100)] ??
+  '/assets/icons/image-placeholder.svg'

@@ -8,7 +8,7 @@
       <view class="row-between cart-item-top">
         <label class="cart-select">
           <checkbox value="{{item.productId}}" checked="{{item.selected}}" />
-          <image class="cart-image" src="{{item.coverImageUrl}}" mode="aspectFill" data-id="{{item.productId}}" catchtap="onOpenProduct" lazy-load />
+          <image class="cart-image" src="{{imageFailed ? '/assets/icons/image-placeholder.svg' : (item.coverImageUrl || '/assets/icons/image-placeholder.svg')}}" mode="aspectFill" data-id="{{item.productId}}" catchtap="onOpenProduct" lazy-load binderror="onImageError" />
           <view class="cart-product-copy" data-id="{{item.productId}}" catchtap="onOpenProduct">
             <text class="cart-name">{{item.name}}</text>
             <text class="cart-service">门店现货 · 到店自取</text>
