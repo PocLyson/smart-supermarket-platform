@@ -12,18 +12,27 @@ public class WechatSessionClient {
     private final RestClient restClient;
     private final String appId;
     private final String appSecret;
+    private final boolean localMockEnabled;
+    private final String localMockOpenid;
 
     public WechatSessionClient(
         RestClient.Builder builder,
         @Value("${smart-store.wechat.app-id}") String appId,
-        @Value("${smart-store.wechat.app-secret}") String appSecret
+        @Value("${smart-store.wechat.app-secret}") String appSecret,
+        @Value("${smart-store.wechat.local-mock-enabled:false}") boolean localMockEnabled,
+        @Value("${smart-store.wechat.local-mock-openid:local-dev-customer}") String localMockOpenid
     ) {
         this.restClient = builder.baseUrl("https://api.weixin.qq.com").build();
         this.appId = appId;
         this.appSecret = appSecret;
+        this.localMockEnabled = localMockEnabled;
+        this.localMockOpenid = localMockOpenid;
     }
 
     public WechatSession exchange(String code) {
+        if (localMockEnabled) {
+            return new WechatSession(localMockOpenid, "local-mock-session");
+        }
         WechatResponse response = restClient.get()
             .uri(uri -> uri.path("/sns/jscode2session")
                 .queryParam("appid", appId)

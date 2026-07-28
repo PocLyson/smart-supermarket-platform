@@ -89,7 +89,7 @@ public class SecurityConfig {
 
     @Bean
     CorsConfigurationSource corsConfigurationSource(
-        @Value("${smart-store.cors.allowed-origins:http://localhost:5173}")
+        @Value("${smart-store.cors.allowed-origins:http://localhost:5173,http://127.0.0.1:5173}")
         List<String> allowedOrigins
     ) {
         CorsConfiguration configuration = new CorsConfiguration();
