@@ -1,4 +1,12 @@
 import assert from 'node:assert/strict'
+import {
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import test from 'node:test'
 import { fileURLToPath } from 'node:url'
 import {
@@ -6,6 +14,7 @@ import {
   parseDotEnv,
   validateDeploymentFiles,
   validateEnvironment,
+  validateMiniOrigins,
 } from './production-readiness.mjs'
 
 const repositoryRoot = fileURLToPath(new URL('../..', import.meta.url))
@@ -22,6 +31,24 @@ const validEnvironment = {
   WECHAT_APP_SECRET: 'wechat-secret-kept-only-on-the-server',
   WECHAT_LOCAL_MOCK_ENABLED: 'false',
   TLS_CERT_DIR: './certs',
+}
+
+function createMiniEnvironment(t, trial, release) {
+  const root = mkdtempSync(join(tmpdir(), 'smart-store-readiness-'))
+  const configDirectory = join(root, 'mini', 'miniprogram', 'config')
+  mkdirSync(configDirectory, { recursive: true })
+  writeFileSync(
+    join(configDirectory, 'env.ts'),
+    `const apiBaseUrls = {
+  develop: 'http://localhost:8080',
+  trial: '${trial}',
+  release: '${release}',
+}
+`,
+    'utf8',
+  )
+  t.after(() => rmSync(root, { force: true, recursive: true }))
+  return root
 }
 
 test('parseDotEnv ignores comments and preserves values after the first equals sign', () => {
@@ -102,4 +129,41 @@ test('CLI rejects tracked production env files and missing certificates', () => 
 
 test('deployment files force the public hostname and disable local login mock', () => {
   assert.deepEqual(validateDeploymentFiles(repositoryRoot), [])
+})
+
+test('mini trial and release origins may both match PUBLIC_HOST', (t) => {
+  const root = createMiniEnvironment(
+    t,
+    'https://shop.registered-domain.cn',
+    'https://shop.registered-domain.cn',
+  )
+
+  assert.deepEqual(
+    validateMiniOrigins(root, 'shop.registered-domain.cn'),
+    [],
+  )
+})
+
+test('mini origin mismatch returns one stable error', (t) => {
+  const root = createMiniEnvironment(
+    t,
+    'https://other.registered-domain.cn',
+    'https://shop.registered-domain.cn',
+  )
+
+  assert.deepEqual(validateMiniOrigins(root, 'shop.registered-domain.cn'), [
+    '小程序 trial 与 release API origin 必须与 PUBLIC_HOST 完全一致',
+  ])
+})
+
+test('mini invalid sentinels return one stable error', (t) => {
+  const root = createMiniEnvironment(
+    t,
+    'https://trial-api.example.invalid',
+    'https://api.example.invalid',
+  )
+
+  assert.deepEqual(validateMiniOrigins(root, 'shop.registered-domain.cn'), [
+    '小程序 trial 与 release API origin 必须与 PUBLIC_HOST 完全一致',
+  ])
 })

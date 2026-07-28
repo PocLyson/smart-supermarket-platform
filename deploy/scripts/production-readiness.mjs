@@ -142,6 +142,27 @@ export function validateDeploymentFiles(rootDir) {
   return errors
 }
 
+export function validateMiniOrigins(rootDir, publicHost) {
+  const error =
+    '小程序 trial 与 release API origin 必须与 PUBLIC_HOST 完全一致'
+  let source
+
+  try {
+    source = readFileSync(
+      join(rootDir, 'mini', 'miniprogram', 'config', 'env.ts'),
+      'utf8',
+    )
+  } catch {
+    return [error]
+  }
+
+  const trial = source.match(/trial:\s*'([^']+)'/)?.[1]
+  const release = source.match(/release:\s*'([^']+)'/)?.[1]
+  const expectedOrigin = `https://${publicHost}`
+
+  return trial === expectedOrigin && release === expectedOrigin ? [] : [error]
+}
+
 const defaultRepositoryRoot = fileURLToPath(new URL('../..', import.meta.url))
 
 function parseArguments(args) {
@@ -192,6 +213,7 @@ export function main(args, dependencies = {}) {
   const errors = [
     ...validateEnvironment(environment),
     ...validateDeploymentFiles(repositoryRoot),
+    ...validateMiniOrigins(repositoryRoot, environment.PUBLIC_HOST ?? ''),
   ]
 
   if (platform !== 'win32') {
