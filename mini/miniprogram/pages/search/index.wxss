@@ -1,0 +1,210 @@
+.search-page {
+  min-height: 100vh;
+  background: var(--color-bg-page);
+}
+
+.search-toolbar {
+  display: flex;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: var(--border-width-default) solid var(--color-divider);
+  background: var(--color-bg-surface);
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.search-control {
+  position: relative;
+  min-width: 0;
+  flex: 1;
+  --td-search-bg-color: var(--color-bg-subtle);
+  --td-search-height: var(--size-touch-min);
+}
+
+.clear-button {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  right: 0;
+  display: flex;
+  width: var(--size-touch-min);
+  height: var(--size-touch-min);
+  align-items: center;
+  justify-content: center;
+}
+
+.clear-button image {
+  width: 36rpx;
+  height: 36rpx;
+}
+
+.search-submit {
+  min-width: 120rpx;
+  min-height: var(--size-touch-min);
+  margin: 0 !important;
+}
+
+.search-content {
+  padding: var(--space-4);
+}
+
+.discovery-heading {
+  margin-bottom: var(--space-3);
+}
+
+.clear-recent {
+  min-width: var(--size-touch-min);
+  min-height: var(--size-touch-min);
+  margin: 0;
+  padding: 0 var(--space-2);
+  border: 0;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  font-size: var(--type-helper-size);
+}
+
+.clear-recent::after,
+.recent-chip::after {
+  border: 0;
+}
+
+.recent-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.recent-chip {
+  min-height: var(--size-touch-min);
+  margin: 0;
+  padding: 0 var(--space-4);
+  border: var(--border-width-default) solid var(--color-divider);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  font-size: var(--type-helper-size);
+}
+
+.quiet-state,
+.search-state {
+  display: flex;
+  padding: var(--space-12) var(--space-4);
+  flex-direction: column;
+  align-items: center;
+}
+
+.quiet-state {
+  color: var(--primary-500);
+}
+
+.quiet-title,
+.state-title {
+  margin-top: var(--space-3);
+  color: var(--color-text-primary);
+  font-size: var(--type-card-title-size);
+  font-weight: var(--weight-semibold);
+}
+
+.quiet-copy,
+.state-copy {
+  margin-top: var(--space-1);
+  color: var(--color-text-tertiary);
+  font-size: var(--type-helper-size);
+  text-align: center;
+}
+
+.state-button {
+  margin-top: var(--space-4);
+}
+
+.result-heading {
+  display: flex;
+  margin-bottom: var(--space-3);
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.result-keyword {
+  margin-left: var(--space-2);
+  color: var(--primary-700);
+  font-size: var(--type-helper-size);
+}
+
+.result-count {
+  color: var(--color-text-tertiary);
+  font-size: var(--type-caption-size);
+}
+
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.result-card {
+  overflow: hidden;
+  border: var(--border-width-default) solid var(--color-divider);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
+}
+
+.result-card-hover {
+  border-color: var(--primary-300);
+  background: var(--primary-50);
+}
+
+.result-image {
+  display: block;
+  width: 100%;
+  height: 280rpx;
+  background: var(--color-bg-subtle);
+}
+
+.result-copy {
+  padding: var(--space-3);
+}
+
+.result-name {
+  display: -webkit-box;
+  min-height: 96rpx;
+  overflow: hidden;
+  color: var(--color-text-primary);
+  font-size: var(--type-card-title-size);
+  font-weight: var(--weight-semibold);
+  line-height: var(--type-card-title-line);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.result-service {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--color-text-tertiary);
+  font-size: var(--type-caption-size);
+}
+
+.result-price-line {
+  margin-top: var(--space-2);
+}
+
+.result-price {
+  color: var(--primary-600);
+  font-size: 40rpx;
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.result-unit {
+  color: var(--color-text-tertiary);
+  font-size: var(--type-caption-size);
+}
+
+.list-feedback {
+  padding: var(--space-6) 0;
+  color: var(--color-text-tertiary);
+  font-size: var(--type-caption-size);
+  text-align: center;
+}
+
+.search-skeleton {
+  padding-top: var(--space-4);
+}

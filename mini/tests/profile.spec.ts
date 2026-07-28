@@ -41,8 +41,8 @@ describe('four-item primary navigation', () => {
       url: '/pages/home/index',
     })
     expect(resolveTabNavigation('profile', 'category')).toEqual({
-      method: 'reLaunch',
-      url: '/pages/home/index?section=category',
+      method: 'redirectTo',
+      url: '/pages/category/index',
     })
     expect(resolveTabNavigation('home', 'cart')).toEqual({
       method: 'redirectTo',

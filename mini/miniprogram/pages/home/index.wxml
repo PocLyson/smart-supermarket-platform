@@ -42,7 +42,7 @@
     <view class="service-strip" aria-label="门店服务">
       <view class="service-item"><text class="service-dot"></text><text>门店现货</text></view>
       <view class="service-item"><text class="service-dot"></text><text>到店自取</text></view>
-      <view class="service-item"><text class="service-dot"></text><text>售后无忧</text></view>
+      <view class="service-item"><text class="service-dot"></text><text>价格透明</text></view>
     </view>
 
     <view class="category-heading">
@@ -71,11 +71,34 @@
       </block>
     </view>
 
-    <view wx:if="{{error}}" class="state-panel home-state">
-      <text>{{error}}</text>
+    <view wx:if="{{error && !products.length}}" class="state-panel home-state">
+      <image class="home-state-icon" src="/assets/icons/close-circle.svg" mode="aspectFit" />
+      <text class="home-state-title">商品暂时加载失败</text>
+      <text class="home-state-copy">{{error}}</text>
       <t-button theme="primary" variant="outline" size="small" bind:tap="loadInitial">重试</t-button>
     </view>
-    <view wx:elif="{{empty}}" class="state-panel home-state">没有找到商品</view>
+    <view wx:elif="{{empty}}" class="state-panel home-state">
+      <image class="home-state-icon" src="/assets/icons/search.svg" mode="aspectFit" />
+      <text class="home-state-title">暂时没有在售商品</text>
+      <text class="home-state-copy">可以稍后再来看看</text>
+    </view>
+
+    <view wx:elif="{{loading && !products.length}}" class="recommend-section">
+      <view class="section-heading">
+        <text class="section-title">精选好物</text>
+        <text class="section-subtitle">正在准备商品</text>
+      </view>
+      <view class="product-grid">
+        <view wx:for="{{[1, 2, 3, 4]}}" wx:key="*this" class="product-card skeleton-card" aria-hidden="true">
+          <view class="skeleton-block skeleton-image"></view>
+          <view class="product-content">
+            <view class="skeleton-block skeleton-line"></view>
+            <view class="skeleton-block skeleton-line short"></view>
+            <view class="skeleton-block skeleton-price"></view>
+          </view>
+        </view>
+      </view>
+    </view>
 
     <view wx:else class="recommend-section">
       <view class="section-heading">
@@ -90,7 +113,7 @@
             <text class="deal-tag">今日好价</text>
             <view class="product-meta">
               <view>
-                <text class="product-price">¥{{item.priceCent / 100}}</text>
+                <text class="product-price">{{item.displayPrice}}</text>
                 <text class="product-unit">/{{item.unit}}</text>
               </view>
               <view class="product-action" aria-label="查看商品">›</view>

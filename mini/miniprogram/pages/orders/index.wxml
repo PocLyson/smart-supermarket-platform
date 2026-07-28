@@ -4,10 +4,24 @@
     <text class="page-description">查看备货进度和取货状态</text>
   </view>
   <view wx:if="{{error}}" class="state-panel">
-    <text>{{error}}</text>
-    <button class="button-secondary" size="mini" data-reset="true" bindtap="loadOrders">重试</button>
+    <image class="orders-state-icon" src="/assets/icons/close-circle.svg" mode="aspectFit" />
+    <text class="orders-state-title">订单加载失败</text>
+    <text class="orders-state-copy">{{error}}</text>
+    <button class="button-secondary orders-state-action" size="mini" data-reset="true" bindtap="loadOrders">重新加载</button>
   </view>
-  <view wx:elif="{{empty}}" class="state-panel">还没有订单</view>
+  <view wx:elif="{{loading && !orders.length}}" class="orders-skeleton">
+    <view wx:for="{{[1, 2, 3]}}" wx:key="*this" class="card skeleton-order">
+      <view class="skeleton-block skeleton-line"></view>
+      <view class="skeleton-block skeleton-line short"></view>
+      <view class="skeleton-block skeleton-total"></view>
+    </view>
+  </view>
+  <view wx:elif="{{empty}}" class="state-panel orders-empty">
+    <image class="orders-state-icon" src="/assets/icons/order.svg" mode="aspectFit" />
+    <text class="orders-state-title">还没有订单</text>
+    <text class="orders-state-copy">挑选商品并提交订单后，进度会显示在这里</text>
+    <button class="button-primary orders-state-action" bindtap="onGoShopping">去逛逛</button>
+  </view>
   <view wx:else>
     <view wx:for="{{orders}}" wx:key="orderNo" class="card order-card" hover-class="order-card-hover" data-order-no="{{item.orderNo}}" bindtap="onOpenOrder">
       <view class="row-between order-card-head">
@@ -15,9 +29,13 @@
         <text class="status-tag status-{{item.status}}">{{orderStatusLabel[item.status]}}</text>
       </view>
       <view class="order-divider"></view>
+      <view class="order-summary-line">
+        <text>{{item.itemCount}} 种商品</text>
+        <text>{{item.displayCreatedAt}}</text>
+      </view>
       <view class="row-between order-card-foot">
         <text class="payment-tag payment-{{item.paymentStatus}}">{{paymentStatusLabel[item.paymentStatus]}}</text>
-        <view><text class="order-total-label">合计</text><text class="price">¥{{item.totalCent / 100}}</text><text class="order-arrow">›</text></view>
+        <view><text class="order-total-label">合计</text><text class="price">{{item.displayTotal}}</text><text class="order-arrow">›</text></view>
       </view>
     </view>
     <view wx:if="{{loading}}" class="state-panel">加载中...</view>

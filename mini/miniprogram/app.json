@@ -1,9 +1,12 @@
 {
   "pages": [
     "pages/home/index",
+    "pages/category/index",
+    "pages/search/index",
     "pages/product/index",
     "pages/cart/index",
     "pages/checkout/index",
+    "pages/submit-result/index",
     "pages/orders/index",
     "pages/order-detail/index",
     "pages/profile/index"

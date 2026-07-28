@@ -5,6 +5,11 @@ import {
   paymentStatusLabel,
   type CustomerOrder,
 } from '../../types/order'
+import { formatMoney } from '../../utils/money'
+import {
+  buildOrderStatusPresentation,
+  type OrderStatusPresentation,
+} from './presentation'
 
 Page({
   data: {
@@ -14,6 +19,14 @@ Page({
     cancelling: false,
     canCancel: false,
     error: '',
+    displayTotal: '',
+    displayItems: [] as Array<
+      CustomerOrder['items'][number] & { displaySubtotal: string }
+    >,
+    statusPresentation: {
+      title: '',
+      description: '',
+    } as OrderStatusPresentation,
     orderStatusLabel,
     paymentStatusLabel,
   },
@@ -35,6 +48,12 @@ Page({
       this.setData({
         order,
         canCancel: canCustomerCancel(order.status),
+        displayTotal: formatMoney(order.totalCent),
+        displayItems: order.items.map((item) => ({
+          ...item,
+          displaySubtotal: formatMoney(item.subtotalCent),
+        })),
+        statusPresentation: buildOrderStatusPresentation(order.status),
       })
     } catch (error) {
       this.setData({
@@ -60,7 +79,11 @@ Page({
     this.setData({ cancelling: true, error: '' })
     try {
       const order = await ordersService.cancel(this.data.orderNo)
-      this.setData({ order, canCancel: false })
+      this.setData({
+        order,
+        canCancel: false,
+        statusPresentation: buildOrderStatusPresentation(order.status),
+      })
       wx.showToast({ title: '订单已取消', icon: 'success' })
     } catch (error) {
       this.setData({

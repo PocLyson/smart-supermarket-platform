@@ -1,29 +1,52 @@
-<view class="page-shell">
+<view class="page-shell checkout-page">
   <view class="page-intro">
     <text class="page-title">确认订单</text>
     <text class="page-description">填写取货信息并核对商品</text>
   </view>
   <view class="card checkout-section">
     <view class="section-title">取货信息</view>
-    <label class="field-label">取货人姓名</label>
-    <input class="field form-field" placeholder-class="field-placeholder" value="{{pickupName}}" maxlength="40" placeholder="请输入取货人姓名" bindinput="onPickupNameInput" />
-    <label class="field-label">手机号码</label>
-    <input class="field form-field" placeholder-class="field-placeholder" value="{{phone}}" type="number" maxlength="11" placeholder="请输入11位手机号" bindinput="onPhoneInput" />
+    <label class="field-label">取货人姓名 <text class="required-mark">必填</text></label>
+    <input class="field {{pickupNameError ? 'field-error' : ''}}" placeholder-class="field-placeholder" value="{{pickupName}}" maxlength="40" placeholder="请输入取货人姓名" bindinput="onPickupNameInput" />
+    <text wx:if="{{pickupNameError}}" class="field-error-copy" role="alert">{{pickupNameError}}</text>
+    <label class="field-label phone-label">手机号码 <text class="required-mark">必填</text></label>
+    <input class="field {{phoneError ? 'field-error' : ''}}" placeholder-class="field-placeholder" value="{{phone}}" type="number" maxlength="11" placeholder="请输入11位手机号" bindinput="onPhoneInput" />
+    <text wx:if="{{phoneError}}" class="field-error-copy" role="alert">{{phoneError}}</text>
+    <text class="field-helper">用于门店备货异常时与你联系</text>
   </view>
 
   <view class="card checkout-section">
-    <view class="section-title">商品清单</view>
+    <view class="row-between checkout-heading">
+      <view class="section-title">商品清单</view>
+      <text class="muted">共 {{items.length}} 种</text>
+    </view>
     <view wx:for="{{items}}" wx:key="productId" class="row-between order-line">
-      <text class="checkout-product-name">{{item.name}} × {{item.quantity}}</text>
-      <text class="checkout-line-price">¥{{item.unitPriceCent * item.quantity / 100}}</text>
+      <image class="checkout-product-image" src="{{item.coverImageUrl}}" mode="aspectFill" lazy-load />
+      <view class="checkout-product-copy">
+        <text class="checkout-product-name">{{item.name}}</text>
+        <text class="muted">数量 × {{item.quantity}}</text>
+      </view>
+      <text class="checkout-line-price">{{item.displaySubtotal}}</text>
     </view>
-    <view class="row-between">
-      <text>预计合计</text>
-      <text class="price">¥{{totalCent / 100}}</text>
-    </view>
-    <view class="muted">最终金额以服务端下单结果为准</view>
   </view>
 
-  <view wx:if="{{error}}" class="state-panel">{{error}}</view>
-  <button class="button-primary checkout-submit {{submitting || !items.length ? 'is-disabled' : ''}}" loading="{{submitting}}" disabled="{{submitting || !items.length}}" bindtap="onSubmit">提交订单</button>
+  <view class="card checkout-section">
+    <view class="section-title">取货与付款</view>
+    <view class="checkout-info-row"><text>取货方式</text><text>到店自取</text></view>
+    <view class="checkout-info-row"><text>取货门店</text><text>鲁能超市李老家分店</text></view>
+    <view class="checkout-info-row"><text>付款方式</text><text>到店付款</text></view>
+    <view class="checkout-notice">支持现金或门店微信收款码，本小程序不收取线上款项。</view>
+  </view>
+
+  <view wx:if="{{error}}" class="error-banner" role="alert">
+    <text class="error-banner-title">订单提交失败</text>
+    <text>{{error}}</text>
+  </view>
+
+  <view class="checkout-submit-bar">
+    <view class="checkout-total">
+      <view><text class="summary-label">应付合计</text><text class="price">{{displayTotal}}</text></view>
+      <text class="total-helper">以服务端最终校验为准</text>
+    </view>
+    <button class="button-primary checkout-submit {{submitting || !items.length ? 'is-disabled' : ''}}" loading="{{submitting}}" disabled="{{submitting || !items.length}}" bindtap="onSubmit">{{submitting ? '正在提交' : '提交订单'}}</button>
+  </view>
 </view>

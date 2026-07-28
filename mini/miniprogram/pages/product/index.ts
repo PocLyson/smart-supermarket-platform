@@ -1,12 +1,16 @@
 import { catalogService } from '../../services/catalog'
 import { cart } from '../../store/cart'
 import type { ProductDetail } from '../../types/catalog'
+import { formatMoney } from '../../utils/money'
 
 Page({
   data: {
     product: undefined as ProductDetail | undefined,
     loading: true,
     error: '',
+    productId: 0,
+    displayPrice: '',
+    outOfStock: false,
   },
 
   onLoad(query: Record<string, string | undefined>) {
@@ -15,13 +19,19 @@ Page({
       this.setData({ loading: false, error: '商品参数无效' })
       return
     }
+    this.setData({ productId: id })
     void this.loadProduct(id)
   },
 
   async loadProduct(id: number) {
     this.setData({ loading: true, error: '' })
     try {
-      this.setData({ product: await catalogService.getProduct(id) })
+      const product = await catalogService.getProduct(id)
+      this.setData({
+        product,
+        displayPrice: formatMoney(product.priceCent),
+        outOfStock: product.availableStock === 0,
+      })
     } catch (error) {
       this.setData({
         error: error instanceof Error ? error.message : '商品加载失败',
@@ -33,7 +43,7 @@ Page({
 
   onAddToCart() {
     const product = this.data.product
-    if (!product) return
+    if (!product || this.data.outOfStock) return
     cart.add({
       productId: product.id,
       name: product.name,
@@ -45,5 +55,9 @@ Page({
 
   onOpenCart() {
     wx.navigateTo({ url: '/pages/cart/index' })
+  },
+
+  onRetry() {
+    if (this.data.productId) void this.loadProduct(this.data.productId)
   },
 })

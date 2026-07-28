@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { buildSearchUrl } from '../miniprogram/pages/search/presentation'
 
 describe('home search interactions', () => {
   afterEach(() => {
@@ -25,5 +26,11 @@ describe('home search interactions', () => {
 
     expect(setData).toHaveBeenCalledWith({ keyword: '' })
     expect(loadProducts).toHaveBeenCalledWith(true)
+  })
+
+  it('opens a dedicated result page with a trimmed encoded keyword', () => {
+    expect(buildSearchUrl('  牛奶 1L  ')).toBe(
+      '/pages/search/index?keyword=%E7%89%9B%E5%A5%B6%201L',
+    )
   })
 })

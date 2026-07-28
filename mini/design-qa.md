@@ -1,49 +1,49 @@
-# Mini 首页视觉 QA
+# 微信小程序 UI 验收记录
 
-## Comparison target
+## 验收基线
 
-- Source visual truth: `C:\Users\k\Documents\智慧超市平台\协助交接\UI\智慧超市小程序首页-深绛红效果图.png`
-- Implementation screenshot: `C:\Users\k\.codex\visualizations\2026\07\27\019fa457-8cd7-7bb3-90aa-99b41d395f18\mini-home-implementation.png`
-- Side-by-side evidence: `C:\Users\k\.codex\visualizations\2026\07\27\019fa457-8cd7-7bb3-90aa-99b41d395f18\mini-home-visual-comparison.png`
-- State: 微信开发者工具中的首页，9 个分类、8 个商品的运行时 mock 数据，深绛红主题，首页底栏选中。
-- CSS viewport: 微信开发者工具模拟器 `390 × 852` CSS px。
-- Source pixels: `852 × 1858`; implementation capture pixels: `363 × 789`.
-- Density normalization: source was downsampled to `363 × 789`; the implementation was cropped from the scaled simulator at the same aspect ratio and compared at equal pixel dimensions.
+- 视觉方向：社区智慧超市、商品优先、干净温暖；主色 `#8E2F3F`，页面底色 `#F8F5F1`。
+- 设备：微信开发者工具 Stable `v2.01.2510290`，iPhone 12/13 模拟器，常用视口约 `390 × 844` CSS px。
+- 组件：TDesign MiniProgram `1.15.3`；底部主导航改用本地 SVG 双态图标，避免游客调试模式下字体图标显示为方框。
+- 截图目录：`C:\Users\k\.codex\visualizations\2026\07\28\019fa75c-a9ab-7923-8080-0778e09e1da2\mini-ui`
 
-## Findings
+## 页面覆盖
 
-No actionable P0/P1/P2 differences remain.
+| 页面/状态 | 验收结果 | 截图 |
+| --- | --- | --- |
+| 首页（主视觉、分类、商品骨架、底部导航） | 通过 | `01-home.jpg` |
+| 分类（左侧分类轨道、商品列表、选中态） | 通过 | `02-category.jpg` |
+| 搜索初始态 | 通过 | `03-search.jpg` |
+| 搜索空结果 | 通过 | `04-search-results.jpg` |
+| 商品详情 | 通过 | `05-product-detail.jpg` |
+| 购物车（选中、数量、合计、结算） | 通过 | `06-cart.jpg` |
+| 结算确认 | 通过 | `07-checkout.jpg` |
+| 表单校验提示 | 通过 | `08-checkout-validation.jpg` |
+| 我的 | 通过 | `10-profile.jpg` |
+| 订单列表错误态 | 通过 | `11-orders.jpg` |
+| 提交结果、订单详情 | 编译与单测通过；本地游客身份无法经真实链路进入 | 见“环境限制” |
 
-- Fonts and typography: both use the system Chinese sans-serif stack with the same strong white header hierarchy, dark section heading, burgundy price emphasis, and compact category labels. The implementation keeps slightly smaller dynamic-product metadata so API-provided names and units remain readable.
-- Spacing and layout rhythm: header, search, hero, two-row five-column category area, recommendation grid, and fixed four-item tab bar preserve the source order and visual rhythm. The implementation intentionally renders one API product per card instead of the source's marketing section cards, because the frozen MVP plan requires tappable product-summary cards.
-- Colors and tokens: the implementation maps primary `#8E2F3F`, hover `#762536`, pressed `#5E1D2B`, selected `#F5E7EA`, and page `#F8F5F1` through centralized WXSS tokens and TDesign variables.
-- Image quality: hero and category imagery are real raster assets with matching warm grocery subjects and crops. Navigation and location icons use official TDesign icon assets rather than text glyphs, CSS drawings, or mixed icon libraries.
-- Copy and content: the confirmed store title, search prompt, hero copy, category labels, recommendation heading, and 首页/分类/购物车/订单 navigation are present. The extra “全部商品” entry is intentional and preserves the MVP category-filter contract.
-- Accessibility and interaction: custom category entries expose `role="button"` and `aria-label`; the visible controls meet the existing touch-target tokens. The TDesign 分类 tab was exercised and scrolled to the category section while keeping 首页 selected.
+## 统一设计检查
 
-## Comparison history
+- 颜色：主按钮、价格、选中态、导航激活态统一使用酒红体系；警告、错误、成功状态使用独立语义色。
+- 排版：页面标题、卡片标题、正文、辅助文字和价格层级统一，金额使用等宽数字并保留两位小数。
+- 间距与圆角：页面、卡片、表单、标签和固定操作栏均使用全局 token；无局部随意值造成的明显跳变。
+- 图标：正式 UI 未使用 emoji；主导航和状态图标均为同一线性/块面 SVG 体系。
+- 安全区：主导航、购物车合计栏、结算提交栏均包含 `env(safe-area-inset-bottom)`。
+- 状态：覆盖加载骨架、空状态、错误重试、禁用按钮、选中态、表单错误、提交成功/不确定结果。
+- 触控：底部导航和主要按钮达到常用小程序触控尺寸；自定义可点击区域保留语义标签。
 
-1. Initial normalized comparison found a P2 horizontal overflow in the five-column category area: the rightmost category was clipped.
-   - Root cause evidence: 微信开发者工具 WXML inspector showed `.category-slot` at `73.2 × 79`, while its native `button.category-item` child was `184 × 79` because the injected `wx-button:not(.size-mini)` rule overrode the intended width.
-   - Fix: replaced native category buttons with custom `view` controls carrying `role="button"` and `aria-label`; retained the 20% flex slots.
-2. Post-fix comparison shows two complete rows of five evenly sized category entries, no clipping, stable hero/product grids, and an unobstructed fixed tab bar.
-3. Post-review runtime check injected 11 enabled categories. All entries rendered across additional rows, overflow entries received a cyclic local-image fallback, and the TDesign tab bar placeholder kept the end of the list clear of the fixed navigation.
+## 自动化验证
 
-## Focused region evidence
+- `npm run typecheck`：通过。
+- `npm test -- --run`：11 个测试文件、42 个测试全部通过。
+- 微信开发者工具“构建 npm”：成功，TDesign 组件可加载。
+- 页面真实编译：首页、分类、搜索、商品详情、购物车、结算、我的、订单列表均已运行。
 
-A separate enlarged crop was not needed: the equal-size side-by-side comparison keeps the header/search, hero crop, all category labels, recommendation heading, product imagery, and all four tab labels readable. The WXML inspector was used separately to verify the category slot and control dimensions during the overflow fix.
+## 环境限制与遗留项
 
-## Primary interactions and runtime checks
+- 游客身份调用 `POST /api/mini/auth/wechat` 返回 `401`，因此不能在本地真实创建订单；提交结果页和订单详情页已完成代码、视觉状态和展示逻辑，但无法用当前游客会话完成业务链路截图。
+- 商品接口返回的部分图片地址在本地不可访问时，卡片会显示统一暖灰占位底色；不影响布局和操作。
+- 开发者工具产生的 `project.config.json` 本地变更不纳入提交。
 
-- 微信开发者工具 npm build completed successfully for TDesign MiniProgram.
-- Home compiled after the final layout change.
-- TDesign search, button, icon, and tab bar rendered in the simulator.
-- 分类 tab scroll interaction passed.
-- More than 9 enabled categories remained visible and tappable in an additional row.
-- Console was cleared after validation; no current application error remained. Backend-unavailable and tourist-mode messages observed earlier were environmental and were not used as passing evidence.
-
-## Follow-up polish
-
-- The source groups products into merchandising sections, while the MVP contract renders API product-summary cards. A future merchandising API could support those grouped cards without hard-coding presentation-only product relationships.
-
-final result: passed
+最终结果：UI 代码、自动化检查和可进入页面的真实模拟器验收通过。

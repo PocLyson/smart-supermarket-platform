@@ -1,8 +1,13 @@
 <view class="page-shell">
-  <view wx:if="{{loading}}" class="state-panel">加载中...</view>
+  <view wx:if="{{loading}}" class="order-loading" aria-label="订单正在加载">
+    <view class="skeleton skeleton-hero"></view>
+    <view class="skeleton skeleton-card"></view>
+    <view class="skeleton skeleton-card"></view>
+  </view>
   <view wx:elif="{{error && !order}}" class="state-panel">
-    <text>{{error}}</text>
-    <button class="button-secondary" size="mini" bindtap="loadOrder">重试</button>
+    <text class="state-title">订单加载失败</text>
+    <text class="state-copy">{{error}}</text>
+    <button class="button-secondary state-button" bindtap="loadOrder">重新加载</button>
   </view>
   <view wx:elif="{{order}}">
     <view class="order-status-hero">
@@ -10,26 +15,32 @@
         <text class="status-tag status-{{order.status}}">{{orderStatusLabel[order.status]}}</text>
         <text class="payment-tag payment-{{order.paymentStatus}}">{{paymentStatusLabel[order.paymentStatus]}}</text>
       </view>
-      <text class="status-hero-title">订单正在为你处理</text>
+      <text class="status-hero-title">{{statusPresentation.title}}</text>
+      <text class="status-hero-description">{{statusPresentation.description}}</text>
       <view class="status-hero-meta">订单号 {{order.orderNo}}</view>
     </view>
 
     <view class="card pickup-card">
       <view class="section-title">取货信息</view>
-      <view>取货人：{{order.pickupName}}</view>
-      <view>手机号：{{order.phone}}</view>
-      <view wx:if="{{order.cancellationReason}}">取消原因：{{order.cancellationReason}}</view>
+      <view class="detail-row"><text>取货门店</text><text>鲁能超市李老家分店</text></view>
+      <view class="detail-row"><text>取货人</text><text>{{order.pickupName}}</text></view>
+      <view class="detail-row"><text>手机号码</text><text>{{order.phone}}</text></view>
+      <view class="detail-row"><text>付款方式</text><text>到店付款</text></view>
+      <view wx:if="{{order.cancellationReason}}" class="cancellation-note">取消原因：{{order.cancellationReason}}</view>
     </view>
 
     <view class="card">
       <view class="section-title">商品快照</view>
-      <view wx:for="{{order.items}}" wx:key="productId" class="row-between order-line">
-        <text>{{item.productName}} × {{item.quantity}}</text>
-        <text>¥{{item.subtotalCent / 100}}</text>
+      <view wx:for="{{displayItems}}" wx:key="productId" class="row-between order-line detail-product">
+        <view class="detail-product-copy">
+          <text class="detail-product-name">{{item.productName}}</text>
+          <text class="muted">数量 × {{item.quantity}}</text>
+        </view>
+        <text class="detail-subtotal">{{item.displaySubtotal}}</text>
       </view>
       <view class="row-between">
         <text>订单合计</text>
-        <text class="price">¥{{order.totalCent / 100}}</text>
+        <text class="price">{{displayTotal}}</text>
       </view>
     </view>
 
@@ -45,7 +56,8 @@
       </view>
     </view>
 
-    <view wx:if="{{error}}" class="state-panel">{{error}}</view>
+    <view wx:if="{{error}}" class="error-banner" role="alert">{{error}}</view>
     <button wx:if="{{canCancel}}" class="button-danger {{cancelling ? 'is-disabled' : ''}}" loading="{{cancelling}}" disabled="{{cancelling}}" bindtap="onCancel">取消订单</button>
+    <view wx:else class="contact-note">如需修改或取消订单，请联系门店工作人员。</view>
   </view>
 </view>

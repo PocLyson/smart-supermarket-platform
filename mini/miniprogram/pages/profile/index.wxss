@@ -119,6 +119,18 @@
   margin-bottom: var(--space-4);
 }
 
+.field-error {
+  border-color: var(--color-error);
+  background: var(--color-error-bg);
+}
+
+.field-error-copy {
+  display: block;
+  margin: calc(var(--space-3) * -1) 0 var(--space-4);
+  color: var(--color-error-text);
+  font-size: var(--type-helper-size);
+}
+
 .save-button {
   margin-top: var(--space-1);
 }
@@ -144,4 +156,24 @@
 
 .logout-button::after {
   border: 0;
+}
+
+.profile-error {
+  display: flex;
+  margin-bottom: var(--space-4);
+  padding: var(--space-4);
+  border: var(--border-width-default) solid var(--color-error-border);
+  border-radius: var(--radius-md);
+  background: var(--color-error-bg);
+  color: var(--color-error-text);
+  font-size: var(--type-helper-size);
+  flex-direction: column;
+}
+
+.profile-error-title {
+  font-weight: var(--weight-semibold);
+}
+
+.profile-retry {
+  margin-top: var(--space-3);
 }

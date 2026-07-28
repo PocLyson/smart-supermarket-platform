@@ -1,15 +1,15 @@
 page {
   /* Brand: UI UX Pro Max "统一酒红" */
-  --primary-50: #FCF6F7;
+  --primary-50: #FCF5F6;
   --primary-100: #F5E7EA;
-  --primary-200: #E9C8CE;
-  --primary-300: #D79DA7;
-  --primary-400: #BC6C7A;
-  --primary-500: #A34B5C;
+  --primary-200: #EACBD1;
+  --primary-300: #D9A6B0;
+  --primary-400: #C57584;
+  --primary-500: #AD4B5E;
   --primary-600: #8E2F3F;
   --primary-700: #762536;
   --primary-800: #5E1D2B;
-  --primary-900: #48151F;
+  --primary-900: #451520;
   --color-accent-gold: #A16207;
   --color-accent-gold-bg: #FEF3C7;
 
@@ -38,19 +38,19 @@ page {
   --td-brand-color-light-active: var(--primary-200);
   --td-bg-color-page: #F8F5F1;
   --td-bg-color-container: #FFFFFF;
-  --td-bg-color-secondarycontainer: #F3EEEB;
+  --td-bg-color-secondarycontainer: #F3EDEE;
   --td-bg-color-container-active: #F5E7EA;
   --td-text-color-primary: #292326;
   --td-text-color-secondary: #595054;
-  --td-text-color-placeholder: #82787C;
-  --td-border-level-1-color: #E7DFE1;
+  --td-text-color-placeholder: #71686C;
+  --td-border-level-1-color: #E8E1E3;
   --td-border-level-2-color: #D8CFD2;
   --td-component-border: #D8CFD2;
   --td-radius-default: 8rpx;
   --td-radius-medium: 16rpx;
   --td-radius-large: 24rpx;
   --td-tab-bar-bg-color: #FFFFFF;
-  --td-tab-bar-border-color: #E7DFE1;
+  --td-tab-bar-border-color: #E8E1E3;
   --td-tab-bar-active-color: #8E2F3F;
   --td-tab-bar-color: #292326;
   --td-tab-bar-height: 112rpx;
@@ -59,18 +59,18 @@ page {
   --color-bg-page: #F8F5F1;
   --color-bg-surface: #FFFFFF;
   --color-bg-overlay: #FFFFFF;
-  --color-bg-subtle: #F3EEEB;
+  --color-bg-subtle: #F3EDEE;
   --color-bg-hover: #F5E7EA;
   --color-text-primary: #292326;
   --color-text-secondary: #595054;
-  --color-text-tertiary: #776E72;
-  --color-text-placeholder: #82787C;
+  --color-text-tertiary: #6F666A;
+  --color-text-placeholder: #71686C;
   --color-border-default: #D8CFD2;
-  --color-border-control: #9B8F94;
-  --color-divider: #E7DFE1;
+  --color-border-control: #877D81;
+  --color-divider: #E8E1E3;
   --color-mask: rgba(41, 35, 38, 0.48);
-  --color-disabled-bg: #EDE8E6;
-  --color-disabled-text: #7A7175;
+  --color-disabled-bg: #E9E4E5;
+  --color-disabled-text: #746C6F;
 
   /* Semantic feedback */
   --color-success: #1F7A5A;
@@ -84,10 +84,10 @@ page {
   --color-warning-text: #754600;
   --color-warning-icon: #9A5C00;
   --color-error: #C2412D;
-  --color-error-bg: #FFF3EF;
-  --color-error-border: #E9A08F;
-  --color-error-text: #7A271A;
-  --color-error-icon: #C2412D;
+  --color-error-bg: #FFF2ED;
+  --color-error-border: #EDAA9A;
+  --color-error-text: #7C2D20;
+  --color-error-icon: #B53B29;
   --color-info: #2563A6;
   --color-info-bg: #EEF5FC;
   --color-info-border: #94BCE4;
@@ -107,9 +107,9 @@ page {
   --status-completed-bg: #ECF8F2;
   --status-completed-text: #15543E;
   --status-completed-border: #86C7AD;
-  --status-cancelled-bg: #FFF3EF;
-  --status-cancelled-text: #7A271A;
-  --status-cancelled-border: #E9A08F;
+  --status-cancelled-bg: #FFF2ED;
+  --status-cancelled-text: #7C2D20;
+  --status-cancelled-border: #EDAA9A;
   --payment-unpaid-bg: #FFF7E6;
   --payment-unpaid-text: #754600;
   --payment-unpaid-border: #E6B866;
@@ -170,7 +170,7 @@ page {
   /* Borders, focus, elevation and mask */
   --border-width-default: 2rpx;
   --border-color-default: #D8CFD2;
-  --border-color-control: #9B8F94;
+  --border-color-control: #877D81;
   --border-color-focus: #8E2F3F;
   --shadow-focus: 0 0 0 4rpx #FFFFFF, 0 0 0 8rpx #8E2F3F;
   --shadow-card: 0 4rpx 16rpx rgba(72, 21, 31, 0.06);

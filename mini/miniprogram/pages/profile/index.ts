@@ -12,6 +12,8 @@ Page({
     loading: false,
     saving: false,
     error: '',
+    pickupNameError: '',
+    phoneError: '',
   },
 
   onShow() {
@@ -61,17 +63,24 @@ Page({
   },
 
   onPickupNameInput(event: WechatMiniprogram.Input) {
-    this.setData({ pickupName: event.detail.value })
+    this.setData({ pickupName: event.detail.value, pickupNameError: '' })
   },
 
   onPhoneInput(event: WechatMiniprogram.Input) {
-    this.setData({ phone: event.detail.value })
+    this.setData({ phone: event.detail.value, phoneError: '' })
   },
 
   async onSave() {
     const error = validateProfile(this.data.pickupName, this.data.phone)
     if (error) {
-      wx.showToast({ title: error, icon: 'none' })
+      this.setData({
+        pickupNameError: !this.data.pickupName.trim()
+          ? '请输入取货人姓名'
+          : '',
+        phoneError: /^1\d{10}$/.test(this.data.phone)
+          ? ''
+          : '请输入正确的11位手机号',
+      })
       return
     }
     this.setData({ saving: true, error: '' })
@@ -112,5 +121,9 @@ Page({
         })
       },
     })
+  },
+
+  onRetry() {
+    void this.loadProfile()
   },
 })

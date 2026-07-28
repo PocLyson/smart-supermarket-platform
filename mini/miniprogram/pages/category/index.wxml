@@ -1,0 +1,63 @@
+<view class="category-page">
+  <view class="category-topbar">
+    <view class="category-search" role="button" aria-label="搜索店内商品" hover-class="category-search-hover" bindtap="onOpenSearch">
+      <t-icon name="/assets/icons/search.svg" size="36rpx" />
+      <text>搜索店内商品</text>
+    </view>
+  </view>
+
+  <view class="category-layout">
+    <scroll-view class="category-rail" scroll-y enhanced show-scrollbar="{{false}}">
+      <view class="rail-item {{selectedCategoryId == null ? 'is-selected' : ''}}" role="button" aria-label="全部商品" data-id="all" bindtap="onSelectCategory">
+        <text>全部商品</text>
+      </view>
+      <view wx:for="{{categories}}" wx:key="id" class="rail-item {{selectedCategoryId === item.id ? 'is-selected' : ''}}" role="button" aria-label="{{item.name}}" data-id="{{item.id}}" bindtap="onSelectCategory">
+        <text>{{item.name}}</text>
+      </view>
+    </scroll-view>
+
+    <scroll-view class="category-products" scroll-y enhanced lower-threshold="120" bindscrolltolower="onReachBottom">
+      <view class="category-content">
+        <view class="category-heading">
+          <view>
+            <text class="category-title">{{selectedCategoryName}}</text>
+            <text class="category-subtitle">门店在售商品</text>
+          </view>
+          <text class="category-count">{{products.length}} 件</text>
+        </view>
+
+        <view wx:if="{{loading && !products.length}}" class="skeleton-stack">
+          <t-skeleton row-col="{{[1, 1, 1]}}" loading theme="paragraph" />
+        </view>
+        <view wx:elif="{{error && !products.length}}" class="state-panel compact-state">
+          <image class="state-icon" src="/assets/icons/state-error.svg" mode="aspectFit" />
+          <text class="state-title">商品暂时加载失败</text>
+          <text class="state-copy">{{error}}</text>
+          <button class="button-secondary state-action" bindtap="loadInitial">重新加载</button>
+        </view>
+        <view wx:elif="{{empty}}" class="state-panel compact-state">
+          <image class="state-icon" src="/assets/icons/state-shop.svg" mode="aspectFit" />
+          <text class="state-title">这个分类暂时没有商品</text>
+          <text class="state-copy">可以看看其他分类</text>
+        </view>
+        <view wx:else class="category-product-list">
+          <view wx:for="{{products}}" wx:key="id" class="category-product" role="button" aria-label="查看商品 {{item.name}}" data-id="{{item.id}}" hover-class="category-product-hover" bindtap="onOpenProduct">
+            <image class="category-product-image" src="{{item.coverImageUrl}}" mode="aspectFill" lazy-load />
+            <view class="category-product-copy">
+              <text class="category-product-name">{{item.name}}</text>
+              <text class="stock-copy">门店现货 · 到店自取</text>
+              <view class="category-price-line">
+                <text class="category-price">{{item.displayPrice}}</text>
+                <text class="category-unit">/{{item.unit}}</text>
+              </view>
+            </view>
+          </view>
+          <view wx:if="{{loading}}" class="list-feedback">正在加载更多商品…</view>
+          <view wx:elif="{{reachedEnd && products.length}}" class="list-feedback">已展示当前分类全部商品</view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <app-tab-bar value="category" />
+</view>

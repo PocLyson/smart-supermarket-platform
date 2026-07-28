@@ -4,10 +4,26 @@ import {
   paymentStatusLabel,
   type CustomerOrder,
 } from '../../types/order'
+import { formatMoney } from '../../utils/money'
+
+type OrderCard = CustomerOrder & {
+  displayTotal: string
+  displayCreatedAt: string
+  itemCount: number
+}
+
+const presentOrder = (order: CustomerOrder): OrderCard => ({
+  ...order,
+  displayTotal: formatMoney(order.totalCent),
+  displayCreatedAt: order.createdAt
+    ? order.createdAt.replace('T', ' ').slice(0, 16)
+    : '下单时间以订单详情为准',
+  itemCount: order.items?.length || 0,
+})
 
 Page({
   data: {
-    orders: [] as CustomerOrder[],
+    orders: [] as OrderCard[],
     page: 1,
     loading: false,
     empty: false,
@@ -33,9 +49,8 @@ Page({
     this.setData({ loading: true, error: '' })
     try {
       const result = await ordersService.list({ page, size: 10 })
-      const orders = reset
-        ? result.items
-        : [...this.data.orders, ...result.items]
+      const incoming = result.items.map(presentOrder)
+      const orders = reset ? incoming : [...this.data.orders, ...incoming]
       this.setData({
         orders,
         page: page + 1,
@@ -56,5 +71,9 @@ Page({
     wx.navigateTo({
       url: `/pages/order-detail/index?orderNo=${encodeURIComponent(orderNo)}`,
     })
+  },
+
+  onGoShopping() {
+    wx.reLaunch({ url: '/pages/home/index' })
   },
 })

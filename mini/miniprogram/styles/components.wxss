@@ -76,7 +76,10 @@
 .button-primary[disabled],
 .button-secondary[disabled],
 .button-danger[disabled] {
-  opacity: 0.5;
+  border-color: var(--color-border-default);
+  background: var(--color-disabled-bg);
+  color: var(--color-disabled-text);
+  opacity: 1;
 }
 
 .button-secondary {
@@ -133,6 +136,10 @@
   background: var(--color-bg-subtle);
   color: var(--color-text-secondary);
   text-align: center;
+}
+
+.state-panel button {
+  margin-top: var(--space-3);
 }
 
 .page-intro {
@@ -244,4 +251,10 @@
   border-color: var(--status-cancelled-border);
   background: var(--status-cancelled-bg);
   color: var(--status-cancelled-text);
+}
+
+.state-icon {
+  width: 72rpx;
+  height: 72rpx;
+  margin-bottom: var(--space-3);
 }

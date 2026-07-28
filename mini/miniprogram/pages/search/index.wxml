@@ -1,0 +1,78 @@
+<view class="search-page">
+  <view class="search-toolbar">
+    <view class="search-control">
+      <t-search
+        value="{{keyword}}"
+        left-icon="/assets/icons/search.svg"
+        clearable="{{false}}"
+        placeholder="搜索店内商品"
+        bind:change="onKeywordInput"
+        bind:submit="onSubmitSearch"
+      />
+      <view wx:if="{{keyword}}" class="clear-button" role="button" aria-label="清空搜索内容" bindtap="onClearKeyword">
+        <image src="/assets/icons/close-circle.svg" mode="aspectFit" />
+      </view>
+    </view>
+    <t-button t-class="search-submit" theme="primary" bind:tap="onSubmitSearch">搜索</t-button>
+  </view>
+
+  <view class="search-content">
+    <view wx:if="{{!hasSearched}}" class="search-discovery">
+      <view class="row-between discovery-heading">
+        <text class="section-title">最近搜索</text>
+        <button wx:if="{{recentSearches.length}}" class="clear-recent" bindtap="onClearRecent">清空</button>
+      </view>
+      <view wx:if="{{recentSearches.length}}" class="recent-list">
+        <button wx:for="{{recentSearches}}" wx:key="*this" class="recent-chip" data-keyword="{{item}}" bindtap="onUseRecent">{{item}}</button>
+      </view>
+      <view wx:else class="quiet-state">
+        <image class="state-icon" src="/assets/icons/state-search.svg" mode="aspectFit" />
+        <text class="quiet-title">搜索想买的商品</text>
+        <text class="quiet-copy">试试“牛奶”“大米”或“纸巾”</text>
+      </view>
+    </view>
+
+    <view wx:elif="{{loading && !products.length}}" class="search-skeleton">
+      <t-skeleton row-col="{{[1, 1, 1, 1]}}" loading theme="paragraph" />
+    </view>
+
+    <view wx:elif="{{error && !products.length}}" class="state-panel search-state">
+      <image class="state-icon" src="/assets/icons/state-error.svg" mode="aspectFit" />
+      <text class="state-title">搜索暂时不可用</text>
+      <text class="state-copy">{{error}}</text>
+      <button class="button-secondary state-button" bindtap="onSubmitSearch">重新搜索</button>
+    </view>
+
+    <view wx:elif="{{empty}}" class="state-panel search-state">
+      <image class="state-icon" src="/assets/icons/state-search.svg" mode="aspectFit" />
+      <text class="state-title">没有找到“{{searchedKeyword}}”</text>
+      <text class="state-copy">换个商品名，或减少关键词再试试</text>
+      <button class="button-secondary state-button" bindtap="onClearKeyword">重新输入</button>
+    </view>
+
+    <view wx:else class="search-results">
+      <view class="result-heading">
+        <view>
+          <text class="section-title">搜索结果</text>
+          <text class="result-keyword">“{{searchedKeyword}}”</text>
+        </view>
+        <text class="result-count">已找到 {{products.length}} 件</text>
+      </view>
+      <view class="result-grid">
+        <view wx:for="{{products}}" wx:key="id" class="result-card" role="button" aria-label="查看商品 {{item.name}}" data-id="{{item.id}}" hover-class="result-card-hover" bindtap="onOpenProduct">
+          <image class="result-image" src="{{item.coverImageUrl}}" mode="aspectFill" lazy-load />
+          <view class="result-copy">
+            <text class="result-name">{{item.name}}</text>
+            <text class="result-service">门店现货 · 到店自取</text>
+            <view class="result-price-line">
+              <text class="result-price">{{item.displayPrice}}</text>
+              <text class="result-unit">/{{item.unit}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view wx:if="{{loading}}" class="list-feedback">正在加载更多结果…</view>
+      <view wx:elif="{{reachedEnd}}" class="list-feedback">已展示全部搜索结果</view>
+    </view>
+  </view>
+</view>

@@ -1,8 +1,21 @@
 import { cart } from '../../store/cart'
+import { formatMoney } from '../../utils/money'
+
+const presentCart = () => {
+  const items = cart.items()
+  return {
+    items: items.map((item) => ({
+      ...item,
+      displayPrice: formatMoney(item.unitPriceCent),
+    })),
+    selectedCount: items.filter((item) => item.selected).length,
+    displayTotal: formatMoney(cart.selectedTotalCent()),
+  }
+}
 
 Page({
   data: {
-    items: cart.items(),
+    ...presentCart(),
     totalCent: cart.selectedTotalCent(),
   },
 
@@ -12,7 +25,7 @@ Page({
 
   refresh() {
     this.setData({
-      items: cart.items(),
+      ...presentCart(),
       totalCent: cart.selectedTotalCent(),
     })
   },
@@ -52,5 +65,15 @@ Page({
       return
     }
     wx.navigateTo({ url: '/pages/checkout/index' })
+  },
+
+  onGoShopping() {
+    wx.reLaunch({ url: '/pages/home/index' })
+  },
+
+  onOpenProduct(event: WechatMiniprogram.TouchEvent) {
+    wx.navigateTo({
+      url: `/pages/product/index?id=${Number(event.currentTarget.dataset.id)}`,
+    })
   },
 })

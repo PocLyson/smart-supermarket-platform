@@ -101,6 +101,14 @@ describe('burgundy retail visual contract', () => {
     expect(read('pages/orders/index.wxml')).not.toContain('<app-tab-bar')
   })
 
+  it('registers dedicated category, search, and submit result pages', () => {
+    const appConfig = JSON.parse(read('app.json')) as { pages: string[] }
+
+    expect(appConfig.pages).toContain('pages/category/index')
+    expect(appConfig.pages).toContain('pages/search/index')
+    expect(appConfig.pages).toContain('pages/submit-result/index')
+  })
+
   it('constrains native category buttons to the five-column grid', () => {
     const home = read('pages/home/index.wxml')
     const homeStyles = read('pages/home/index.wxss')

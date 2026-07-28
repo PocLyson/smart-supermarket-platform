@@ -35,6 +35,14 @@
   align-items: center;
 }
 
+.order-summary-line {
+  display: flex;
+  margin-bottom: var(--space-3);
+  color: var(--color-text-tertiary);
+  font-size: var(--type-caption-size);
+  justify-content: space-between;
+}
+
 .order-total-label {
   margin-right: var(--space-2);
   color: var(--color-text-tertiary);
@@ -46,4 +54,68 @@
   color: var(--primary-600);
   font-size: 40rpx;
   line-height: 48rpx;
+}
+
+.orders-empty,
+.state-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.orders-state-icon {
+  width: 88rpx;
+  height: 88rpx;
+  opacity: 0.62;
+}
+
+.orders-state-title {
+  margin-top: var(--space-3);
+  color: var(--color-text-primary);
+  font-size: var(--type-card-title-size);
+  font-weight: var(--weight-semibold);
+}
+
+.orders-state-copy {
+  margin-top: var(--space-1);
+  color: var(--color-text-tertiary);
+  font-size: var(--type-helper-size);
+  text-align: center;
+}
+
+.orders-state-action {
+  margin-top: var(--space-4);
+}
+
+.skeleton-block {
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-subtle) 25%,
+    #FFFFFF 50%,
+    var(--color-bg-subtle) 75%
+  );
+  background-size: 200% 100%;
+  animation: orders-shimmer 1.2s ease-in-out infinite;
+}
+
+.skeleton-line {
+  height: 32rpx;
+  margin-bottom: var(--space-3);
+}
+
+.skeleton-line.short {
+  width: 58%;
+}
+
+.skeleton-total {
+  width: 36%;
+  height: 44rpx;
+  margin-top: var(--space-4);
+  margin-left: auto;
+}
+
+@keyframes orders-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
 }
