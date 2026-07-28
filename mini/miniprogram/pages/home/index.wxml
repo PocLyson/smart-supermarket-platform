@@ -42,7 +42,14 @@
 
     <view class="category-heading">
       <text class="category-title">热门分类</text>
-      <text class="category-tip">全部 ›</text>
+      <view
+        class="category-tip"
+        role="button"
+        aria-label="查看全部分类"
+        data-id="all"
+        hover-class="category-tip-hover"
+        bindtap="onSelectCategory"
+      >全部 ›</view>
     </view>
 
     <view id="category-section" class="category-grid">
