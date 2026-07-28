@@ -19,26 +19,173 @@ export function validatePublicHost(host) {
   return host
 }
 
-export function replaceMiniOrigins(source, host) {
-  const origin = `https://${validatePublicHost(host)}`
-  const withTrial = source.replace(
-    /trial:\s*'https:\/\/[^']+'/,
-    `trial: '${origin}'`,
-  )
-  const withRelease = withTrial.replace(
-    /release:\s*'https:\/\/[^']+'/,
-    `release: '${origin}'`,
-  )
+function stripComments(source) {
+  const characters = [...source]
+  let quote = null
 
-  if (
-    withRelease === source ||
-    !withRelease.includes(`trial: '${origin}'`) ||
-    !withRelease.includes(`release: '${origin}'`)
-  ) {
-    throw new Error('mini environment source did not match the expected contract')
+  for (let index = 0; index < characters.length; index += 1) {
+    const character = characters[index]
+    const next = characters[index + 1]
+
+    if (quote) {
+      if (character === '\\') {
+        index += 1
+      } else if (character === quote) {
+        quote = null
+      }
+      continue
+    }
+
+    if (character === "'" || character === '"' || character === '`') {
+      quote = character
+      continue
+    }
+
+    if (character === '/' && next === '/') {
+      characters[index] = ' '
+      characters[index + 1] = ' '
+      index += 2
+      while (index < characters.length && characters[index] !== '\n') {
+        characters[index] = ' '
+        index += 1
+      }
+      index -= 1
+      continue
+    }
+
+    if (character === '/' && next === '*') {
+      characters[index] = ' '
+      characters[index + 1] = ' '
+      index += 2
+      while (
+        index < characters.length &&
+        !(characters[index] === '*' && characters[index + 1] === '/')
+      ) {
+        if (characters[index] !== '\n') characters[index] = ' '
+        index += 1
+      }
+      if (index < characters.length) {
+        characters[index] = ' '
+        characters[index + 1] = ' '
+        index += 1
+      }
+    }
   }
 
-  return withRelease
+  return characters.join('')
+}
+
+function findClosingBrace(source, openingBrace) {
+  let depth = 0
+  let quote = null
+
+  for (let index = openingBrace; index < source.length; index += 1) {
+    const character = source[index]
+    if (quote) {
+      if (character === '\\') {
+        index += 1
+      } else if (character === quote) {
+        quote = null
+      }
+      continue
+    }
+    if (character === "'" || character === '"' || character === '`') {
+      quote = character
+    } else if (character === '{') {
+      depth += 1
+    } else if (character === '}') {
+      depth -= 1
+      if (depth === 0) return index
+    }
+  }
+
+  throw new Error('apiBaseUrls object is not closed')
+}
+
+function topLevelSegments(source, start, end) {
+  const segments = []
+  let segmentStart = start
+  let depth = 0
+  let quote = null
+
+  for (let index = start; index < end; index += 1) {
+    const character = source[index]
+    if (quote) {
+      if (character === '\\') {
+        index += 1
+      } else if (character === quote) {
+        quote = null
+      }
+      continue
+    }
+    if (character === "'" || character === '"' || character === '`') {
+      quote = character
+    } else if ('{[('.includes(character)) {
+      depth += 1
+    } else if ('}])'.includes(character)) {
+      depth -= 1
+    } else if (character === ',' && depth === 0) {
+      segments.push([segmentStart, index])
+      segmentStart = index + 1
+    }
+  }
+  segments.push([segmentStart, end])
+  return segments
+}
+
+export function extractMiniOrigins(source) {
+  const uncommented = stripComments(source)
+  const declarationPattern =
+    /\b(?:const|let|var)\s+apiBaseUrls\b[^=;]*=\s*\{/g
+  const declarations = [...uncommented.matchAll(declarationPattern)]
+  if (declarations.length !== 1) {
+    throw new Error('expected exactly one apiBaseUrls object')
+  }
+
+  const declaration = declarations[0]
+  const openingBrace =
+    declaration.index + declaration[0].lastIndexOf('{')
+  const closingBrace = findClosingBrace(uncommented, openingBrace)
+  const fields = { trial: [], release: [] }
+  const fieldPattern =
+    /^\s*(trial|release)\s*:\s*'((?:\\.|[^'\\])*)'\s*$/d
+
+  for (const [start, end] of topLevelSegments(
+    uncommented,
+    openingBrace + 1,
+    closingBrace,
+  )) {
+    const match = fieldPattern.exec(uncommented.slice(start, end))
+    if (!match) continue
+    fields[match[1]].push({
+      end: start + match.indices[2][1],
+      start: start + match.indices[2][0],
+      value: match[2],
+    })
+  }
+
+  if (fields.trial.length !== 1 || fields.release.length !== 1) {
+    throw new Error('expected exactly one trial and one release field')
+  }
+
+  return {
+    release: fields.release[0],
+    trial: fields.trial[0],
+  }
+}
+
+export function replaceMiniOrigins(source, host) {
+  const origin = `https://${validatePublicHost(host)}`
+  const fields = extractMiniOrigins(source)
+  let updated = source
+
+  for (const field of [fields.trial, fields.release].sort(
+    (left, right) => right.start - left.start,
+  )) {
+    updated = `${updated.slice(0, field.start)}${origin}${updated.slice(field.end)}`
+  }
+
+  return updated
 }
 
 function parseArguments(args) {

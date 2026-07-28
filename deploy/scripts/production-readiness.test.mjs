@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import {
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   rmSync,
   writeFileSync,
 } from 'node:fs'
@@ -33,22 +34,64 @@ const validEnvironment = {
   TLS_CERT_DIR: './certs',
 }
 
-function createMiniEnvironment(t, trial, release) {
+function createMiniEnvironmentSource(t, source) {
   const root = mkdtempSync(join(tmpdir(), 'smart-store-readiness-'))
   const configDirectory = join(root, 'mini', 'miniprogram', 'config')
   mkdirSync(configDirectory, { recursive: true })
-  writeFileSync(
-    join(configDirectory, 'env.ts'),
+  writeFileSync(join(configDirectory, 'env.ts'), source, 'utf8')
+  t.after(() => rmSync(root, { force: true, recursive: true }))
+  return root
+}
+
+function createMiniEnvironment(t, trial, release) {
+  return createMiniEnvironmentSource(
+    t,
     `const apiBaseUrls = {
   develop: 'http://localhost:8080',
   trial: '${trial}',
   release: '${release}',
 }
 `,
+  )
+}
+
+function createDeploymentFixture(
+  t,
+  {
+    composeTransform = (source) => source,
+    nginxTransform = (source) => source,
+  } = {},
+) {
+  const root = mkdtempSync(join(tmpdir(), 'smart-store-deployment-'))
+  const nginxDirectory = join(root, 'deploy', 'nginx')
+  mkdirSync(nginxDirectory, { recursive: true })
+  writeFileSync(
+    join(root, 'deploy', 'compose.production.yaml'),
+    composeTransform(
+      readFileSync(join(repositoryRoot, 'deploy', 'compose.production.yaml'), 'utf8'),
+    ),
+    'utf8',
+  )
+  writeFileSync(
+    join(nginxDirectory, 'default.conf.template'),
+    nginxTransform(
+      readFileSync(
+        join(repositoryRoot, 'deploy', 'nginx', 'default.conf.template'),
+        'utf8',
+      ),
+    ),
     'utf8',
   )
   t.after(() => rmSync(root, { force: true, recursive: true }))
   return root
+}
+
+function gitPathNotMatchedError() {
+  const error = new Error('git pathspec did not match')
+  error.status = 1
+  error.stderr =
+    "error: pathspec 'deploy/.env.production' did not match any file(s) known to git"
+  return error
 }
 
 test('parseDotEnv ignores comments and preserves values after the first equals sign', () => {
@@ -88,7 +131,7 @@ test('CLI reports validation failures without printing environment values', () =
     cwd: '/repository',
     existsSync: () => false,
     execFileSync: () => {
-      throw new Error('not tracked')
+      throw gitPathNotMatchedError()
     },
     log: (message) => messages.push(message),
     platform: 'linux',
@@ -105,6 +148,43 @@ test('CLI reports validation failures without printing environment values', () =
   assert.equal(exitCode, 1)
   assert.match(messages.at(-1), /未通过（\d+ 项）/)
   assert.equal(messages.some((message) => message.includes(secret)), false)
+  assert.equal(
+    messages.includes('无法验证生产环境文件的 Git 跟踪状态'),
+    false,
+  )
+})
+
+test('CLI fails closed when Git tracking status cannot be checked', () => {
+  const missingGit = new Error('spawn git ENOENT')
+  missingGit.code = 'ENOENT'
+  const brokenRepository = new Error('git repository is damaged')
+  brokenRepository.status = 128
+  brokenRepository.stderr = 'fatal: not a git repository'
+
+  for (const commandError of [missingGit, brokenRepository]) {
+    const messages = []
+    const exitCode = main(['--env-file', 'deploy/.env.production'], {
+      cwd: '/repository',
+      existsSync: () => true,
+      execFileSync: () => {
+        throw commandError
+      },
+      log: (message) => messages.push(message),
+      platform: 'linux',
+      readFileSync: () =>
+        Object.entries(validEnvironment)
+          .map(([key, value]) => `${key}=${value}`)
+          .join('\n'),
+      statSync: () => ({ mode: 0o100600 }),
+    })
+
+    assert.equal(exitCode, 1)
+    assert.ok(messages.includes('无法验证生产环境文件的 Git 跟踪状态'))
+    assert.equal(
+      messages.some((message) => message.includes(commandError.message)),
+      false,
+    )
+  }
 })
 
 test('CLI rejects tracked production env files and missing certificates', () => {
@@ -127,8 +207,113 @@ test('CLI rejects tracked production env files and missing certificates', () => 
   assert.ok(messages.includes('TLS 证书文件缺失'))
 })
 
+test('CLI fails closed when Docker Compose cannot render the configuration', () => {
+  const messages = []
+  const exitCode = main(['--env-file', 'deploy/.env.production'], {
+    cwd: repositoryRoot,
+    existsSync: () => true,
+    execFileSync: (command, args) => {
+      if (command === 'git') throw gitPathNotMatchedError()
+      assert.equal(command, 'docker')
+      assert.deepEqual(args, [
+        'compose',
+        '-f',
+        join(repositoryRoot, 'deploy', 'compose.production.yaml'),
+        '--env-file',
+        join(repositoryRoot, 'deploy', '.env.production'),
+        'config',
+      ])
+      const error = new Error('compose failed with sensitive stderr')
+      error.stderr = 'must-not-be-printed'
+      throw error
+    },
+    log: (message) => messages.push(message),
+    platform: 'linux',
+    readFileSync: () =>
+      Object.entries(validEnvironment)
+        .map(([key, value]) => `${key}=${value}`)
+        .join('\n'),
+    statSync: () => ({ mode: 0o100600 }),
+  })
+
+  assert.equal(exitCode, 1)
+  assert.ok(messages.includes('Docker Compose 配置无法渲染'))
+  assert.equal(
+    messages.some((message) => message.includes('must-not-be-printed')),
+    false,
+  )
+})
+
 test('deployment files force the public hostname and disable local login mock', () => {
   assert.deepEqual(validateDeploymentFiles(repositoryRoot), [])
+})
+
+test('deployment validation ignores a commented false mock setting', (t) => {
+  const root = createDeploymentFixture(t, {
+    composeTransform: (source) =>
+      source.replace(
+        'WECHAT_LOCAL_MOCK_ENABLED: "false"',
+        'WECHAT_LOCAL_MOCK_ENABLED: "true"\n      # WECHAT_LOCAL_MOCK_ENABLED: "false"',
+      ),
+  })
+
+  assert.ok(
+    validateDeploymentFiles(root).includes(
+      '生产 Compose 配置未满足公网部署契约',
+    ),
+  )
+})
+
+test('deployment validation rejects ports on internal services', (t) => {
+  for (const [service, port] of [
+    ['mysql', '3306'],
+    ['redis', '6379'],
+    ['server', '8080'],
+  ]) {
+    const root = createDeploymentFixture(t, {
+      composeTransform: (source) =>
+        source.replace(
+          `  ${service}:\n`,
+          `  ${service}:\n    ports:\n      - "${port}:${port}"\n`,
+        ),
+    })
+
+    assert.ok(
+      validateDeploymentFiles(root).includes(
+        'mysql、redis 与 server 不得发布主机端口',
+      ),
+    )
+  }
+})
+
+test('deployment validation ignores commented Nginx server_name decoys', (t) => {
+  const root = createDeploymentFixture(t, {
+    nginxTransform: (source) =>
+      `# server_name \${PUBLIC_HOST};\n${source.replaceAll(
+        'server_name ${PUBLIC_HOST};',
+        'server_name _;',
+      )}`,
+  })
+
+  assert.ok(
+    validateDeploymentFiles(root).includes('Nginx 模板未使用 PUBLIC_HOST'),
+  )
+})
+
+test('deployment validation rejects redirects derived from the client Host', (t) => {
+  const root = createDeploymentFixture(t, {
+    nginxTransform: (source) =>
+      source.replace(
+        'https://${PUBLIC_HOST}$request_uri',
+        'https://$host$request_uri',
+      ),
+  })
+
+  assert.ok(
+    validateDeploymentFiles(root).includes(
+      'Nginx HTTP 跳转必须使用 PUBLIC_HOST',
+    ),
+  )
 })
 
 test('mini trial and release origins may both match PUBLIC_HOST', (t) => {
@@ -161,6 +346,52 @@ test('mini invalid sentinels return one stable error', (t) => {
     t,
     'https://trial-api.example.invalid',
     'https://api.example.invalid',
+  )
+
+  assert.deepEqual(validateMiniOrigins(root, 'shop.registered-domain.cn'), [
+    '小程序 trial 与 release API origin 必须与 PUBLIC_HOST 完全一致',
+  ])
+})
+
+test('mini origin validation ignores comment decoys', (t) => {
+  const root = createMiniEnvironmentSource(
+    t,
+    `const apiBaseUrls = {
+  // trial: 'https://shop.registered-domain.cn',
+  develop: 'http://localhost:8080',
+  trial: 'https://other.registered-domain.cn',
+  release: 'https://shop.registered-domain.cn',
+}`,
+  )
+
+  assert.deepEqual(validateMiniOrigins(root, 'shop.registered-domain.cn'), [
+    '小程序 trial 与 release API origin 必须与 PUBLIC_HOST 完全一致',
+  ])
+})
+
+test('mini origin validation rejects duplicate public fields', (t) => {
+  const root = createMiniEnvironmentSource(
+    t,
+    `const apiBaseUrls = {
+  trial: 'https://shop.registered-domain.cn',
+  trial: 'https://shop.registered-domain.cn',
+  release: 'https://shop.registered-domain.cn',
+}`,
+  )
+
+  assert.deepEqual(validateMiniOrigins(root, 'shop.registered-domain.cn'), [
+    '小程序 trial 与 release API origin 必须与 PUBLIC_HOST 完全一致',
+  ])
+})
+
+test('mini origin validation rejects missing fields despite comment decoys', (t) => {
+  const root = createMiniEnvironmentSource(
+    t,
+    `const apiBaseUrls = {
+  // trial: 'https://shop.registered-domain.cn',
+  develop: 'http://localhost:8080',
+  release: 'https://shop.registered-domain.cn',
+}`,
   )
 
   assert.deepEqual(validateMiniOrigins(root, 'shop.registered-domain.cn'), [

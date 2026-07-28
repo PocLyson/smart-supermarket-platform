@@ -21,6 +21,57 @@ test('updates trial and release together', () => {
   assert.match(updated, /develop: 'http:\/\/localhost:8080'/)
 })
 
+test('updates real apiBaseUrls fields without changing comment decoys', () => {
+  const sourceWithDecoy = `const apiBaseUrls = {
+  // trial: 'https://comment.example.invalid',
+  develop: 'http://localhost:8080',
+  trial: 'https://trial-api.example.invalid',
+  release: 'https://api.example.invalid',
+}`
+
+  assert.equal(
+    replaceMiniOrigins(sourceWithDecoy, 'shop.registered-domain.cn'),
+    `const apiBaseUrls = {
+  // trial: 'https://comment.example.invalid',
+  develop: 'http://localhost:8080',
+  trial: 'https://shop.registered-domain.cn',
+  release: 'https://shop.registered-domain.cn',
+}`,
+  )
+})
+
+test('rejects duplicate or missing public origin fields', () => {
+  for (const malformedSource of [
+    `const apiBaseUrls = {
+  trial: 'https://first.example.invalid',
+  trial: 'https://second.example.invalid',
+  release: 'https://api.example.invalid',
+}`,
+    `const apiBaseUrls = {
+  develop: 'http://localhost:8080',
+  release: 'https://api.example.invalid',
+}`,
+  ]) {
+    assert.throws(
+      () => replaceMiniOrigins(malformedSource, 'shop.registered-domain.cn'),
+      /expected exactly one trial and one release field/,
+    )
+  }
+})
+
+test('is idempotent when both public origins already match', () => {
+  const configuredSource = `const apiBaseUrls = {
+  develop: 'http://localhost:8080',
+  trial: 'https://shop.registered-domain.cn',
+  release: 'https://shop.registered-domain.cn',
+}`
+
+  assert.equal(
+    replaceMiniOrigins(configuredSource, 'shop.registered-domain.cn'),
+    configuredSource,
+  )
+})
+
 test('rejects protocol, path, port and invalid sentinel hosts', () => {
   for (const host of [
     'https://shop.registered-domain.cn',

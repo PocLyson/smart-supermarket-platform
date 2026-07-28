@@ -6,6 +6,7 @@ import {
 } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import { extractMiniOrigins } from './configure-mini-origin.mjs'
 
 const requiredKeys = [
   'PUBLIC_HOST',
@@ -84,6 +85,80 @@ export function validateEnvironment(env) {
   return [...new Set(errors)]
 }
 
+function stripHashComments(source) {
+  return source
+    .split(/\r?\n/)
+    .map((line) => {
+      let quote = null
+      for (let index = 0; index < line.length; index += 1) {
+        const character = line[index]
+        if (quote) {
+          if (character === '\\') {
+            index += 1
+          } else if (character === quote) {
+            quote = null
+          }
+        } else if (character === "'" || character === '"') {
+          quote = character
+        } else if (character === '#') {
+          return line.slice(0, index)
+        }
+      }
+      return line
+    })
+    .join('\n')
+}
+
+function yamlRecords(source) {
+  return stripHashComments(source)
+    .split(/\r?\n/)
+    .map((line) => ({
+      indent: line.match(/^ */)[0].length,
+      text: line.trim(),
+    }))
+    .filter((line) => line.text)
+}
+
+function serviceBlock(records, serviceName) {
+  const start = records.findIndex(
+    (line) => line.indent === 2 && line.text === `${serviceName}:`,
+  )
+  if (start < 0) return []
+  const next = records.findIndex(
+    (line, index) => index > start && line.indent <= 2,
+  )
+  return records.slice(start + 1, next < 0 ? undefined : next)
+}
+
+function nestedValues(block, parentName, key) {
+  const parent = block.findIndex(
+    (line) => line.indent === 4 && line.text === `${parentName}:`,
+  )
+  if (parent < 0) return []
+  const end = block.findIndex(
+    (line, index) => index > parent && line.indent <= 4,
+  )
+  const prefix = `${key}:`
+  return block
+    .slice(parent + 1, end < 0 ? undefined : end)
+    .filter((line) => line.indent === 6 && line.text.startsWith(prefix))
+    .map((line) => line.text.slice(prefix.length).trim())
+}
+
+function nestedList(block, parentName) {
+  const parent = block.findIndex(
+    (line) => line.indent === 4 && line.text === `${parentName}:`,
+  )
+  if (parent < 0) return []
+  const end = block.findIndex(
+    (line, index) => index > parent && line.indent <= 4,
+  )
+  return block
+    .slice(parent + 1, end < 0 ? undefined : end)
+    .filter((line) => line.indent === 6 && line.text.startsWith('- '))
+    .map((line) => line.text.slice(2).trim())
+}
+
 export function validateDeploymentFiles(rootDir) {
   const errors = []
   let compose = ''
@@ -107,18 +182,55 @@ export function validateDeploymentFiles(rootDir) {
     errors.push('缺少 Nginx 生产模板')
   }
 
-  const composeContracts = [
-    'WECHAT_LOCAL_MOCK_ENABLED: "false"',
-    'CORS_ALLOWED_ORIGINS: https://${PUBLIC_HOST}',
-    'PUBLIC_HOST: ${PUBLIC_HOST:?PUBLIC_HOST is required}',
-    'NGINX_ENVSUBST_FILTER: ^PUBLIC_HOST$',
-    './nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro',
-  ]
-  if (composeContracts.some((contract) => !compose.includes(contract))) {
+  const records = yamlRecords(compose)
+  const server = serviceBlock(records, 'server')
+  const nginx = serviceBlock(records, 'nginx')
+  const composeContractsHold =
+    nestedValues(
+      server,
+      'environment',
+      'WECHAT_LOCAL_MOCK_ENABLED',
+    ).length === 1 &&
+    nestedValues(
+      server,
+      'environment',
+      'WECHAT_LOCAL_MOCK_ENABLED',
+    )[0] === '"false"' &&
+    nestedValues(server, 'environment', 'CORS_ALLOWED_ORIGINS').length ===
+      1 &&
+    nestedValues(server, 'environment', 'CORS_ALLOWED_ORIGINS')[0] ===
+      'https://${PUBLIC_HOST}' &&
+    nestedValues(nginx, 'environment', 'PUBLIC_HOST').length === 1 &&
+    nestedValues(nginx, 'environment', 'PUBLIC_HOST')[0] ===
+      '${PUBLIC_HOST:?PUBLIC_HOST is required}' &&
+    nestedValues(nginx, 'environment', 'NGINX_ENVSUBST_FILTER').length ===
+      1 &&
+    nestedValues(nginx, 'environment', 'NGINX_ENVSUBST_FILTER')[0] ===
+      '^PUBLIC_HOST$' &&
+    nestedList(nginx, 'volumes').includes(
+      './nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro',
+    )
+
+  if (!composeContractsHold) {
     errors.push('生产 Compose 配置未满足公网部署契约')
   }
 
-  if (!nginxTemplate.includes('server_name ${PUBLIC_HOST};')) {
+  for (const serviceName of ['mysql', 'redis', 'server']) {
+    const block = serviceBlock(records, serviceName)
+    if (
+      block.some(
+        (line) => line.indent === 4 && /^ports\s*:/.test(line.text),
+      )
+    ) {
+      errors.push('mysql、redis 与 server 不得发布主机端口')
+      break
+    }
+  }
+
+  const activeNginx = stripHashComments(nginxTemplate)
+  const publicServerNames =
+    activeNginx.match(/^\s*server_name\s+\$\{PUBLIC_HOST\};\s*$/gm) ?? []
+  if (publicServerNames.length < 2) {
     errors.push('Nginx 模板未使用 PUBLIC_HOST')
   }
 
@@ -129,10 +241,26 @@ export function validateDeploymentFiles(rootDir) {
     '$remote_addr',
     '$proxy_add_x_forwarded_for',
   ]) {
-    if (!nginxTemplate.includes(variable)) {
+    if (!activeNginx.includes(variable)) {
       errors.push('Nginx 模板未保留运行时变量')
       break
     }
+  }
+
+  if (
+    !/^\s*return\s+301\s+https:\/\/\$\{PUBLIC_HOST\}\$request_uri;\s*$/m.test(
+      activeNginx,
+    )
+  ) {
+    errors.push('Nginx HTTP 跳转必须使用 PUBLIC_HOST')
+  }
+
+  if (
+    !/server\s*\{[^{}]*listen\s+80\s+default_server;[^{}]*server_name\s+_;[^{}]*return\s+444;[^{}]*\}/s.test(
+      activeNginx,
+    )
+  ) {
+    errors.push('Nginx 必须拒绝未知 Host')
   }
 
   if (existsSync(join(rootDir, 'deploy', 'nginx', 'smart-store.conf'))) {
@@ -156,11 +284,16 @@ export function validateMiniOrigins(rootDir, publicHost) {
     return [error]
   }
 
-  const trial = source.match(/trial:\s*'([^']+)'/)?.[1]
-  const release = source.match(/release:\s*'([^']+)'/)?.[1]
   const expectedOrigin = `https://${publicHost}`
-
-  return trial === expectedOrigin && release === expectedOrigin ? [] : [error]
+  try {
+    const fields = extractMiniOrigins(source)
+    return fields.trial.value === expectedOrigin &&
+      fields.release.value === expectedOrigin
+      ? []
+      : [error]
+  } catch {
+    return [error]
+  }
 }
 
 const defaultRepositoryRoot = fileURLToPath(new URL('../..', import.meta.url))
@@ -177,6 +310,15 @@ function parseArguments(args) {
   }
 
   return { envFile }
+}
+
+function isGitPathNotMatched(error) {
+  return (
+    error?.status === 1 &&
+    /pathspec .* did not match any file\(s\) known to git/i.test(
+      String(error.stderr ?? ''),
+    )
+  )
 }
 
 export function main(args, dependencies = {}) {
@@ -231,11 +373,30 @@ export function main(args, dependencies = {}) {
     runCommand(
       'git',
       ['-C', repositoryRoot, 'ls-files', '--error-unmatch', '--', trackedPath],
-      { stdio: 'ignore' },
+      { encoding: 'utf8', stdio: ['ignore', 'ignore', 'pipe'] },
     )
     errors.push('生产环境文件不得被 Git 跟踪')
+  } catch (error) {
+    if (!isGitPathNotMatched(error)) {
+      errors.push('无法验证生产环境文件的 Git 跟踪状态')
+    }
+  }
+
+  try {
+    runCommand(
+      'docker',
+      [
+        'compose',
+        '-f',
+        join(repositoryRoot, 'deploy', 'compose.production.yaml'),
+        '--env-file',
+        envFile,
+        'config',
+      ],
+      { stdio: 'ignore' },
+    )
   } catch {
-    // A non-zero git result proves that this production environment file is untracked.
+    errors.push('Docker Compose 配置无法渲染')
   }
 
   const certificateDirectory = resolve(

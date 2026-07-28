@@ -4,9 +4,15 @@ map $http_x_request_id $smart_store_request_id {
 }
 
 server {
+    listen 80 default_server;
+    server_name _;
+    return 444;
+}
+
+server {
     listen 80;
     server_name ${PUBLIC_HOST};
-    return 301 https://$host$request_uri;
+    return 301 https://${PUBLIC_HOST}$request_uri;
 }
 
 server {
