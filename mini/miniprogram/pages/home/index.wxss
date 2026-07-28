@@ -237,11 +237,13 @@
 
 .category-name {
   display: block;
-  max-width: 104rpx;
+  width: 100%;
+  max-width: 100%;
   overflow: hidden;
-  font-size: var(--type-helper-size);
+  font-size: 20rpx;
   font-weight: var(--weight-medium);
   line-height: var(--type-caption-line);
+  text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
 }

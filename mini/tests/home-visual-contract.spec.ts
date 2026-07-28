@@ -159,6 +159,9 @@ describe('navy fresh retail visual contract', () => {
     expect(homeStyles).toMatch(
       /\.category-item\s*\{[\s\S]*?box-sizing:\s*border-box;[\s\S]*?width:\s*100%;/,
     )
+    expect(homeStyles).toMatch(
+      /\.category-name\s*\{[\s\S]*?width:\s*100%;[\s\S]*?font-size:\s*20rpx;[\s\S]*?text-align:\s*center;/,
+    )
   })
 
   it('pins the confirmed TDesign version', () => {

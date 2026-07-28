@@ -64,6 +64,8 @@
 }
 
 .profile-login-button {
+  display: flex;
+  height: 88rpx;
   min-width: 176rpx;
   min-height: 88rpx;
   margin: 0;
@@ -74,6 +76,9 @@
   color: var(--primary-600);
   font-size: 26rpx;
   font-weight: var(--weight-semibold);
+  line-height: 1;
+  align-items: center;
+  justify-content: center;
 }
 
 .profile-login-button::after {

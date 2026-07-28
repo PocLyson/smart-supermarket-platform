@@ -52,6 +52,7 @@ describe('approved navy fresh UI structure', () => {
 
   it('places logged-out WeChat login in the profile header only', () => {
     const profile = read('pages/profile/index.wxml')
+    const profileStyles = read('pages/profile/index.wxss')
     const presentation = read('pages/profile/presentation.ts')
 
     expect(presentation).toContain("displayName: '登录 / 注册'")
@@ -60,6 +61,9 @@ describe('approved navy fresh UI structure', () => {
     expect(profile).not.toContain('login-guide')
     expect(profile).not.toContain('微信用户')
     expect(profile).toContain('order-status-grid')
+    expect(profileStyles).toMatch(
+      /\.profile-login-button\s*\{[\s\S]*?display:\s*flex;[\s\S]*?height:\s*88rpx;[\s\S]*?line-height:\s*1;[\s\S]*?align-items:\s*center;[\s\S]*?justify-content:\s*center;/,
+    )
   })
 
   it('provides local image error recovery on every product-heavy page', () => {
