@@ -1,14 +1,26 @@
-<view class="page-shell">
+<view class="page-shell product-page">
   <view wx:if="{{loading}}" class="state-panel">加载中...</view>
   <view wx:elif="{{error}}" class="state-panel">{{error}}</view>
-  <view wx:elif="{{product}}" class="card">
+  <view wx:elif="{{product}}">
     <image class="product-image" src="{{product.coverImageUrl}}" mode="aspectFill" />
-    <view class="section-title">{{product.name}}</view>
-    <view class="price">¥{{product.priceCent / 100}} / {{product.unit}}</view>
-    <view class="muted">{{product.description}}</view>
-    <view class="row">
+    <view class="product-info card">
+      <view class="product-badges">
+        <text class="product-badge">门店现货</text>
+        <text class="product-badge is-gold">到店自取</text>
+      </view>
+      <view class="product-title">{{product.name}}</view>
+      <view class="product-price-line">
+        <text class="price">¥{{product.priceCent / 100}}</text>
+        <text class="muted">/{{product.unit}}</text>
+      </view>
+      <view class="product-description">
+        <text class="description-label">商品说明</text>
+        <text class="muted">{{product.description || '门店精选商品，以实际到店商品为准'}}</text>
+      </view>
+    </view>
+    <view class="product-purchase-bar">
+      <button class="button-secondary purchase-secondary" hover-class="button-hover" bindtap="onOpenCart">购物车</button>
       <button class="button-primary" bindtap="onAddToCart">加入购物车</button>
-      <button class="button-secondary" bindtap="onOpenCart">查看购物车</button>
     </view>
   </view>
 </view>

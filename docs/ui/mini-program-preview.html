@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>鲁能智慧超市小程序 · UI UX Pro Max 红色方案</title>
+    <style>
+      * { box-sizing: border-box; }
+      :root {
+        --red: #dc2626;
+        --red-deep: #991b1b;
+        --red-soft: #fee2e2;
+        --warm: #fff8f6;
+        --ink: #2b1919;
+        --muted: #806a6a;
+        --line: #f5deda;
+        --gold: #a16207;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        padding: 36px 20px;
+        background:
+          radial-gradient(circle at 15% 15%, rgba(220, 38, 38, .10), transparent 26%),
+          #f7f2f0;
+        color: var(--ink);
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      }
+      .stage {
+        display: grid;
+        grid-template-columns: minmax(240px, 360px) 390px;
+        max-width: 930px;
+        margin: 0 auto;
+        align-items: start;
+        justify-content: center;
+        gap: 54px;
+      }
+      .brief { padding-top: 80px; }
+      .eyebrow {
+        color: var(--red);
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: .14em;
+      }
+      h1 { margin: 14px 0 16px; font-size: 34px; line-height: 1.24; }
+      .brief p { color: #665252; font-size: 15px; line-height: 1.8; }
+      .palette { display: flex; margin: 26px 0; gap: 10px; }
+      .swatch { width: 42px; height: 42px; border: 4px solid #fff; border-radius: 14px; box-shadow: 0 4px 14px rgba(43,25,25,.12); }
+      .spec {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .spec div {
+        padding: 12px;
+        border: 1px solid #eadbd7;
+        border-radius: 12px;
+        background: rgba(255,255,255,.78);
+        font-size: 13px;
+      }
+      .spec b { display: block; margin-bottom: 4px; color: var(--ink); }
+      .phone {
+        position: relative;
+        width: 390px;
+        height: 844px;
+        overflow: hidden;
+        border: 10px solid #231b1b;
+        border-radius: 42px;
+        background: var(--warm);
+        box-shadow: 0 32px 80px rgba(73, 29, 29, .22);
+      }
+      .screen {
+        height: 100%;
+        overflow: auto;
+        scrollbar-width: none;
+        padding-bottom: 78px;
+      }
+      .screen::-webkit-scrollbar { display: none; }
+      .status {
+        display: flex;
+        height: 30px;
+        padding: 8px 20px 0;
+        background: var(--red);
+        color: #fff;
+        justify-content: space-between;
+        font-size: 11px;
+        font-weight: 600;
+      }
+      header { padding: 10px 16px 15px; background: var(--red); color: #fff; }
+      .store { display: flex; margin-bottom: 12px; align-items: center; justify-content: space-between; }
+      .store-name { display: flex; align-items: center; gap: 7px; font-size: 17px; font-weight: 700; }
+      .pin { width: 16px; height: 16px; border: 2px solid #fff; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
+      .pickup { padding: 4px 9px; border: 1px solid rgba(255,255,255,.65); border-radius: 99px; font-size: 10px; }
+      .search {
+        display: flex;
+        height: 44px;
+        padding: 4px 4px 4px 13px;
+        border-radius: 12px;
+        background: #fff;
+        align-items: center;
+        color: #9b8585;
+        font-size: 13px;
+      }
+      .magnify { width: 14px; height: 14px; margin-right: 8px; border: 2px solid #9b8585; border-radius: 50%; }
+      .search button { height: 36px; margin-left: auto; padding: 0 16px; border: 0; border-radius: 9px; background: var(--red-deep); color: #fff; font-weight: 700; }
+      main { padding: 12px; }
+      .hero { position: relative; height: 188px; overflow: hidden; border-radius: 16px; background: var(--red-deep); }
+      .hero img { width: 100%; height: 100%; object-fit: cover; }
+      .hero-copy { position: absolute; inset: 0 36% 0 0; display: flex; padding: 28px 18px; flex-direction: column; color: #fff; }
+      .hero-copy small { align-self: flex-start; padding: 4px 7px; border-radius: 99px; background: rgba(255,255,255,.17); font-size: 9px; }
+      .hero-copy strong { margin-top: 12px; font-size: 24px; line-height: 1.25; }
+      .hero-copy span { margin-top: 9px; color: rgba(255,255,255,.82); font-size: 10px; }
+      .services { display: flex; height: 38px; margin: -5px 5px 16px; padding: 0 12px; border-radius: 10px; background: #fff; align-items: center; justify-content: space-between; box-shadow: 0 4px 14px rgba(127,29,29,.08); font-size: 10px; color: #665252; }
+      .services span::before { content: ""; display: inline-block; width: 5px; height: 5px; margin-right: 5px; border-radius: 50%; background: var(--red); vertical-align: 1px; }
+      .section-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
+      .section-head b { font-size: 18px; }
+      .section-head span { color: var(--muted); font-size: 10px; }
+      .categories { display: grid; grid-template-columns: repeat(5, 1fr); margin-bottom: 19px; gap: 10px 5px; }
+      .category { text-align: center; font-size: 10px; }
+      .category img { display: block; width: 52px; height: 52px; margin: 0 auto 5px; border: 1px solid var(--line); border-radius: 50%; object-fit: cover; }
+      .category.active img { border: 2px solid var(--red); box-shadow: 0 0 0 3px var(--red-soft); }
+      .category.active { color: var(--red-deep); font-weight: 700; }
+      .products { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .product { overflow: hidden; border: 1px solid var(--line); border-radius: 13px; background: #fff; }
+      .product > img { display: block; width: 100%; height: 130px; object-fit: cover; }
+      .product-body { padding: 10px; }
+      .product-name { display: block; min-height: 36px; font-size: 14px; font-weight: 700; line-height: 1.35; }
+      .deal { display: inline-block; margin: 5px 0; padding: 2px 5px; border-radius: 3px; background: var(--red-soft); color: var(--red-deep); font-size: 9px; }
+      .product-foot { display: flex; align-items: center; justify-content: space-between; }
+      .price { color: var(--red); font-size: 19px; font-weight: 800; }
+      .unit { color: var(--muted); font-size: 9px; }
+      .go { display: grid; width: 27px; height: 27px; border-radius: 50%; background: var(--red); color: #fff; place-items: center; font-size: 22px; line-height: 1; }
+      nav { position: absolute; right: 0; bottom: 0; left: 0; display: grid; height: 70px; padding: 8px 10px 10px; border-top: 1px solid var(--line); background: rgba(255,255,255,.97); grid-template-columns: repeat(4, 1fr); }
+      nav div { display: flex; color: #7d6c6c; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 10px; }
+      nav div:first-child { color: var(--red); font-weight: 700; }
+      .nav-icon { width: 20px; height: 20px; border: 2px solid currentColor; border-radius: 7px; }
+      nav div:first-child .nav-icon { border-radius: 50% 50% 7px 7px; background: var(--red); }
+      @media (max-width: 780px) {
+        body { padding: 18px 0; }
+        .stage { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+        .brief { width: min(390px, calc(100vw - 32px)); padding-top: 0; }
+        .phone { width: min(390px, calc(100vw - 16px)); }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <aside class="brief">
+        <div class="eyebrow">UI UX PRO MAX · RED RETAIL</div>
+        <h1>鲁能智慧超市<br />小程序视觉方案</h1>
+        <p>暖红色建立门店识别，米白背景降低长列表疲劳。商品和价格是视觉中心，服务承诺紧跟活动图，减少顾客对库存与取货方式的疑问。</p>
+        <div class="palette">
+          <div class="swatch" style="background:#dc2626"></div>
+          <div class="swatch" style="background:#991b1b"></div>
+          <div class="swatch" style="background:#fff8f6"></div>
+          <div class="swatch" style="background:#a16207"></div>
+        </div>
+        <div class="spec">
+          <div><b>触控</b>最小 44px / 88rpx</div>
+          <div><b>圆角</b>8 / 12 / 16px</div>
+          <div><b>间距</b>4 / 8px 节奏</div>
+          <div><b>导航</b>4 个一级入口</div>
+        </div>
+      </aside>
+      <section class="phone" aria-label="小程序首页效果图">
+        <div class="screen">
+          <div class="status"><span>9:41</span><span>● ●●</span></div>
+          <header>
+            <div class="store">
+              <div class="store-name"><span class="pin"></span>鲁能超市李老家分店</div>
+              <span class="pickup">到店自取</span>
+            </div>
+            <div class="search"><span class="magnify"></span>搜索店内商品<button>搜索</button></div>
+          </header>
+          <main>
+            <div class="hero">
+              <img src="/mini/miniprogram/assets/home/burgundy-grocery-hero.jpg" alt="" />
+              <div class="hero-copy"><small>李老家分店 · 今日精选</small><strong>新鲜好物<br />就在家门口</strong><span>线上选购 · 到店自取</span></div>
+            </div>
+            <div class="services"><span>门店现货</span><span>到店自取</span><span>售后无忧</span></div>
+            <div class="section-head"><b>逛分类</b><span>快速找到想买的</span></div>
+            <div class="categories">
+              <div class="category active"><img src="/mini/miniprogram/assets/categories/fruit.jpg" alt="" />全部商品</div>
+              <div class="category"><img src="/mini/miniprogram/assets/categories/dairy.jpg" alt="" />乳品饮料</div>
+              <div class="category"><img src="/mini/miniprogram/assets/categories/snacks.jpg" alt="" />休闲零食</div>
+              <div class="category"><img src="/mini/miniprogram/assets/categories/grain-oil.jpg" alt="" />粮油日用</div>
+              <div class="category"><img src="/mini/miniprogram/assets/categories/beverages.jpg" alt="" />水饮专区</div>
+            </div>
+            <div class="section-head"><b>精选好物</b><span style="color:#dc2626">到店自取 放心选购</span></div>
+            <div class="products">
+              <article class="product"><img src="/mini/miniprogram/assets/categories/dairy.jpg" alt="" /><div class="product-body"><span class="product-name">纯牛奶 250ml</span><span class="deal">今日好价</span><div class="product-foot"><div><span class="price">¥3.20</span><span class="unit">/盒</span></div><span class="go">›</span></div></div></article>
+              <article class="product"><img src="/mini/miniprogram/assets/categories/snacks.jpg" alt="" /><div class="product-body"><span class="product-name">原味薯片 70g</span><span class="deal">今日好价</span><div class="product-foot"><div><span class="price">¥6.50</span><span class="unit">/袋</span></div><span class="go">›</span></div></div></article>
+            </div>
+          </main>
+        </div>
+        <nav><div><span class="nav-icon"></span>首页</div><div><span class="nav-icon"></span>分类</div><div><span class="nav-icon"></span>购物车</div><div><span class="nav-icon"></span>订单</div></nav>
+      </section>
+    </div>
+  </body>
+</html>

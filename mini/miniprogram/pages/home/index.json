@@ -1,6 +1,6 @@
 {
   "navigationStyle": "custom",
-  "backgroundColor": "#F8F5F1",
+  "backgroundColor": "#FFF8F6",
   "backgroundTextStyle": "dark",
   "usingComponents": {
     "t-button": "tdesign-miniprogram/button/button",

@@ -1,18 +1,22 @@
 <view class="page-shell">
+  <view class="page-intro">
+    <text class="page-title">购物车</text>
+    <text class="page-description">选好商品后，到店快速取货</text>
+  </view>
   <checkbox-group bindchange="onToggle">
-    <view wx:for="{{items}}" wx:key="productId" class="card">
-      <view class="row-between">
-        <label class="row">
+    <view wx:for="{{items}}" wx:key="productId" class="card cart-item">
+      <view class="row-between cart-item-top">
+        <label class="row cart-select">
           <checkbox value="{{item.productId}}" checked="{{item.selected}}" />
-          <text>{{item.name}}</text>
+          <text class="cart-name">{{item.name}}</text>
         </label>
-        <button class="button-danger" size="mini" data-id="{{item.productId}}" bindtap="onRemove">移除</button>
+        <button class="cart-remove" size="mini" data-id="{{item.productId}}" bindtap="onRemove">删除</button>
       </view>
-      <view class="row-between">
+      <view class="row-between cart-item-bottom">
         <text class="price">¥{{item.unitPriceCent / 100}}</text>
-        <view class="row">
+        <view class="row quantity-stepper">
           <button class="button-secondary quantity-button" size="mini" data-id="{{item.productId}}" bindtap="onDecrease">−</button>
-          <text>{{item.quantity}}</text>
+          <text class="quantity-value">{{item.quantity}}</text>
           <button class="button-secondary quantity-button" size="mini" data-id="{{item.productId}}" bindtap="onIncrease">+</button>
         </view>
       </view>
@@ -20,11 +24,11 @@
   </checkbox-group>
 
   <view wx:if="{{!items.length}}" class="state-panel">购物车还是空的</view>
-  <view wx:else class="card row-between">
-    <view>
-      <view class="price">合计 ¥{{totalCent / 100}}</view>
-      <view class="muted">展示价格仅供参考，以提交订单时服务端价格为准</view>
+  <view wx:else class="cart-summary-bar">
+    <view class="cart-summary-copy">
+      <view><text class="summary-label">合计</text><text class="price">¥{{totalCent / 100}}</text></view>
+      <view class="muted">以提交订单时价格为准</view>
     </view>
-    <button class="button-primary" bindtap="onCheckout">去结算</button>
+    <button class="button-primary checkout-button" bindtap="onCheckout">去结算</button>
   </view>
 </view>

@@ -1,7 +1,87 @@
+.product-page {
+  padding-bottom: calc(176rpx + env(safe-area-inset-bottom));
+}
+
 .product-image {
   width: 100%;
   height: var(--size-product-hero);
-  margin-bottom: var(--space-5);
+  margin-bottom: var(--space-4);
   border-radius: var(--radius-lg);
   background: var(--color-bg-subtle);
+}
+
+.product-info {
+  padding: var(--space-5);
+}
+
+.product-badges {
+  display: flex;
+  margin-bottom: var(--space-3);
+  gap: var(--space-2);
+}
+
+.product-badge {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--primary-100);
+  color: var(--primary-700);
+  font-size: var(--type-caption-size);
+  font-weight: var(--weight-medium);
+  line-height: var(--type-caption-line);
+}
+
+.product-badge.is-gold {
+  background: var(--color-accent-gold-bg);
+  color: var(--color-accent-gold);
+}
+
+.product-title {
+  color: var(--color-text-primary);
+  font-size: var(--type-page-title-size);
+  font-weight: var(--weight-bold);
+  line-height: var(--type-page-title-line);
+}
+
+.product-price-line {
+  display: flex;
+  margin-top: var(--space-2);
+  align-items: baseline;
+}
+
+.product-description {
+  display: flex;
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: var(--border-width-default) solid var(--color-divider);
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.description-label {
+  color: var(--color-text-primary);
+  font-size: var(--type-card-title-size);
+  font-weight: var(--weight-semibold);
+  line-height: var(--type-card-title-line);
+}
+
+.product-purchase-bar {
+  position: fixed;
+  z-index: 20;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  box-sizing: border-box;
+  padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom));
+  border-top: var(--border-width-default) solid var(--color-divider);
+  background: var(--color-bg-surface);
+  gap: var(--space-3);
+}
+
+.product-purchase-bar button {
+  flex: 1;
+}
+
+.product-purchase-bar .purchase-secondary {
+  max-width: 200rpx;
 }

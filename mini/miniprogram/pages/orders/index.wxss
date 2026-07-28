@@ -1,0 +1,49 @@
+.orders-header {
+  padding-top: var(--space-2);
+}
+
+.order-card {
+  padding: var(--space-4);
+  transition:
+    background-color var(--duration-fast) var(--easing-standard),
+    border-color var(--duration-fast) var(--easing-standard);
+}
+
+.order-card-hover {
+  border-color: var(--primary-200);
+  background: var(--primary-50);
+}
+
+.order-card-head {
+  align-items: flex-start;
+}
+
+.order-number {
+  color: var(--color-text-secondary);
+  font-size: var(--type-caption-size);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--type-caption-line);
+}
+
+.order-divider {
+  height: var(--border-width-default);
+  margin: var(--space-4) 0;
+  background: var(--color-divider);
+}
+
+.order-card-foot {
+  align-items: center;
+}
+
+.order-total-label {
+  margin-right: var(--space-2);
+  color: var(--color-text-tertiary);
+  font-size: var(--type-caption-size);
+}
+
+.order-arrow {
+  margin-left: var(--space-2);
+  color: var(--primary-600);
+  font-size: 40rpx;
+  line-height: 48rpx;
+}

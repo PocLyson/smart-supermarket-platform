@@ -1,8 +1,11 @@
 <view class="home-page">
   <view class="home-header">
     <view class="store-heading" aria-label="当前门店 鲁能超市李老家分店">
-      <t-icon name="/assets/icons/location.svg" size="48rpx" />
-      <text class="store-name">鲁能超市李老家分店</text>
+      <view class="store-location">
+        <t-icon name="/assets/icons/location.svg" size="44rpx" />
+        <text class="store-name">鲁能超市李老家分店</text>
+      </view>
+      <text class="pickup-badge">到店自取</text>
     </view>
 
     <view class="search-card">
@@ -21,10 +24,21 @@
     <view class="home-hero">
       <image class="hero-image" src="/assets/home/burgundy-grocery-hero.jpg" mode="aspectFill" />
       <view class="hero-copy">
-        <text class="hero-title">家门口的放心好物</text>
-        <text class="hero-subtitle">线上选购 到店自取</text>
-        <view class="hero-rule"></view>
+        <text class="hero-kicker">李老家分店 · 今日精选</text>
+        <text class="hero-title">新鲜好物 就在家门口</text>
+        <text class="hero-subtitle">线上选购 · 到店自取 · 省时省心</text>
       </view>
+    </view>
+
+    <view class="service-strip" aria-label="门店服务">
+      <view class="service-item"><text class="service-dot"></text><text>门店现货</text></view>
+      <view class="service-item"><text class="service-dot"></text><text>到店自取</text></view>
+      <view class="service-item"><text class="service-dot"></text><text>售后无忧</text></view>
+    </view>
+
+    <view class="category-heading">
+      <text class="category-title">逛分类</text>
+      <text class="category-tip">快速找到想买的</text>
     </view>
 
     <view id="category-section" class="category-grid">
@@ -64,9 +78,13 @@
           <image class="product-image" src="{{item.coverImageUrl}}" mode="aspectFill" />
           <view class="product-content">
             <text class="product-name">{{item.name}}</text>
+            <text class="deal-tag">今日好价</text>
             <view class="product-meta">
-              <text class="product-price">¥{{item.priceCent / 100}}</text>
-              <text class="product-unit">/{{item.unit}}</text>
+              <view>
+                <text class="product-price">¥{{item.priceCent / 100}}</text>
+                <text class="product-unit">/{{item.unit}}</text>
+              </view>
+              <view class="product-action" aria-label="查看商品">›</view>
             </view>
           </view>
         </view>

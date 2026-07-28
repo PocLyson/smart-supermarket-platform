@@ -1,18 +1,23 @@
 <view class="page-shell">
+  <view class="page-intro orders-header">
+    <text class="page-title">我的订单</text>
+    <text class="page-description">查看备货进度和取货状态</text>
+  </view>
   <view wx:if="{{error}}" class="state-panel">
     <text>{{error}}</text>
     <button class="button-secondary" size="mini" data-reset="true" bindtap="loadOrders">重试</button>
   </view>
   <view wx:elif="{{empty}}" class="state-panel">还没有订单</view>
   <view wx:else>
-    <view wx:for="{{orders}}" wx:key="orderNo" class="card" data-order-no="{{item.orderNo}}" bindtap="onOpenOrder">
-      <view class="row-between">
-        <text>{{item.orderNo}}</text>
+    <view wx:for="{{orders}}" wx:key="orderNo" class="card order-card" hover-class="order-card-hover" data-order-no="{{item.orderNo}}" bindtap="onOpenOrder">
+      <view class="row-between order-card-head">
+        <text class="order-number">订单 {{item.orderNo}}</text>
         <text class="status-tag status-{{item.status}}">{{orderStatusLabel[item.status]}}</text>
       </view>
-      <view class="row-between">
+      <view class="order-divider"></view>
+      <view class="row-between order-card-foot">
         <text class="payment-tag payment-{{item.paymentStatus}}">{{paymentStatusLabel[item.paymentStatus]}}</text>
-        <text class="price">¥{{item.totalCent / 100}}</text>
+        <view><text class="order-total-label">合计</text><text class="price">¥{{item.totalCent / 100}}</text><text class="order-arrow">›</text></view>
       </view>
     </view>
     <view wx:if="{{loading}}" class="state-panel">加载中...</view>

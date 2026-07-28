@@ -1,0 +1,29 @@
+.checkout-section {
+  padding: var(--space-5);
+}
+
+.field-label {
+  display: block;
+  margin-bottom: var(--space-2);
+  color: var(--color-text-primary);
+  font-size: var(--type-label-size);
+  font-weight: var(--weight-medium);
+  line-height: var(--type-label-line);
+}
+
+.checkout-product-name {
+  min-width: 0;
+  flex: 1;
+  color: var(--color-text-secondary);
+}
+
+.checkout-line-price {
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--weight-medium);
+}
+
+.checkout-submit {
+  width: 100%;
+  margin-top: var(--space-2);
+}

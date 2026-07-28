@@ -8,19 +8,22 @@ function read(relativePath: string) {
   return readFileSync(resolve(miniRoot, relativePath), 'utf8')
 }
 
-describe('deep burgundy home visual contract', () => {
-  it('publishes the confirmed brand and surface tokens', () => {
+describe('warm red retail visual contract', () => {
+  it('publishes the UI UX Pro Max retail palette', () => {
     const theme = read('styles/theme.wxss')
+    const appConfig = JSON.parse(read('app.json')) as {
+      window?: { navigationBarTitleText?: string }
+    }
 
-    expect(theme).toContain('--primary-600: #8E2F3F;')
-    expect(theme).toContain('--primary-700: #762536;')
-    expect(theme).toContain('--primary-800: #5E1D2B;')
-    expect(theme).toContain('--primary-100: #F5E7EA;')
-    expect(theme).toContain('--color-bg-page: #F8F5F1;')
-    expect(theme).toContain('--color-text-primary: #292326;')
-    expect(theme).toContain('--color-text-secondary: #595054;')
-    expect(theme).toContain('--color-border-default: #D8CFD2;')
+    expect(theme).toContain('--primary-600: #DC2626;')
+    expect(theme).toContain('--primary-700: #B91C1C;')
+    expect(theme).toContain('--primary-800: #991B1B;')
+    expect(theme).toContain('--primary-100: #FEE2E2;')
+    expect(theme).toContain('--color-bg-page: #FFF8F6;')
+    expect(theme).toContain('--color-text-primary: #2B1919;')
+    expect(theme).toContain('--color-accent-gold: #A16207;')
     expect(theme).not.toContain('#2F7046')
+    expect(appConfig.window?.navigationBarTitleText).toBe('智慧超市')
   })
 
   it('keeps every required home region and excludes the AI assistant', () => {
@@ -28,13 +31,23 @@ describe('deep burgundy home visual contract', () => {
 
     expect(home).toContain('鲁能超市李老家分店')
     expect(home).toContain('home-hero')
+    expect(home).toContain('service-strip')
     expect(home).toContain('category-grid')
     expect(home).toContain('product-grid')
+    expect(home).toContain('今日好价')
     expect(home).toContain('首页')
     expect(home).toContain('分类')
     expect(home).toContain('购物车')
     expect(home).toContain('订单')
     expect(home).not.toContain('AI 助手')
+  })
+
+  it('gives every commerce page a clear retail hierarchy', () => {
+    expect(read('pages/product/index.wxml')).toContain('product-purchase-bar')
+    expect(read('pages/cart/index.wxml')).toContain('cart-summary-bar')
+    expect(read('pages/checkout/index.wxml')).toContain('checkout-section')
+    expect(read('pages/orders/index.wxml')).toContain('orders-header')
+    expect(read('pages/order-detail/index.wxml')).toContain('status-timeline')
   })
 
   it('uses TDesign for shared search, button, icon and tab bar controls', () => {

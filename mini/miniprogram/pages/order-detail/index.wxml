@@ -5,12 +5,17 @@
     <button class="button-secondary" size="mini" bindtap="loadOrder">重试</button>
   </view>
   <view wx:elif="{{order}}">
-    <view class="card">
+    <view class="order-status-hero">
       <view class="row-between">
         <text class="status-tag status-{{order.status}}">{{orderStatusLabel[order.status]}}</text>
         <text class="payment-tag payment-{{order.paymentStatus}}">{{paymentStatusLabel[order.paymentStatus]}}</text>
       </view>
-      <view class="muted">订单号 {{order.orderNo}}</view>
+      <text class="status-hero-title">订单正在为你处理</text>
+      <view class="status-hero-meta">订单号 {{order.orderNo}}</view>
+    </view>
+
+    <view class="card pickup-card">
+      <view class="section-title">取货信息</view>
       <view>取货人：{{order.pickupName}}</view>
       <view>手机号：{{order.phone}}</view>
       <view wx:if="{{order.cancellationReason}}">取消原因：{{order.cancellationReason}}</view>
@@ -28,12 +33,15 @@
       </view>
     </view>
 
-    <view class="card">
+    <view class="card status-timeline">
       <view class="section-title">状态记录</view>
-      <view wx:for="{{order.history}}" wx:key="index" class="order-line">
-        <view class="status-tag status-{{item.status}}">{{orderStatusLabel[item.status]}}</view>
-        <view class="muted">{{item.createdAt}}</view>
-        <view wx:if="{{item.reason}}" class="muted">{{item.reason}}</view>
+      <view wx:for="{{order.history}}" wx:key="index" class="timeline-item">
+        <view class="timeline-mark"><view class="timeline-dot"></view><view class="timeline-line"></view></view>
+        <view class="timeline-content">
+          <view class="timeline-title">{{orderStatusLabel[item.status]}}</view>
+          <view class="muted">{{item.createdAt}}</view>
+          <view wx:if="{{item.reason}}" class="muted">{{item.reason}}</view>
+        </view>
       </view>
     </view>
 
