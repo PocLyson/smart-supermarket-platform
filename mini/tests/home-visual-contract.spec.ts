@@ -45,6 +45,25 @@ describe('burgundy retail visual contract', () => {
     expect(home).not.toContain('AI 助手')
   })
 
+  it('distributes the four preview navigation items evenly', () => {
+    const preview = readFileSync(
+      resolve(miniRoot, '..', '..', 'docs', 'ui', 'mini-program-preview.html'),
+      'utf8',
+    )
+    const navButtons = preview.match(/<button[^>]+data-view=/g) ?? []
+
+    expect(navButtons).toHaveLength(4)
+    expect(preview).toMatch(
+      /nav\s*\{[^}]*display:\s*flex;[^}]*\}/,
+    )
+    expect(preview).toMatch(
+      /nav button\s*\{[^}]*flex:\s*1;/,
+    )
+    expect(preview).not.toMatch(
+      /nav\s*\{[^}]*grid-template-columns:\s*repeat\(5,\s*1fr\);/,
+    )
+  })
+
   it('gives every commerce page a clear retail hierarchy', () => {
     expect(read('pages/product/index.wxml')).toContain('product-purchase-bar')
     expect(read('pages/cart/index.wxml')).toContain('cart-summary-bar')
