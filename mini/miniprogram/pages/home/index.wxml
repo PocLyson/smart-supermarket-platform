@@ -31,7 +31,7 @@
 
   <view class="home-content">
     <view class="home-hero">
-      <image class="hero-image" src="/assets/home/navy-fresh-grocery-hero.png" mode="aspectFill" />
+      <image class="hero-image" src="/assets/home/navy-fresh-grocery-hero.jpg" mode="aspectFill" />
       <view class="hero-copy">
         <text class="hero-kicker">今日精选</text>
         <text class="hero-title">新鲜好物
