@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { execFileSync as runCommand } from 'node:child_process'
 import {
   mkdirSync,
   mkdtempSync,
@@ -101,6 +102,114 @@ test('parseDotEnv ignores comments and preserves values after the first equals s
   })
 })
 
+test('unquoted inline comments do not disguise reused passwords', () => {
+  const parsed = parseDotEnv(`MYSQL_PASSWORD=same # database comment
+MYSQL_ROOT_PASSWORD=same # root comment
+REDIS_PASSWORD=same # redis comment
+`)
+  const errors = validateEnvironment({
+    ...validEnvironment,
+    ...parsed,
+  })
+
+  assert.deepEqual(parsed, {
+    MYSQL_PASSWORD: 'same',
+    MYSQL_ROOT_PASSWORD: 'same',
+    REDIS_PASSWORD: 'same',
+  })
+  assert.ok(errors.includes('MySQL、root 与 Redis 密码必须互不相同'))
+})
+
+test('unquoted inline comments do not make a short JWT secret look long', () => {
+  const environment = {
+    ...validEnvironment,
+    ...parseDotEnv(
+      'JWT_SECRET=short # this comment is deliberately much longer than 32 bytes',
+    ),
+  }
+
+  assert.ok(
+    validateEnvironment(environment).includes(
+      'JWT_SECRET 至少需要 32 个字节',
+    ),
+  )
+})
+
+test('quoted values preserve spaces and hashes while unquoted hashes need no space', () => {
+  assert.deepEqual(
+    parseDotEnv(`SINGLE=' value # kept '
+DOUBLE=" value # kept "
+HASH=abc#def
+EMPTY= # ignored comment
+`),
+    {
+      SINGLE: ' value # kept ',
+      DOUBLE: ' value # kept ',
+      HASH: 'abc#def',
+      EMPTY: '',
+    },
+  )
+})
+
+test('rejects unsupported escapes, interpolation and multiline quotes', () => {
+  for (const unsupported of [
+    String.raw`A="line\nvalue"`,
+    String.raw`A=value\#hash`,
+    'A=${OTHER}',
+    "A='first line\nsecond line'",
+  ]) {
+    assert.throws(
+      () => parseDotEnv(unsupported),
+      /dotenv 第 \d+ 行使用了不支持的语法/,
+    )
+  }
+})
+
+test('representative parsed values match Docker Compose interpolation', (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'smart-store-dotenv-'))
+  const envFile = join(root, 'representative.env')
+  const composeFile = join(root, 'compose.yaml')
+  const dotenv = `INLINE=same # ignored comment
+HASH=abc#def
+SINGLE='value # kept'
+DOUBLE="value # kept"
+`
+  writeFileSync(envFile, dotenv, 'utf8')
+  writeFileSync(
+    composeFile,
+    `services:
+  probe:
+    image: busybox
+    environment:
+      INLINE: \${INLINE}
+      HASH: \${HASH}
+      SINGLE: \${SINGLE}
+      DOUBLE: \${DOUBLE}
+`,
+    'utf8',
+  )
+  t.after(() => rmSync(root, { force: true, recursive: true }))
+
+  const rendered = JSON.parse(
+    runCommand(
+      'docker',
+      [
+        'compose',
+        '-f',
+        composeFile,
+        '--env-file',
+        envFile,
+        'config',
+        '--format',
+        'json',
+      ],
+      { encoding: 'utf8' },
+    ),
+  )
+
+  assert.deepEqual(parseDotEnv(dotenv), rendered.services.probe.environment)
+})
+
 test('valid environment has no errors', () => {
   assert.deepEqual(validateEnvironment(validEnvironment), [])
 })
@@ -150,6 +259,23 @@ test('CLI reports validation failures without printing environment values', () =
   assert.equal(messages.some((message) => message.includes(secret)), false)
   assert.equal(
     messages.includes('无法验证生产环境文件的 Git 跟踪状态'),
+    false,
+  )
+})
+
+test('CLI rejects unsupported dotenv syntax without printing the value', () => {
+  const messages = []
+  const unsupportedValue = String.raw`do-not-print\nthis`
+  const exitCode = main(['--env-file', 'deploy/.env.production'], {
+    cwd: '/repository',
+    log: (message) => messages.push(message),
+    readFileSync: () => `JWT_SECRET="${unsupportedValue}"`,
+  })
+
+  assert.equal(exitCode, 1)
+  assert.ok(messages.includes('生产环境文件包含不支持的 dotenv 语法'))
+  assert.equal(
+    messages.some((message) => message.includes(unsupportedValue)),
     false,
   )
 })

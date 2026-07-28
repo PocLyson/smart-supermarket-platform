@@ -26,18 +26,64 @@ const publicHostPattern =
   /^(?=.{1,253}$)(?!-)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/
 
 export function parseDotEnv(text) {
-  return Object.fromEntries(
-    text
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter((line) => line && !line.startsWith('#'))
-      .map((line) => {
-        const separator = line.indexOf('=')
-        return separator < 1
-          ? [line, '']
-          : [line.slice(0, separator).trim(), line.slice(separator + 1).trim()]
-      }),
-  )
+  const environment = {}
+  const unsupported = (lineNumber) => {
+    throw new Error(`dotenv 第 ${lineNumber} 行使用了不支持的语法`)
+  }
+
+  for (const [index, sourceLine] of text.split(/\r?\n/).entries()) {
+    const lineNumber = index + 1
+    const line = sourceLine.trim()
+    if (!line || line.startsWith('#')) continue
+
+    const separator = line.indexOf('=')
+    if (separator < 1) unsupported(lineNumber)
+    const key = line.slice(0, separator).trim()
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(key) || key in environment) {
+      unsupported(lineNumber)
+    }
+
+    const valueSource = line.slice(separator + 1)
+    const startsWithWhitespaceComment = /^\s+#/.test(valueSource)
+    const rawValue = valueSource.trim()
+    let value
+    if (rawValue.startsWith("'") || rawValue.startsWith('"')) {
+      const quote = rawValue[0]
+      const closingQuote = rawValue.indexOf(quote, 1)
+      if (closingQuote < 0) unsupported(lineNumber)
+      const trailing = rawValue.slice(closingQuote + 1).trim()
+      if (trailing && !trailing.startsWith('#')) unsupported(lineNumber)
+      value = rawValue.slice(1, closingQuote)
+      if (
+        value.includes('\\') ||
+        (quote === '"' && value.includes('$'))
+      ) {
+        unsupported(lineNumber)
+      }
+    } else {
+      let commentStart = -1
+      for (let offset = 1; offset < rawValue.length; offset += 1) {
+        if (
+          rawValue[offset] === '#' &&
+          /\s/.test(rawValue[offset - 1])
+        ) {
+          commentStart = offset
+          break
+        }
+      }
+      const uncommentedValue = startsWithWhitespaceComment
+        ? ''
+        : commentStart < 0
+          ? rawValue
+          : rawValue.slice(0, commentStart)
+      value = uncommentedValue.trimEnd()
+      if (/['"\\$]/.test(value)) unsupported(lineNumber)
+    }
+
+    environment[key] = value
+  }
+
+  return environment
 }
 
 export function validateEnvironment(env) {
@@ -351,7 +397,14 @@ export function main(args, dependencies = {}) {
     return 1
   }
 
-  const environment = parseDotEnv(environmentText)
+  let environment
+  try {
+    environment = parseDotEnv(environmentText)
+  } catch {
+    log('生产环境文件包含不支持的 dotenv 语法')
+    log('生产就绪检查未通过（1 项）')
+    return 1
+  }
   const errors = [
     ...validateEnvironment(environment),
     ...validateDeploymentFiles(repositoryRoot),
