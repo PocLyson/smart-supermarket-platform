@@ -46,34 +46,10 @@
     </view>
 
     <view id="category-section" class="category-grid">
-      <view class="category-slot">
-        <view class="category-item" role="button" aria-label="乳品饮料" data-name="乳品饮料" hover-class="category-hover" bindtap="onSelectCategory">
-          <view class="category-image-wrap"><image class="category-image" src="/assets/categories/dairy.jpg" mode="aspectFill" /></view>
-          <text class="category-name">乳品饮料</text>
-        </view>
-      </view>
-      <view class="category-slot">
-        <view class="category-item" role="button" aria-label="休闲零食" data-name="休闲零食" hover-class="category-hover" bindtap="onSelectCategory">
-          <view class="category-image-wrap"><image class="category-image" src="/assets/categories/snacks.jpg" mode="aspectFill" /></view>
-          <text class="category-name">休闲零食</text>
-        </view>
-      </view>
-      <view class="category-slot">
-        <view class="category-item" role="button" aria-label="粮油日用" data-name="粮油日用" hover-class="category-hover" bindtap="onSelectCategory">
-          <view class="category-image-wrap"><image class="category-image" src="/assets/categories/grain-oil.jpg" mode="aspectFill" /></view>
-          <text class="category-name">粮油日用</text>
-        </view>
-      </view>
-      <view class="category-slot">
-        <view class="category-item" role="button" aria-label="烟酒" data-name="烟酒" hover-class="category-hover" bindtap="onSelectCategory">
-          <view class="category-image-wrap"><image class="category-image" src="/assets/categories/beverages.jpg" mode="aspectFill" /></view>
-          <text class="category-name">烟酒</text>
-        </view>
-      </view>
-      <view class="category-slot">
-        <view class="category-item" role="button" aria-label="全部分类" data-id="all" hover-class="category-hover" bindtap="onSelectCategory">
-          <view class="category-image-wrap"><image class="category-image" src="/assets/categories/vegetables.jpg" mode="aspectFill" /></view>
-          <text class="category-name">全部分类</text>
+      <view wx:for="{{categoryPresentation}}" wx:key="id" class="category-slot">
+        <view class="category-item" role="button" aria-label="{{item.name}}" data-name="{{item.name}}" hover-class="category-hover" bindtap="onSelectCategory">
+          <view class="category-image-wrap"><image class="category-image" src="{{item.imageUrl}}" mode="aspectFill" /></view>
+          <text class="category-name">{{item.name}}</text>
         </view>
       </view>
     </view>

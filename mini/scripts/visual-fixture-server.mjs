@@ -1,11 +1,12 @@
 import { createServer } from 'node:http'
 
 const categories = [
-  { id: 1, name: '乳品饮料', enabled: true, sortOrder: 1 },
+  { id: 1, name: '酒水饮料', enabled: true, sortOrder: 1 },
   { id: 2, name: '休闲零食', enabled: true, sortOrder: 2 },
-  { id: 3, name: '粮油日用', enabled: true, sortOrder: 3 },
-  { id: 4, name: '烟酒', enabled: true, sortOrder: 4 },
-  { id: 5, name: '蛋奶食品', enabled: true, sortOrder: 5 },
+  { id: 3, name: '水果生鲜', enabled: true, sortOrder: 3 },
+  { id: 4, name: '洗涤清洁', enabled: true, sortOrder: 4 },
+  { id: 5, name: '卫生用品', enabled: true, sortOrder: 5 },
+  { id: 6, name: '米面粮油', enabled: true, sortOrder: 6 },
 ]
 
 const products = [
@@ -45,7 +46,7 @@ const products = [
   {
     id: 301,
     name: '鲁花压榨一级花生油 5L',
-    categoryId: 3,
+    categoryId: 6,
     priceCent: 11990,
     unit: '桶',
     coverImageUrl: '/assets/categories/grain-oil.jpg',
@@ -56,7 +57,7 @@ const products = [
   {
     id: 401,
     name: '青岛啤酒经典 500ml×12',
-    categoryId: 4,
+    categoryId: 1,
     priceCent: 5590,
     unit: '箱',
     coverImageUrl: '/assets/categories/beverages.jpg',
@@ -67,7 +68,7 @@ const products = [
   {
     id: 501,
     name: '正大鲜鸡蛋 30枚',
-    categoryId: 5,
+    categoryId: 3,
     priceCent: 3290,
     unit: '盒',
     coverImageUrl: '/assets/categories/meat-eggs.jpg',

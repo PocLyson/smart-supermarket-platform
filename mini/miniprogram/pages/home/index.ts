@@ -2,6 +2,10 @@ import { catalogService } from '../../services/catalog'
 import type { Category, ProductSummary } from '../../types/catalog'
 import { buildSearchUrl } from '../search/presentation'
 import { formatMoney } from '../../utils/money'
+import {
+  presentCategories,
+  type PresentedCategory,
+} from '../../config/category-presentation'
 
 type ProductCard = ProductSummary & { displayPrice: string }
 
@@ -10,6 +14,7 @@ const pageSize = 10
 Page({
   data: {
     categories: [] as Category[],
+    categoryPresentation: [] as PresentedCategory[],
     products: [] as ProductCard[],
     selectedCategoryId: undefined as number | undefined,
     keyword: '',
@@ -20,17 +25,6 @@ Page({
     reachedEnd: false,
     imageFailed: false,
     fallbackImage: '/assets/icons/image-placeholder.svg',
-    categoryImages: [
-      '/assets/categories/fruit.jpg',
-      '/assets/categories/vegetables.jpg',
-      '/assets/categories/dairy.jpg',
-      '/assets/categories/snacks.jpg',
-      '/assets/categories/grain-oil.jpg',
-      '/assets/categories/meat-eggs.jpg',
-      '/assets/categories/bakery.jpg',
-      '/assets/categories/household.jpg',
-      '/assets/categories/beverages.jpg',
-    ],
   },
 
   onLoad() {
@@ -47,7 +41,11 @@ Page({
     this.setData({ loading: true, error: '' })
     try {
       const categories = await catalogService.listCategories()
-      this.setData({ categories: categories.filter((item) => item.enabled) })
+      const enabledCategories = categories.filter((item) => item.enabled)
+      this.setData({
+        categories: enabledCategories,
+        categoryPresentation: presentCategories(enabledCategories),
+      })
       await this.loadProducts(true)
     } catch (error) {
       this.setData({

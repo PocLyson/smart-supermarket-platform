@@ -38,8 +38,8 @@ describe('approved navy fresh UI structure', () => {
 
     expect(category).toContain('category-strip')
     expect(category).not.toContain('category-rail')
-    expect(category).toContain('烟酒')
-    expect(category.indexOf('烟酒')).toBeLessThan(category.indexOf('蛋奶食品'))
+    expect(category).toContain('wx:for="{{categoryPresentation}}"')
+    expect(category).toContain('{{item.name}}')
     expect(categoryStyles).toMatch(
       /\.category-chip\s*\{[\s\S]*?width:\s*108rpx;/,
     )

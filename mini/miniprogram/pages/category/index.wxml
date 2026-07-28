@@ -23,25 +23,9 @@
             <image class="category-chip-image" src="/assets/categories/fruit.jpg" mode="aspectFill" />
             <text class="category-chip-label">全部商品</text>
           </view>
-          <view class="category-chip {{selectedCategoryName === '乳品饮料' ? 'is-selected' : ''}}" role="button" data-name="乳品饮料" bindtap="onSelectCategory">
-            <image class="category-chip-image" src="/assets/categories/dairy.jpg" mode="aspectFill" />
-            <text class="category-chip-label">乳品饮料</text>
-          </view>
-          <view class="category-chip {{selectedCategoryName === '休闲零食' ? 'is-selected' : ''}}" role="button" data-name="休闲零食" bindtap="onSelectCategory">
-            <image class="category-chip-image" src="/assets/categories/snacks.jpg" mode="aspectFill" />
-            <text class="category-chip-label">休闲零食</text>
-          </view>
-          <view class="category-chip {{selectedCategoryName === '粮油日用' ? 'is-selected' : ''}}" role="button" data-name="粮油日用" bindtap="onSelectCategory">
-            <image class="category-chip-image" src="/assets/categories/grain-oil.jpg" mode="aspectFill" />
-            <text class="category-chip-label">粮油日用</text>
-          </view>
-          <view class="category-chip {{selectedCategoryName === '烟酒' ? 'is-selected' : ''}}" role="button" data-name="烟酒" bindtap="onSelectCategory">
-            <image class="category-chip-image" src="/assets/categories/beverages.jpg" mode="aspectFill" />
-            <text class="category-chip-label">烟酒</text>
-          </view>
-          <view class="category-chip {{selectedCategoryName === '蛋奶食品' ? 'is-selected' : ''}}" role="button" data-name="蛋奶食品" bindtap="onSelectCategory">
-            <image class="category-chip-image" src="/assets/categories/meat-eggs.jpg" mode="aspectFill" />
-            <text class="category-chip-label">蛋奶食品</text>
+          <view wx:for="{{categoryPresentation}}" wx:key="id" class="category-chip {{selectedCategoryName === item.name ? 'is-selected' : ''}}" role="button" data-name="{{item.name}}" bindtap="onSelectCategory">
+            <image class="category-chip-image" src="{{item.imageUrl}}" mode="aspectFill" />
+            <text class="category-chip-label">{{item.name}}</text>
           </view>
         </view>
       </scroll-view>

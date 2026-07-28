@@ -1,6 +1,10 @@
 import { catalogService } from '../../services/catalog'
 import type { Category, ProductSummary } from '../../types/catalog'
 import { formatMoney } from '../../utils/money'
+import {
+  presentCategories,
+  type PresentedCategory,
+} from '../../config/category-presentation'
 
 const pageSize = 12
 
@@ -9,6 +13,7 @@ type CategoryProduct = ProductSummary & { displayPrice: string }
 Page({
   data: {
     categories: [] as Category[],
+    categoryPresentation: [] as PresentedCategory[],
     selectedCategoryId: undefined as number | undefined,
     selectedCategoryName: '全部商品',
     products: [] as CategoryProduct[],
@@ -46,6 +51,7 @@ Page({
       )
       this.setData({
         categories,
+        categoryPresentation: presentCategories(categories),
         selectedCategoryName: selected?.name || '全部商品',
       })
       await this.loadProducts(true)

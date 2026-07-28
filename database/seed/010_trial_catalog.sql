@@ -2,12 +2,18 @@
 SET NAMES utf8mb4;
 START TRANSACTION;
 
-INSERT INTO category(name, sort_order, enabled) VALUES ('乳品饮料', 10, TRUE);
+INSERT INTO category(name, sort_order, enabled) VALUES ('酒水饮料', 10, TRUE);
 SET @category_drink = LAST_INSERT_ID();
 INSERT INTO category(name, sort_order, enabled) VALUES ('休闲零食', 20, TRUE);
 SET @category_snack = LAST_INSERT_ID();
-INSERT INTO category(name, sort_order, enabled) VALUES ('粮油日用', 30, TRUE);
-SET @category_daily = LAST_INSERT_ID();
+INSERT INTO category(name, sort_order, enabled) VALUES ('水果生鲜', 30, TRUE);
+SET @category_fresh = LAST_INSERT_ID();
+INSERT INTO category(name, sort_order, enabled) VALUES ('洗涤清洁', 40, TRUE);
+SET @category_cleaning = LAST_INSERT_ID();
+INSERT INTO category(name, sort_order, enabled) VALUES ('卫生用品', 50, TRUE);
+SET @category_hygiene = LAST_INSERT_ID();
+INSERT INTO category(name, sort_order, enabled) VALUES ('米面粮油', 60, TRUE);
+SET @category_grain = LAST_INSERT_ID();
 
 INSERT INTO product(
     category_id, name, price_cent, unit, cover_image_url, description, on_shelf
@@ -32,16 +38,16 @@ INSERT INTO product(
 (@category_snack, '蛋黄派 6枚', 990, '盒', NULL, '夹心蛋糕', TRUE),
 (@category_snack, '辣味豆干 80g', 450, '袋', NULL, '即食豆制品', TRUE),
 (@category_snack, '话梅 100g', 720, '袋', NULL, '果脯蜜饯', TRUE),
-(@category_daily, '东北大米 5kg', 3990, '袋', NULL, '粳米', TRUE),
-(@category_daily, '花生油 5L', 10900, '桶', NULL, '压榨花生油', TRUE),
-(@category_daily, '小麦粉 2.5kg', 2590, '袋', NULL, '家庭通用面粉', TRUE),
-(@category_daily, '挂面 1kg', 1290, '袋', NULL, '原味挂面', TRUE),
-(@category_daily, '鸡蛋 10枚', 1290, '盒', NULL, '鲜鸡蛋', TRUE),
-(@category_daily, '抽纸 3包', 1590, '提', NULL, '三层抽取式面巾纸', TRUE),
-(@category_daily, '洗衣液 2kg', 3290, '瓶', NULL, '洁净护理洗衣液', TRUE),
-(@category_daily, '洗洁精 1kg', 1290, '瓶', NULL, '餐具洗涤剂', TRUE),
-(@category_daily, '垃圾袋 45只', 990, '卷', NULL, '中号垃圾袋', TRUE),
-(@category_daily, '一次性纸杯 50只', 1390, '包', NULL, '家用纸杯', TRUE);
+(@category_grain, '东北大米 5kg', 3990, '袋', NULL, '粳米', TRUE),
+(@category_grain, '花生油 5L', 10900, '桶', NULL, '压榨花生油', TRUE),
+(@category_grain, '小麦粉 2.5kg', 2590, '袋', NULL, '家庭通用面粉', TRUE),
+(@category_grain, '挂面 1kg', 1290, '袋', NULL, '原味挂面', TRUE),
+(@category_fresh, '鸡蛋 10枚', 1290, '盒', NULL, '鲜鸡蛋', TRUE),
+(@category_hygiene, '抽纸 3包', 1590, '提', NULL, '三层抽取式面巾纸', TRUE),
+(@category_cleaning, '洗衣液 2kg', 3290, '瓶', NULL, '洁净护理洗衣液', TRUE),
+(@category_cleaning, '洗洁精 1kg', 1290, '瓶', NULL, '餐具洗涤剂', TRUE),
+(@category_cleaning, '垃圾袋 45只', 990, '卷', NULL, '中号垃圾袋', TRUE),
+(@category_hygiene, '一次性纸杯 50只', 1390, '包', NULL, '家用纸杯', TRUE);
 
 SET @first_product = LAST_INSERT_ID();
 INSERT INTO online_inventory(product_id, available_quantity, version)

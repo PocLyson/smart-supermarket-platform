@@ -141,21 +141,18 @@ describe('navy fresh retail visual contract', () => {
     expect(appConfig.pages).toContain('pages/auth/index')
   })
 
-  it('constrains native category buttons to the five-column grid', () => {
+  it('lays out the six backend categories as a balanced two-row grid', () => {
     const home = read('pages/home/index.wxml')
     const homeStyles = read('pages/home/index.wxss')
 
+    expect(home).toContain('wx:for="{{categoryPresentation}}"')
     expect(home).toContain('class="category-slot"')
     expect(home).toContain('role="button"')
     expect(home).not.toContain('<button class="category-item')
     expect(home).not.toContain('index < 9')
-    expect(home.match(/class="category-slot"/g)).toHaveLength(5)
-    expect(home).toContain('烟酒')
+    expect(home).not.toContain('全部分类')
     expect(homeStyles).toMatch(
-      /\.category-grid\s*\{[\s\S]*?display:\s*flex;[\s\S]*?flex-wrap:\s*nowrap;/,
-    )
-    expect(homeStyles).toMatch(
-      /\.category-slot\s*\{[\s\S]*?box-sizing:\s*border-box;[\s\S]*?width:\s*calc\(\(100% - 64rpx\) \/ 5\);/,
+      /\.category-grid\s*\{[\s\S]*?display:\s*grid;[\s\S]*?grid-template-columns:\s*repeat\(3,\s*1fr\);/,
     )
     expect(homeStyles).toMatch(
       /\.category-item\s*\{[\s\S]*?box-sizing:\s*border-box;[\s\S]*?width:\s*100%;/,

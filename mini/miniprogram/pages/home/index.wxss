@@ -188,15 +188,15 @@
 }
 
 .category-grid {
-  display: flex;
+  display: grid;
   margin-bottom: var(--space-6);
-  flex-wrap: nowrap;
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--space-2);
 }
 
 .category-slot {
   box-sizing: border-box;
-  width: calc((100% - 64rpx) / 5);
+  min-width: 0;
 }
 
 .category-item {
