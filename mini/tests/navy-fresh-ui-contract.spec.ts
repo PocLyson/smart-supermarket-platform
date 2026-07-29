@@ -78,6 +78,50 @@ describe('approved navy fresh UI structure', () => {
     )
   })
 
+  it('uses the profile custom header without the redundant native home control', () => {
+    const profileConfig = JSON.parse(read('pages/profile/index.json')) as {
+      navigationStyle?: string
+    }
+    const profile = read('pages/profile/index.wxml')
+    const profileStyles = read('pages/profile/index.wxss')
+
+    expect(profileConfig.navigationStyle).toBe('custom')
+    expect(profile).toContain('class="profile-title">我的</view>')
+    expect(profile).toContain('<app-tab-bar value="profile" />')
+    expect(profileStyles).toMatch(
+      /\.profile-hero\s*\{[\s\S]*?padding:\s*calc\(env\(safe-area-inset-top\) \+ 112rpx\)/,
+    )
+  })
+
+  it('uses custom primary-tab headers and one consistent category icon', () => {
+    const categoryConfig = JSON.parse(read('pages/category/index.json')) as {
+      navigationStyle?: string
+    }
+    const cartConfig = JSON.parse(read('pages/cart/index.json')) as {
+      navigationStyle?: string
+    }
+    const category = read('pages/category/index.wxml')
+    const categoryStyles = read('pages/category/index.wxss')
+    const cart = read('pages/cart/index.wxml')
+    const cartStyles = read('pages/cart/index.wxss')
+    const tabBar = read('components/app-tab-bar/index.wxml')
+
+    expect(categoryConfig.navigationStyle).toBe('custom')
+    expect(cartConfig.navigationStyle).toBe('custom')
+    expect(category).toContain('class="category-nav-title">商品分类</text>')
+    expect(categoryStyles).toContain(
+      'padding: calc(env(safe-area-inset-top) + 112rpx)',
+    )
+    expect(cart).toContain('class="cart-topbar-title">购物车</text>')
+    expect(cartStyles).toContain(
+      'padding: calc(env(safe-area-inset-top) + 112rpx)',
+    )
+    expect(tabBar).toContain('src="/assets/icons/view-module-active.svg"')
+    expect(tabBar).not.toContain(
+      "? '/assets/icons/view-module-active.svg' : '/assets/icons/view-module.svg'",
+    )
+  })
+
   it('keeps product purchase information readable above the fixed action bar', () => {
     const product = read('pages/product/index.wxml')
     const productStyles = read('pages/product/index.wxss')
@@ -95,7 +139,30 @@ describe('approved navy fresh UI structure', () => {
       /\.product-stock-row\s*\{[\s\S]*?flex-wrap:\s*wrap;/,
     )
     expect(productStyles).toMatch(
+      /\.product-stock-row\s*\{[\s\S]*?min-height:\s*96rpx;[\s\S]*?border-bottom:\s*var\(--border-width-default\) solid var\(--color-divider\);/,
+    )
+    expect(productStyles).toMatch(
       /\.product-store-copy\s*\{[\s\S]*?font-size:\s*24rpx;/,
+    )
+    expect(product).toContain(
+      '<text class="quantity-value">{{quantity}}</text>',
+    )
+    expect(product).toContain(
+      "quantity-button {{quantity === 1 ? 'is-disabled' : ''}}",
+    )
+    expect(productStyles).toMatch(
+      /\.quantity-stepper\s*\{[\s\S]*?display:\s*flex;[\s\S]*?width:\s*240rpx;/,
+    )
+    expect(productStyles).toContain('.quantity-button.is-disabled')
+    expect(productStyles).not.toContain('.quantity-button[disabled]')
+    expect(productStyles).toMatch(
+      /\.quantity-row\s*\{[\s\S]*?min-height:\s*112rpx;/,
+    )
+    expect(productStyles).not.toMatch(
+      /\.quantity-row\s*\{[^}]*border-bottom:/,
+    )
+    expect(productStyles).toMatch(
+      /\.product-info\s*\{[\s\S]*?padding:\s*var\(--space-5\) var\(--space-5\) 0;/,
     )
   })
 
@@ -133,6 +200,19 @@ describe('approved navy fresh UI structure', () => {
     expect(auth).toContain('同步订单与购物车')
     expect(submitResult).toContain('订单提交成功')
     expect(submitResult).toContain('订单结果确认中')
+  })
+
+  it('moves account operations into the registered settings page', () => {
+    const appConfig = JSON.parse(read('app.json')) as { pages: string[] }
+    const profile = read('pages/profile/index.wxml')
+    const settings = read('pages/settings/index.wxml')
+
+    expect(appConfig.pages).toContain('pages/settings/index')
+    expect(profile).toContain('bindtap="onSettings"')
+    expect(profile).not.toContain('bindtap="onDeleteAccount"')
+    expect(profile).not.toContain('bindtap="onLogout"')
+    expect(profile).toContain('默认取货信息')
+    expect(settings).not.toContain('默认取货信息')
   })
 
   it('uses class selectors that the WeChat component compiler accepts', () => {

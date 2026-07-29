@@ -1,4 +1,5 @@
 {
+  "navigationStyle": "custom",
   "navigationBarTitleText": "我的",
   "backgroundColor": "#F7F9FC",
   "usingComponents": {

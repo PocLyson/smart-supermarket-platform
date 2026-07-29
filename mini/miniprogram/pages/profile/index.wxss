@@ -7,7 +7,7 @@
 .profile-hero {
   box-sizing: border-box;
   min-height: 324rpx;
-  padding: calc(env(safe-area-inset-top) + var(--space-5)) var(--space-4) var(--space-7);
+  padding: calc(env(safe-area-inset-top) + 112rpx) var(--space-4) var(--space-7);
   background: var(--primary-600);
   color: #FFFFFF;
 }
@@ -65,9 +65,11 @@
 
 .profile-login-button {
   display: flex;
+  width: 240rpx;
   height: 88rpx;
-  min-width: 176rpx;
+  min-width: 240rpx;
   min-height: 88rpx;
+  flex: 0 0 240rpx;
   margin: 0;
   padding: 0 var(--space-3);
   border: 0;
@@ -229,15 +231,28 @@
   margin-top: var(--space-3);
 }
 
-.logout-button {
-  min-height: 88rpx;
-  margin-top: var(--space-4);
-  border: 0;
-  background: transparent;
-  color: var(--color-text-tertiary);
-  font-size: var(--type-helper-size);
+.settings-card {
+  display: flex;
+  box-sizing: border-box;
+  min-height: 96rpx;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.logout-button::after {
-  border: 0;
+.settings-card-hover {
+  background: var(--primary-50);
+}
+
+.settings-link {
+  display: flex;
+  color: var(--color-text-tertiary);
+  font-size: var(--type-helper-size);
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.settings-link-icon {
+  width: 32rpx;
+  height: 32rpx;
+  opacity: 0.6;
 }

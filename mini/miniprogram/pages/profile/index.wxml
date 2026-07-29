@@ -51,12 +51,19 @@
       <t-button t-class="save-button" theme="primary" block loading="{{saving}}" disabled="{{saving}}" bind:tap="onSave">保存取货信息</t-button>
     </view>
 
+    <view class="profile-card settings-card" role="button" hover-class="settings-card-hover" bindtap="onSettings">
+      <text class="card-title">设置</text>
+      <view class="settings-link">
+        <text>账号与隐私</text>
+        <image class="settings-link-icon" src="/assets/icons/chevron-right.svg" mode="aspectFit" />
+      </view>
+    </view>
+
     <view wx:if="{{error}}" class="profile-error" role="alert">
       <text class="profile-error-title">资料加载失败</text>
       <text>{{error}}</text>
       <button class="button-secondary profile-retry" bindtap="onRetry">重新加载</button>
     </view>
-    <button wx:if="{{loggedIn}}" class="logout-button" bindtap="onLogout">退出登录</button>
   </view>
 
   <app-tab-bar value="profile" />

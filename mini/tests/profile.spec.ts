@@ -4,6 +4,8 @@ import {
   validateProfile,
 } from '../miniprogram/pages/profile/presentation'
 import { resolveTabNavigation } from '../miniprogram/components/app-tab-bar/navigation'
+import { createProfileService } from '../miniprogram/services/auth'
+import type { CustomerSession } from '../miniprogram/store/session'
 
 describe('profile presentation', () => {
   it('shows an actionable logged-out state when no session exists', () => {
@@ -31,6 +33,31 @@ describe('profile presentation', () => {
     expect(validateProfile('', '13800138000')).toBe('请输入取货人姓名')
     expect(validateProfile('李先生', '123')).toBe('请输入正确的11位手机号')
     expect(validateProfile('李先生', '13800138000')).toBeUndefined()
+  })
+
+  it('calls the protected account deletion endpoint with the current token', async () => {
+    const deleteRequest = vi.fn().mockResolvedValue({ deleted: true })
+    const session: CustomerSession = { accessToken: 'customer-token' }
+    const service = createProfileService(
+      {
+        get: vi.fn(),
+        put: vi.fn(),
+        delete: deleteRequest,
+      },
+      {
+        current: () => session,
+        save: vi.fn(),
+        clear: vi.fn(),
+      },
+    )
+
+    await service.deleteAccount()
+
+    expect(deleteRequest).toHaveBeenCalledWith(
+      '/api/mini/account',
+      undefined,
+      { Authorization: 'Bearer customer-token' },
+    )
   })
 })
 

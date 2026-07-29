@@ -8,8 +8,10 @@
     "pages/checkout/index",
     "pages/submit-result/index",
     "pages/auth/index",
+    "pages/legal/index",
     "pages/orders/index",
     "pages/order-detail/index",
+    "pages/settings/index",
     "pages/profile/index"
   ],
   "window": {

@@ -103,21 +103,8 @@ Page({
     })
   },
 
-  onLogout() {
-    wx.showModal({
-      title: '退出登录',
-      content: '退出后将无法查看个人订单，确定退出吗？',
-      success: ({ confirm }) => {
-        if (!confirm) return
-        sessionStore.clear()
-        this.setData({
-          ...loggedOutView,
-          pickupName: '',
-          phone: '',
-          error: '',
-        })
-      },
-    })
+  onSettings() {
+    wx.navigateTo({ url: '/pages/settings/index' })
   },
 
   onRetry() {
