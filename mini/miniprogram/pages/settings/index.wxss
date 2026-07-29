@@ -1,0 +1,125 @@
+.settings-page {
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: var(--space-5) var(--space-4) calc(var(--space-8) + env(safe-area-inset-bottom));
+  background: var(--color-bg-page);
+}
+
+.settings-content {
+  max-width: 720rpx;
+  margin: 0 auto;
+}
+
+.settings-group {
+  margin-bottom: var(--space-5);
+  padding: 0 var(--space-5);
+  border: var(--border-width-default) solid var(--color-divider);
+  border-radius: var(--radius-lg);
+  background: #FFFFFF;
+  box-shadow: var(--shadow-card);
+}
+
+.settings-group-title {
+  display: block;
+  padding-top: var(--space-5);
+  color: var(--color-text-primary);
+  font-size: var(--type-card-title-size);
+  font-weight: var(--weight-semibold);
+  line-height: var(--type-card-title-line);
+}
+
+.settings-row {
+  display: flex;
+  min-height: 96rpx;
+  border-bottom: var(--border-width-default) solid var(--color-divider);
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.settings-row:last-child {
+  border-bottom: 0;
+}
+
+.settings-row.is-action {
+  cursor: pointer;
+}
+
+.settings-row-hover {
+  background: var(--primary-50);
+}
+
+.settings-label {
+  color: var(--color-text-primary);
+  font-size: var(--type-label-size);
+  font-weight: var(--weight-medium);
+}
+
+.settings-value,
+.settings-action-copy,
+.settings-description {
+  color: var(--color-text-tertiary);
+  font-size: var(--type-helper-size);
+  line-height: var(--type-helper-line);
+}
+
+.settings-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  padding: var(--space-3) 0;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.settings-action-copy {
+  color: var(--primary-600);
+  flex: none;
+}
+
+.settings-chevron {
+  width: 32rpx;
+  height: 32rpx;
+  flex: none;
+  opacity: 0.6;
+}
+
+.danger-group {
+  padding-bottom: var(--space-4);
+}
+
+.delete-account-button {
+  display: flex;
+  min-height: 88rpx;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-error-text);
+  font-size: var(--type-label-size);
+  font-weight: var(--weight-medium);
+  line-height: 1;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.delete-account-button::after {
+  border: 0;
+}
+
+.danger-description {
+  display: block;
+  color: var(--color-text-tertiary);
+  font-size: var(--type-helper-size);
+  line-height: var(--type-helper-line);
+}
+
+.settings-error {
+  padding: var(--space-4);
+  border: var(--border-width-default) solid var(--color-error-border);
+  border-radius: var(--radius-md);
+  background: var(--color-error-bg);
+  color: var(--color-error-text);
+  font-size: var(--type-helper-size);
+  line-height: var(--type-helper-line);
+}
