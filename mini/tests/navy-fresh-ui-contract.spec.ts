@@ -116,9 +116,8 @@ describe('approved navy fresh UI structure', () => {
     expect(cartStyles).toContain(
       'padding: calc(env(safe-area-inset-top) + 112rpx)',
     )
-    expect(tabBar).toContain('src="/assets/icons/view-module-active.svg"')
-    expect(tabBar).not.toContain(
-      "? '/assets/icons/view-module-active.svg' : '/assets/icons/view-module.svg'",
+    expect(tabBar).toContain(
+      "value === 'category' ? '/assets/icons/view-module-active.svg' : '/assets/icons/view-module.svg'",
     )
   })
 
