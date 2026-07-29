@@ -1,6 +1,6 @@
 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="view-module">
-<path id="fill1" d="M2 20H22V4H2V20Z" fill="white"/>
-<path id="stroke1" d="M8.6665 4V20M15.333 4V20M2 12H22M2 20H22V4H2V20Z" stroke="#6F666A" stroke-width="1.8" stroke-linecap="round"/>
-</g>
+  <rect x="3" y="4" width="7" height="7" rx="1.5" fill="none" stroke="#6F666A" stroke-width="1.8"/>
+  <rect x="14" y="4" width="7" height="7" rx="1.5" fill="none" stroke="#6F666A" stroke-width="1.8"/>
+  <rect x="3" y="15" width="7" height="6" rx="1.5" fill="none" stroke="#6F666A" stroke-width="1.8"/>
+  <rect x="14" y="15" width="7" height="6" rx="1.5" fill="none" stroke="#6F666A" stroke-width="1.8"/>
 </svg>

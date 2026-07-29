@@ -105,6 +105,7 @@ describe('approved navy fresh UI structure', () => {
     const cart = read('pages/cart/index.wxml')
     const cartStyles = read('pages/cart/index.wxss')
     const tabBar = read('components/app-tab-bar/index.wxml')
+    const inactiveCategoryIcon = read('assets/icons/view-module.svg')
 
     expect(categoryConfig.navigationStyle).toBe('custom')
     expect(cartConfig.navigationStyle).toBe('custom')
@@ -119,6 +120,9 @@ describe('approved navy fresh UI structure', () => {
     expect(tabBar).toContain(
       "value === 'category' ? '/assets/icons/view-module-active.svg' : '/assets/icons/view-module.svg'",
     )
+    expect(inactiveCategoryIcon.match(/<rect /g)).toHaveLength(4)
+    expect(inactiveCategoryIcon).toContain('fill="none"')
+    expect(inactiveCategoryIcon).toContain('stroke="#6F666A"')
   })
 
   it('keeps product purchase information readable above the fixed action bar', () => {
