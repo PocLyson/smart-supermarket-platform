@@ -1,14 +1,14 @@
 import { catalogService } from '../../services/catalog'
+import { RECENT_SEARCHES_STORAGE_KEY } from '../../store/local-usage-data'
 import type { ProductSummary } from '../../types/catalog'
 import { formatMoney } from '../../utils/money'
 
-const recentStorageKey = 'smart-store-recent-searches-v1'
 const pageSize = 10
 
 type SearchProduct = ProductSummary & { displayPrice: string }
 
 const readRecentSearches = (): string[] => {
-  const value = wx.getStorageSync(recentStorageKey) as unknown
+  const value = wx.getStorageSync(RECENT_SEARCHES_STORAGE_KEY) as unknown
   return Array.isArray(value)
     ? value.filter((item): item is string => typeof item === 'string').slice(0, 6)
     : []
@@ -73,7 +73,7 @@ Page({
   },
 
   onClearRecent() {
-    wx.removeStorageSync(recentStorageKey)
+    wx.removeStorageSync(RECENT_SEARCHES_STORAGE_KEY)
     this.setData({ recentSearches: [] })
   },
 
@@ -101,7 +101,7 @@ Page({
         keyword,
         ...this.data.recentSearches.filter((item) => item !== keyword),
       ].slice(0, 6)
-      wx.setStorageSync(recentStorageKey, recentSearches)
+      wx.setStorageSync(RECENT_SEARCHES_STORAGE_KEY, recentSearches)
       this.setData({
         searchedKeyword: keyword,
         recentSearches,

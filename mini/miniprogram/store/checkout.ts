@@ -50,7 +50,8 @@ export interface PendingCheckoutStorage {
   clear(): void
 }
 
-const PENDING_CHECKOUT_STORAGE_KEY = 'smart-store-pending-checkout-v1'
+export const PENDING_CHECKOUT_STORAGE_KEY =
+  'smart-store-pending-checkout-v1'
 
 const isPendingCheckout = (value: unknown): value is PendingCheckout => {
   if (!value || typeof value !== 'object') return false
