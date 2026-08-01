@@ -258,7 +258,7 @@ onMounted(load)
       />
       <template v-else>
         <div class="responsive-table has-mobile-cards">
-          <el-table :data="items">
+          <el-table :data="items" class="announcement-table">
             <el-table-column prop="title" label="标题" min-width="180" />
             <el-table-column label="状态" width="110">
               <template #default="{ row }">
@@ -457,6 +457,9 @@ onMounted(load)
 .announcement-pagination {
   justify-content: flex-end;
   margin-top: var(--space-4);
+}
+.announcement-table :deep(th.el-table-fixed-column--right) {
+  background: var(--color-bg-subtle);
 }
 @media (max-width: 760px) {
   .announcement-pagination {
