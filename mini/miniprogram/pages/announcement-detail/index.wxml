@@ -1,0 +1,14 @@
+<view class="page-shell announcement-detail-page">
+  <view wx:if="{{loading}}" class="state-panel">正在加载公告...</view>
+  <view wx:elif="{{ended}}" class="state-panel announcement-ended" role="alert">
+    <text class="announcement-ended-title">该公告已结束</text>
+    <text class="announcement-ended-copy">请返回公告列表查看最新门店安排</text>
+    <button class="button-primary announcement-back" bindtap="onBack">返回公告列表</button>
+  </view>
+  <view wx:elif="{{announcement}}" class="announcement-detail card">
+    <text class="announcement-title">{{announcement.title}}</text>
+    <text class="announcement-time">{{displayPublishedAt}}</text>
+    <view class="announcement-divider"></view>
+    <text class="announcement-content">{{announcement.content}}</text>
+  </view>
+</view>

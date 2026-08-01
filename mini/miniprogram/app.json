@@ -1,6 +1,8 @@
 {
   "pages": [
     "pages/home/index",
+    "pages/announcements/index",
+    "pages/announcement-detail/index",
     "pages/category/index",
     "pages/search/index",
     "pages/product/index",

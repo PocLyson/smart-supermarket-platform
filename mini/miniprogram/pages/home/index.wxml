@@ -40,6 +40,14 @@
       </view>
     </view>
 
+    <view wx:if="{{latestAnnouncement}}" class="announcement-strip" role="button" data-id="{{latestAnnouncement.id}}" hover-class="announcement-strip-hover" bindtap="onOpenAnnouncement">
+      <view class="announcement-strip-copy">
+        <text class="announcement-strip-label">门店公告</text>
+        <text class="announcement-strip-title">{{latestAnnouncement.title}}</text>
+      </view>
+      <view class="announcement-strip-all" role="button" catchtap="onOpenAnnouncements">全部 ›</view>
+    </view>
+
     <view class="category-heading">
       <text class="category-title">热门分类</text>
       <view

@@ -1,0 +1,26 @@
+<view class="page-shell announcements-page">
+  <view class="page-intro">
+    <text class="page-title">门店公告</text>
+    <text class="page-description">及时了解门店营业与服务安排</text>
+  </view>
+
+  <view wx:if="{{loading && !announcements.length}}" class="state-panel">正在加载公告...</view>
+  <view wx:elif="{{error && !announcements.length}}" class="state-panel announcements-error" role="alert">
+    <text class="announcements-state-title">公告加载失败</text>
+    <text>{{error}}</text>
+    <button class="button-secondary announcements-retry" bindtap="onRetry">重新加载</button>
+  </view>
+  <view wx:elif="{{empty}}" class="state-panel">
+    <text class="announcements-state-title">暂时没有门店公告</text>
+    <text>有新安排时会显示在这里</text>
+  </view>
+  <view wx:else class="announcement-list">
+    <view wx:for="{{announcements}}" wx:key="id" class="announcement-card card" data-id="{{item.id}}" hover-class="announcement-card-hover" bindtap="onOpenAnnouncement">
+      <text class="announcement-card-title">{{item.title}}</text>
+      <text class="announcement-card-time">{{item.displayPublishedAt}}</text>
+      <text class="announcement-card-arrow">›</text>
+    </view>
+    <view wx:if="{{loading}}" class="list-feedback">正在加载更多公告...</view>
+    <view wx:elif="{{reachedEnd && announcements.length}}" class="list-feedback">已展示全部公告</view>
+  </view>
+</view>

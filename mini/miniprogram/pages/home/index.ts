@@ -1,4 +1,6 @@
 import { catalogService } from '../../services/catalog'
+import { announcementsService } from '../../services/announcements'
+import type { Announcement } from '../../types/announcement'
 import type { Category, ProductSummary } from '../../types/catalog'
 import { buildSearchUrl } from '../search/presentation'
 import { formatMoney } from '../../utils/money'
@@ -29,10 +31,22 @@ Page({
     reachedEnd: false,
     imageFailed: false,
     fallbackImage: '/assets/icons/image-placeholder.svg',
+    latestAnnouncement: undefined as Announcement | undefined,
   },
 
   onLoad() {
+    void this.loadLatestAnnouncement()
     void this.loadInitial()
+  },
+
+  async loadLatestAnnouncement() {
+    try {
+      this.setData({
+        latestAnnouncement: (await announcementsService.latest()) || undefined,
+      })
+    } catch {
+      this.setData({ latestAnnouncement: undefined })
+    }
   },
 
   onReachBottom() {
@@ -121,6 +135,16 @@ Page({
     wx.navigateTo({
       url: `/pages/product/index?id=${Number(event.currentTarget.dataset.id)}`,
     })
+  },
+
+  onOpenAnnouncement(event: WechatMiniprogram.TouchEvent) {
+    const id = Number(event.currentTarget.dataset.id)
+    if (!Number.isSafeInteger(id) || id <= 0) return
+    wx.navigateTo({ url: `/pages/announcement-detail/index?id=${id}` })
+  },
+
+  onOpenAnnouncements() {
+    wx.navigateTo({ url: '/pages/announcements/index' })
   },
 
   onQuickAdd(event: WechatMiniprogram.TouchEvent) {
