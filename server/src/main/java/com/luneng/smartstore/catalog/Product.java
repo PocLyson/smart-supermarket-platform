@@ -1,5 +1,6 @@
 package com.luneng.smartstore.catalog;
 
+import com.luneng.smartstore.common.api.BusinessException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -9,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.Instant;
 
 @Entity
 @Table(name = "product")
@@ -39,6 +41,15 @@ public class Product {
     @Column(name = "on_shelf", nullable = false)
     private boolean onShelf;
 
+    @Column(nullable = false)
+    private boolean archived;
+
+    @Column(name = "archived_at")
+    private Instant archivedAt;
+
+    @Column(name = "archived_by")
+    private Long archivedBy;
+
     protected Product() {
     }
 
@@ -63,6 +74,7 @@ public class Product {
         String description,
         boolean onShelf
     ) {
+        rejectArchivedChange();
         this.category = category;
         this.name = name;
         this.priceCent = priceCent;
@@ -73,7 +85,42 @@ public class Product {
     }
 
     public void setOnShelf(boolean onShelf) {
+        if (archived && onShelf) {
+            throw archived();
+        }
         this.onShelf = onShelf;
+    }
+
+    public boolean archive(long actorId) {
+        if (archived) {
+            return false;
+        }
+        archived = true;
+        archivedAt = Instant.now();
+        archivedBy = actorId;
+        onShelf = false;
+        return true;
+    }
+
+    public boolean restore(long actorId) {
+        if (!archived) {
+            return false;
+        }
+        archived = false;
+        archivedAt = null;
+        archivedBy = null;
+        onShelf = false;
+        return true;
+    }
+
+    private void rejectArchivedChange() {
+        if (archived) {
+            throw archived();
+        }
+    }
+
+    private BusinessException archived() {
+        return new BusinessException("PRODUCT_ARCHIVED", "归档商品不可编辑或上架");
     }
 
     public Long getId() {
@@ -106,5 +153,17 @@ public class Product {
 
     public boolean isOnShelf() {
         return onShelf;
+    }
+
+    public boolean isArchived() {
+        return archived;
+    }
+
+    public Instant getArchivedAt() {
+        return archivedAt;
+    }
+
+    public Long getArchivedBy() {
+        return archivedBy;
     }
 }
