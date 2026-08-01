@@ -1,5 +1,10 @@
 <view class="page-shell announcement-detail-page">
   <view wx:if="{{loading}}" class="state-panel">正在加载公告...</view>
+  <view wx:elif="{{loadError}}" class="state-panel announcement-error" role="alert">
+    <text class="announcement-ended-title">公告加载失败</text>
+    <text class="announcement-ended-copy">{{loadError}}</text>
+    <button class="button-primary announcement-back" bindtap="onRetry">重新加载</button>
+  </view>
   <view wx:elif="{{ended}}" class="state-panel announcement-ended" role="alert">
     <text class="announcement-ended-title">该公告已结束</text>
     <text class="announcement-ended-copy">请返回公告列表查看最新门店安排</text>

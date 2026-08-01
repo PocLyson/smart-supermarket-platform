@@ -1,4 +1,8 @@
-import { createHttpClient, NetworkUncertainError } from '../miniprogram/services/http'
+import {
+  createHttpClient,
+  HttpResponseError,
+  NetworkUncertainError,
+} from '../miniprogram/services/http'
 
 describe('mini HTTP client', () => {
   it('omits undefined query values before sending a GET request', async () => {
@@ -92,6 +96,35 @@ describe('mini HTTP client', () => {
 
     await expect(client.get('/api/mini/orders')).rejects.toThrow('登录已过期')
     expect(onUnauthorized).toHaveBeenCalledTimes(1)
+  })
+
+  it('preserves status, business code and request id on a 404 response', async () => {
+    const client = createHttpClient({
+      apiBaseUrl: () => 'https://api.test',
+      showError: vi.fn(),
+      onUnauthorized: vi.fn(),
+      transport: (options) => {
+        options.success({
+          statusCode: 404,
+          data: {
+            code: 'NOT_FOUND',
+            message: 'Announcement not found',
+            requestId: 'request-not-found',
+            data: null,
+          },
+        })
+      },
+    })
+
+    const request = client.get('/api/mini/announcements/7')
+
+    await expect(request).rejects.toMatchObject({
+      name: 'HttpResponseError',
+      statusCode: 404,
+      code: 'NOT_FOUND',
+      requestId: 'request-not-found',
+    })
+    await expect(request).rejects.toBeInstanceOf(HttpResponseError)
   })
 
   it('marks transport failure as a network-uncertain error', async () => {

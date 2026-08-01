@@ -1,5 +1,6 @@
 package com.luneng.smartstore;
 
+import com.luneng.smartstore.announcement.AnnouncementRepository;
 import com.luneng.smartstore.audit.AuditService;
 import com.luneng.smartstore.catalog.CatalogService;
 import com.luneng.smartstore.catalog.CatalogRepository;
@@ -28,6 +29,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
     "smart-store.upload-dir=target/test-uploads"
 })
 class SmartStoreApplicationTest {
+    @MockitoBean
+    private AnnouncementRepository announcementRepository;
+
     @MockitoBean
     private StaffAccountRepository staffAccountRepository;
 

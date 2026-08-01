@@ -121,6 +121,11 @@ const submit = async (): Promise<void> => {
 
 type LifecycleAction = 'publish' | 'offline' | 'delete'
 
+const lifecyclePendingById = reactive<Record<number, LifecycleAction | undefined>>({})
+const lifecyclePending = (id: number): boolean => lifecyclePendingById[id] !== undefined
+const lifecycleLoading = (id: number, action: LifecycleAction): boolean =>
+  lifecyclePendingById[id] === action
+
 const actionCopy: Record<
   LifecycleAction,
   { message: string; title: string; confirmButtonText: string }
@@ -146,6 +151,8 @@ const runLifecycleAction = async (
   announcement: Announcement,
   action: LifecycleAction,
 ): Promise<void> => {
+  if (lifecyclePending(announcement.id)) return
+  lifecyclePendingById[announcement.id] = action
   const { message, title, confirmButtonText } = actionCopy[action]
   try {
     await ElMessageBox.confirm(message, title, {
@@ -164,6 +171,8 @@ const runLifecycleAction = async (
     if (error !== 'cancel' && error !== 'close') {
       reportUnexpectedError(error, '公告操作失败')
     }
+  } finally {
+    delete lifecyclePendingById[announcement.id]
   }
 }
 
@@ -260,6 +269,7 @@ onMounted(load)
                     :data-test="`announcement-edit-${row.id}`"
                     link
                     type="primary"
+                    :disabled="lifecyclePending(row.id)"
                     @click="openEdit(row)"
                     >编辑</el-button
                   >
@@ -267,6 +277,8 @@ onMounted(load)
                     :data-test="`announcement-delete-${row.id}`"
                     link
                     type="danger"
+                    :loading="lifecycleLoading(row.id, 'delete')"
+                    :disabled="lifecyclePending(row.id)"
                     @click="runLifecycleAction(row, 'delete')"
                     >删除</el-button
                   >
@@ -274,6 +286,8 @@ onMounted(load)
                     :data-test="`announcement-publish-${row.id}`"
                     link
                     type="primary"
+                    :loading="lifecycleLoading(row.id, 'publish')"
+                    :disabled="lifecyclePending(row.id)"
                     @click="runLifecycleAction(row, 'publish')"
                     >{{ row.status === 'OFFLINE' ? '重新发布' : '发布' }}</el-button
                   >
@@ -283,6 +297,8 @@ onMounted(load)
                   :data-test="`announcement-offline-${row.id}`"
                   link
                   type="warning"
+                  :loading="lifecycleLoading(row.id, 'offline')"
+                  :disabled="lifecyclePending(row.id)"
                   @click="runLifecycleAction(row, 'offline')"
                   >下线</el-button
                 >
@@ -309,15 +325,34 @@ onMounted(load)
             </div>
             <div class="mobile-data-card__footer">
               <template v-if="announcement.status !== 'PUBLISHED'">
-                <el-button @click="openEdit(announcement)">编辑</el-button>
-                <el-button type="danger" plain @click="runLifecycleAction(announcement, 'delete')"
+                <el-button
+                  :disabled="lifecyclePending(announcement.id)"
+                  @click="openEdit(announcement)"
+                  >编辑</el-button
+                >
+                <el-button
+                  type="danger"
+                  plain
+                  :loading="lifecycleLoading(announcement.id, 'delete')"
+                  :disabled="lifecyclePending(announcement.id)"
+                  @click="runLifecycleAction(announcement, 'delete')"
                   >删除</el-button
                 >
-                <el-button type="primary" @click="runLifecycleAction(announcement, 'publish')">{{
+                <el-button
+                  type="primary"
+                  :loading="lifecycleLoading(announcement.id, 'publish')"
+                  :disabled="lifecyclePending(announcement.id)"
+                  @click="runLifecycleAction(announcement, 'publish')"
+                  >{{
                   announcement.status === 'OFFLINE' ? '重新发布' : '发布'
                 }}</el-button>
               </template>
-              <el-button v-else type="warning" @click="runLifecycleAction(announcement, 'offline')"
+              <el-button
+                v-else
+                type="warning"
+                :loading="lifecycleLoading(announcement.id, 'offline')"
+                :disabled="lifecyclePending(announcement.id)"
+                @click="runLifecycleAction(announcement, 'offline')"
                 >下线</el-button
               >
             </div>

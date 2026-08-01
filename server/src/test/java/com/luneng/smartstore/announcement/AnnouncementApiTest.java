@@ -139,15 +139,30 @@ class AnnouncementApiTest extends IntegrationTestBase {
 
         mockMvc.perform(get("/api/mini/announcements/latest"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.data.id").value(published.id()));
+            .andExpect(jsonPath("$.data.id").value(published.id()))
+            .andExpect(jsonPath("$.data.status").doesNotExist())
+            .andExpect(jsonPath("$.data.createdBy").doesNotExist())
+            .andExpect(jsonPath("$.data.updatedBy").doesNotExist())
+            .andExpect(jsonPath("$.data.createdAt").doesNotExist())
+            .andExpect(jsonPath("$.data.updatedAt").doesNotExist());
         mockMvc.perform(get("/api/mini/announcements")
                 .param("page", "0").param("size", "20"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.items.length()").value(1))
-            .andExpect(jsonPath("$.data.items[0].id").value(published.id()));
+            .andExpect(jsonPath("$.data.items[0].id").value(published.id()))
+            .andExpect(jsonPath("$.data.items[0].status").doesNotExist())
+            .andExpect(jsonPath("$.data.items[0].createdBy").doesNotExist())
+            .andExpect(jsonPath("$.data.items[0].updatedBy").doesNotExist())
+            .andExpect(jsonPath("$.data.items[0].createdAt").doesNotExist())
+            .andExpect(jsonPath("$.data.items[0].updatedAt").doesNotExist());
         mockMvc.perform(get("/api/mini/announcements/{id}", published.id()))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.data.status").value("PUBLISHED"));
+            .andExpect(jsonPath("$.data.id").value(published.id()))
+            .andExpect(jsonPath("$.data.status").doesNotExist())
+            .andExpect(jsonPath("$.data.createdBy").doesNotExist())
+            .andExpect(jsonPath("$.data.updatedBy").doesNotExist())
+            .andExpect(jsonPath("$.data.createdAt").doesNotExist())
+            .andExpect(jsonPath("$.data.updatedAt").doesNotExist());
         mockMvc.perform(get("/api/mini/announcements/{id}", draft.id()))
             .andExpect(status().isNotFound());
         mockMvc.perform(get("/api/mini/announcements/{id}", offline.id()))

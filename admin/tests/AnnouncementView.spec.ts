@@ -192,6 +192,34 @@ describe('AnnouncementView', () => {
     expect(announcementApi.offlineAnnouncement).toHaveBeenCalledWith(2)
   })
 
+  it('guards each row while a lifecycle action is awaiting confirmation', async () => {
+    let resolveConfirmation!: (value: never) => void
+    const confirmation = new Promise<never>((resolve) => {
+      resolveConfirmation = resolve
+    })
+    vi.spyOn(ElMessageBox, 'confirm').mockReturnValue(confirmation)
+    vi.mocked(announcementApi.publishAnnouncement).mockResolvedValue(announcements[1])
+    const wrapper = mount(AnnouncementView)
+    await flushPromises()
+
+    const publish = wrapper.get('[data-test="announcement-publish-1"]')
+    await publish.trigger('click')
+    await publish.trigger('click')
+
+    expect(ElMessageBox.confirm).toHaveBeenCalledTimes(1)
+    expect((publish.element as HTMLButtonElement).disabled).toBe(true)
+    expect(
+      (wrapper.get('[data-test="announcement-delete-1"]').element as HTMLButtonElement).disabled,
+    ).toBe(true)
+    expect(
+      (wrapper.get('[data-test="announcement-offline-2"]').element as HTMLButtonElement).disabled,
+    ).toBe(false)
+
+    resolveConfirmation('confirm' as never)
+    await flushPromises()
+    expect(announcementApi.publishAnnouncement).toHaveBeenCalledTimes(1)
+  })
+
   it('does not delete until confirmation and then refreshes the list', async () => {
     vi.spyOn(ElMessageBox, 'confirm').mockRejectedValueOnce('cancel')
     const wrapper = mount(AnnouncementView)

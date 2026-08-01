@@ -37,6 +37,23 @@ describe('merchant contact service', () => {
       customerServiceEnabled: false,
     })
   })
+
+  it.each(['', '12345678901'])(
+    'falls back and hides online service when a successful response has invalid phone %j',
+    async (phone) => {
+      await expect(
+        loadStoreContact({
+          contact: vi.fn().mockResolvedValue({
+            phone,
+            customerServiceEnabled: true,
+          }),
+        }),
+      ).resolves.toEqual({
+        phone: EMERGENCY_STORE_PHONE,
+        customerServiceEnabled: false,
+      })
+    },
+  )
 })
 
 describe('merchant phone helper', () => {

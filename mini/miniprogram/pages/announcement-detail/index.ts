@@ -1,5 +1,6 @@
 import { announcementsService } from '../../services/announcements'
 import type { Announcement } from '../../types/announcement'
+import { announcementDetailFailureState } from './state'
 
 const formatPublishedAt = (value: string): string =>
   value ? value.replace('T', ' ').slice(0, 16) : ''
@@ -10,6 +11,8 @@ Page({
     displayPublishedAt: '',
     loading: true,
     ended: false,
+    loadError: '',
+    announcementId: 0,
   },
 
   onLoad(query: Record<string, string | undefined>) {
@@ -22,17 +25,26 @@ Page({
   },
 
   async loadAnnouncement(id: number) {
-    this.setData({ loading: true, ended: false })
+    this.setData({ announcementId: id, loading: true, ended: false, loadError: '' })
     try {
       const announcement = await announcementsService.detail(id)
       this.setData({
         announcement,
         displayPublishedAt: formatPublishedAt(announcement.publishedAt),
       })
-    } catch {
-      this.setData({ announcement: undefined, ended: true })
+    } catch (error) {
+      this.setData({
+        announcement: undefined,
+        ...announcementDetailFailureState(error),
+      })
     } finally {
       this.setData({ loading: false })
+    }
+  },
+
+  onRetry() {
+    if (this.data.announcementId > 0) {
+      void this.loadAnnouncement(this.data.announcementId)
     }
   },
 

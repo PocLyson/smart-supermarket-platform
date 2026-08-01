@@ -23,11 +23,15 @@ const emergencyStoreContact = (): StoreContact => ({
   customerServiceEnabled: false,
 })
 
+const isValidStorePhone = (phone: unknown): phone is string =>
+  typeof phone === 'string' && /^1[3-9]\d{9}$/.test(phone)
+
 export const loadStoreContact = async (
   service: StoreContactService = storeService,
 ): Promise<StoreContact> => {
   try {
-    return await service.contact()
+    const contact = await service.contact()
+    return isValidStorePhone(contact.phone) ? contact : emergencyStoreContact()
   } catch {
     return emergencyStoreContact()
   }

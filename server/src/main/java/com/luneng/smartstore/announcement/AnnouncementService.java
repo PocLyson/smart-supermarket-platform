@@ -70,7 +70,7 @@ public class AnnouncementService {
     ) {
         requireOwner(actor);
         Content content = normalize(request);
-        Announcement announcement = find(id);
+        Announcement announcement = findForUpdate(id);
         announcement.updateContent(content.title(), content.content(), actor.id());
         audit(actor, "ANNOUNCEMENT_UPDATE", announcement, announcement.getTitle(), requestId);
         return AnnouncementView.from(announcement);
@@ -79,7 +79,7 @@ public class AnnouncementService {
     @Transactional
     public AnnouncementView publish(long id, CurrentPrincipal actor, String requestId) {
         requireOwner(actor);
-        Announcement announcement = find(id);
+        Announcement announcement = findForUpdate(id);
         if (announcement.publish(actor.id())) {
             audit(actor, "ANNOUNCEMENT_PUBLISH", announcement, announcement.getTitle(), requestId);
         }
@@ -89,7 +89,7 @@ public class AnnouncementService {
     @Transactional
     public AnnouncementView offline(long id, CurrentPrincipal actor, String requestId) {
         requireOwner(actor);
-        Announcement announcement = find(id);
+        Announcement announcement = findForUpdate(id);
         if (announcement.offline(actor.id())) {
             audit(actor, "ANNOUNCEMENT_OFFLINE", announcement, announcement.getTitle(), requestId);
         }
@@ -99,7 +99,7 @@ public class AnnouncementService {
     @Transactional
     public boolean delete(long id, CurrentPrincipal actor, String requestId) {
         requireOwner(actor);
-        Announcement announcement = find(id);
+        Announcement announcement = findForUpdate(id);
         announcement.rejectPublishedChange();
         repository.delete(announcement);
         audit(actor, "ANNOUNCEMENT_DELETE", announcement, announcement.getTitle(), requestId);
@@ -108,13 +108,13 @@ public class AnnouncementService {
 
     @Transactional(readOnly = true)
     public Optional<AnnouncementView> latestPublished() {
-        return repository.findFirstByStatusOrderByPublishedAtDesc(AnnouncementStatus.PUBLISHED)
+        return repository.findFirstByStatusOrderByPublishedAtDescIdDesc(AnnouncementStatus.PUBLISHED)
             .map(AnnouncementView::from);
     }
 
     @Transactional(readOnly = true)
     public Page<AnnouncementView> listPublished(int page, int size) {
-        return repository.findAllByStatusOrderByPublishedAtDesc(
+        return repository.findAllByStatusOrderByPublishedAtDescIdDesc(
             AnnouncementStatus.PUBLISHED,
             PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100))
         ).map(AnnouncementView::from);
@@ -131,6 +131,10 @@ public class AnnouncementService {
 
     private Announcement find(long id) {
         return repository.findById(id).orElseThrow(EntityNotFoundException::new);
+    }
+
+    private Announcement findForUpdate(long id) {
+        return repository.findByIdForUpdate(id).orElseThrow(EntityNotFoundException::new);
     }
 
     private Content normalize(AnnouncementWriteRequest request) {

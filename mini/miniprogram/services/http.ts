@@ -54,6 +54,18 @@ export class NetworkUncertainError extends Error {
   }
 }
 
+export class HttpResponseError extends Error {
+  constructor(
+    message: string,
+    readonly statusCode: number,
+    readonly code: string,
+    readonly requestId: string,
+  ) {
+    super(message)
+    this.name = 'HttpResponseError'
+  }
+}
+
 const isApiResponse = (value: unknown): value is ApiResponse<unknown> => {
   if (!value || typeof value !== 'object') return false
   const envelope = value as Partial<ApiResponse<unknown>>
@@ -123,7 +135,12 @@ export const createHttpClient = (
             resolve(responseData.data as T)
             return
           }
-          const error = new Error(responseData.message || '请求失败，请稍后重试')
+          const error = new HttpResponseError(
+            responseData.message || '请求失败，请稍后重试',
+            statusCode,
+            responseData.code,
+            responseData.requestId,
+          )
           dependencies.showError(error.message)
           reject(error)
         },

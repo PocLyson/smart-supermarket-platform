@@ -7,6 +7,10 @@ import com.luneng.smartstore.auth.ActorType;
 import com.luneng.smartstore.auth.CurrentPrincipal;
 import com.luneng.smartstore.common.api.BusinessException;
 import com.luneng.smartstore.support.IntegrationTestBase;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,6 +63,17 @@ class AnnouncementServiceTest extends IntegrationTestBase {
             "select count(*) from operation_log where object_type = 'ANNOUNCEMENT'",
             Integer.class
         )).isEqualTo(3);
+    }
+
+    @Test
+    void concurrentPublishAndOfflineEachRecordExactlyOneStateChange() throws Exception {
+        long id = create("Concurrent", "Only one audit per transition").id();
+
+        runConcurrently(() -> service.publish(id, owner, "concurrent-publish"));
+        assertThat(auditCount("ANNOUNCEMENT_PUBLISH")).isEqualTo(1);
+
+        runConcurrently(() -> service.offline(id, owner, "concurrent-offline"));
+        assertThat(auditCount("ANNOUNCEMENT_OFFLINE")).isEqualTo(1);
     }
 
     @Test
@@ -118,6 +133,25 @@ class AnnouncementServiceTest extends IntegrationTestBase {
     }
 
     @Test
+    void publishedQueriesUseDescendingIdAsAStableTieBreaker() {
+        AnnouncementView first = create("First", "Published first");
+        service.publish(first.id(), owner, "publish-first");
+        AnnouncementView second = create("Second", "Published second");
+        service.publish(second.id(), owner, "publish-second");
+        jdbcTemplate.update(
+            "update announcement set published_at = ? where id in (?, ?)",
+            java.sql.Timestamp.from(java.time.Instant.parse("2026-08-01T12:00:00Z")),
+            first.id(),
+            second.id()
+        );
+
+        assertThat(service.listPublished(0, 20).getContent())
+            .extracting(AnnouncementView::id)
+            .containsExactly(second.id(), first.id());
+        assertThat(service.latestPublished().orElseThrow().id()).isEqualTo(second.id());
+    }
+
+    @Test
     void onlyOwnerCanUseEveryAdminAnnouncementOperation() {
         AnnouncementView created = create("营业调整", "周日20点闭店");
 
@@ -139,6 +173,36 @@ class AnnouncementServiceTest extends IntegrationTestBase {
 
     private AnnouncementView create(String title, String content) {
         return service.create(new AnnouncementWriteRequest(title, content), owner, "announcement-create");
+    }
+
+    private void runConcurrently(java.util.concurrent.Callable<AnnouncementView> operation)
+        throws Exception {
+        var executor = Executors.newFixedThreadPool(2);
+        var ready = new CountDownLatch(2);
+        var start = new CountDownLatch(1);
+        try {
+            java.util.concurrent.Callable<AnnouncementView> synchronizedStart = () -> {
+                ready.countDown();
+                assertThat(start.await(5, TimeUnit.SECONDS)).isTrue();
+                return operation.call();
+            };
+            Future<AnnouncementView> first = executor.submit(synchronizedStart);
+            Future<AnnouncementView> second = executor.submit(synchronizedStart);
+            assertThat(ready.await(5, TimeUnit.SECONDS)).isTrue();
+            start.countDown();
+            first.get(10, TimeUnit.SECONDS);
+            second.get(10, TimeUnit.SECONDS);
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
+    private int auditCount(String action) {
+        return jdbcTemplate.queryForObject(
+            "select count(*) from operation_log where object_type = 'ANNOUNCEMENT' and action = ?",
+            Integer.class,
+            action
+        );
     }
 
     private void assertOwnerOnly(org.assertj.core.api.ThrowableAssert.ThrowingCallable operation) {
