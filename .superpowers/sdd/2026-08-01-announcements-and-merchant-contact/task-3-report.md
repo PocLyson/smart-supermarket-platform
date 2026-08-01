@@ -44,3 +44,24 @@ npm run lint                           # 成功
 ## 已知事项
 
 `npm run format` 的全仓检查仍会报告任务外既有文件（如 orders、inventory）的格式问题；本任务新增文件已通过目标 Prettier 检查，且未改动这些既有文件。
+
+## Fix round 1：公告分页
+
+**文件：**
+
+- 修改 `admin/src/views/announcements/AnnouncementView.vue`
+- 修改 `admin/tests/AnnouncementView.spec.ts`
+- 更新本报告
+
+**RED：** 先新增分页用例，使用 `total: 41` 的列表响应，要求页面展示 Element Plus 分页控件、切换至第 2 页请求 `{ page: 1, size: 20 }`，切换为 `DRAFT` 后请求 `{ status: 'DRAFT', page: 0, size: 20 }` 且分页控件回到第 1 页。实现前执行 `npm test -- AnnouncementView.spec.ts` 失败，原因是找不到 `[data-test="announcement-pagination"]`。
+
+**GREEN：** 新增 `currentPage` 状态；加载请求使用零基 `currentPage - 1`；页码变更刷新目标页，状态变更重置到第 1 页再刷新。分页控件位于桌面表格和移动端卡片之后，并在窄屏居中，两个布局共用同一个可操作分页控件与状态。
+
+**验证：**
+
+```powershell
+cd admin
+npm test -- AnnouncementView.spec.ts  # 8 passed
+npm test -- --run                     # 14 files, 64 tests passed
+npm run build                          # vue-tsc 与 vite build 成功
+```

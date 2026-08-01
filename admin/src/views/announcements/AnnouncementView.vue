@@ -22,6 +22,7 @@ const total = ref(0)
 const loading = ref(false)
 const loadError = ref('')
 const status = ref<AnnouncementStatus | ''>('')
+const currentPage = ref(1)
 const dialogVisible = ref(false)
 const pending = ref(false)
 const editingId = ref<number | null>(null)
@@ -45,7 +46,7 @@ const load = async (): Promise<void> => {
   try {
     const result = await listAnnouncements({
       ...(status.value ? { status: status.value } : {}),
-      page: 0,
+      page: currentPage.value - 1,
       size: pageSize,
     })
     items.value = result.items
@@ -56,6 +57,16 @@ const load = async (): Promise<void> => {
   } finally {
     loading.value = false
   }
+}
+
+const changePage = (page: number): void => {
+  currentPage.value = page
+  void load()
+}
+
+const changeStatus = (): void => {
+  currentPage.value = 1
+  void load()
 }
 
 const openCreate = (): void => {
@@ -182,7 +193,7 @@ onMounted(load)
           v-model="status"
           data-test="announcement-status"
           class="text-control"
-          @change="load"
+          @change="changeStatus"
         >
           <option value="">全部状态</option>
           <option value="DRAFT">草稿</option>
@@ -303,6 +314,16 @@ onMounted(load)
             </div>
           </article>
         </div>
+        <el-pagination
+          v-if="total > pageSize"
+          v-model:current-page="currentPage"
+          data-test="announcement-pagination"
+          class="announcement-pagination"
+          :page-size="pageSize"
+          :total="total"
+          layout="prev, pager, next"
+          @current-change="changePage"
+        />
       </template>
     </div>
 
@@ -379,5 +400,14 @@ onMounted(load)
 .is-over-limit {
   color: var(--el-color-danger);
   font-weight: 600;
+}
+.announcement-pagination {
+  justify-content: flex-end;
+  margin-top: var(--space-4);
+}
+@media (max-width: 760px) {
+  .announcement-pagination {
+    justify-content: center;
+  }
 }
 </style>

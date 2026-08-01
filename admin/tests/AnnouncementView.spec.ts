@@ -1,6 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import { ElMessageBox } from 'element-plus'
+import { ElMessageBox, ElPagination } from 'element-plus'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import AnnouncementView from '@/views/announcements/AnnouncementView.vue'
@@ -86,6 +86,33 @@ describe('AnnouncementView', () => {
     expect(
       (wrapper.get('[data-test="announcement-submit"]').element as HTMLButtonElement).disabled,
     ).toBe(true)
+  })
+
+  it('paginates announcement results and resets to the first page when status changes', async () => {
+    vi.mocked(announcementApi.listAnnouncements).mockResolvedValue({
+      items: announcements,
+      page: 0,
+      size: 20,
+      total: 41,
+    })
+    const wrapper = mount(AnnouncementView)
+    await flushPromises()
+
+    const pagination = wrapper.getComponent(ElPagination)
+    expect(pagination.props('currentPage')).toBe(1)
+
+    pagination.vm.$emit('current-change', 2)
+    await flushPromises()
+    expect(announcementApi.listAnnouncements).toHaveBeenLastCalledWith({ page: 1, size: 20 })
+
+    await wrapper.get('[data-test="announcement-status"]').setValue('DRAFT')
+    await flushPromises()
+    expect(announcementApi.listAnnouncements).toHaveBeenLastCalledWith({
+      status: 'DRAFT',
+      page: 0,
+      size: 20,
+    })
+    expect(pagination.props('currentPage')).toBe(1)
   })
 
   it('creates an announcement from the editor', async () => {
