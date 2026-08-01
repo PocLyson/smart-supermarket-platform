@@ -1,6 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import { ElMessageBox, ElPagination } from 'element-plus'
+import { ElMessage, ElMessageBox, ElPagination } from 'element-plus'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import AnnouncementView from '@/views/announcements/AnnouncementView.vue'
@@ -147,8 +147,39 @@ describe('AnnouncementView', () => {
     expect(announcementApi.listAnnouncements).toHaveBeenCalledTimes(1)
   })
 
-  it('creates an announcement from the editor', async () => {
+  it('creates and immediately publishes an announcement from the editor', async () => {
     vi.mocked(announcementApi.createAnnouncement).mockResolvedValue(announcements[0])
+    vi.mocked(announcementApi.publishAnnouncement).mockResolvedValue({
+      ...announcements[0],
+      status: 'PUBLISHED',
+      publishedAt: '2026-08-01T11:00:00Z',
+    })
+    const wrapper = mount(AnnouncementView)
+    await flushPromises()
+
+    await wrapper.get('[data-test="announcement-create"]').trigger('click')
+    await wrapper.get('[data-test="announcement-title"]').setValue('营业调整')
+    await wrapper.get('[data-test="announcement-content"]').setValue('周日20点闭店')
+    expect(wrapper.get('[data-test="announcement-submit"]').text()).toBe('立即发布')
+    await wrapper.get('[data-test="announcement-submit"]').trigger('click')
+    await flushPromises()
+
+    expect(announcementApi.createAnnouncement).toHaveBeenCalledWith({
+      title: '营业调整',
+      content: '周日20点闭店',
+    })
+    expect(announcementApi.publishAnnouncement).toHaveBeenCalledWith(1)
+    expect(
+      vi.mocked(announcementApi.createAnnouncement).mock.invocationCallOrder[0],
+    ).toBeLessThan(
+      vi.mocked(announcementApi.publishAnnouncement).mock.invocationCallOrder[0],
+    )
+  })
+
+  it('keeps a created draft recoverable when immediate publishing fails', async () => {
+    const warning = vi.spyOn(ElMessage, 'warning').mockImplementation(() => undefined as never)
+    vi.mocked(announcementApi.createAnnouncement).mockResolvedValue(announcements[0])
+    vi.mocked(announcementApi.publishAnnouncement).mockRejectedValue(new Error('网络异常'))
     const wrapper = mount(AnnouncementView)
     await flushPromises()
 
@@ -158,10 +189,10 @@ describe('AnnouncementView', () => {
     await wrapper.get('[data-test="announcement-submit"]').trigger('click')
     await flushPromises()
 
-    expect(announcementApi.createAnnouncement).toHaveBeenCalledWith({
-      title: '营业调整',
-      content: '周日20点闭店',
-    })
+    expect(announcementApi.createAnnouncement).toHaveBeenCalledTimes(1)
+    expect(announcementApi.publishAnnouncement).toHaveBeenCalledWith(1)
+    expect(warning).toHaveBeenCalledWith('公告已保存为草稿，但发布失败，请在列表中重新发布')
+    expect(announcementApi.listAnnouncements).toHaveBeenCalledTimes(2)
   })
 
   it('only offers published announcements offline, while offline announcements can be edited, deleted and republished', async () => {

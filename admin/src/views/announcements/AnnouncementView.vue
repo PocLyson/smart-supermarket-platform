@@ -39,6 +39,7 @@ const formInvalid = computed(
     contentCount.value > 2000,
 )
 const dialogTitle = computed(() => (editingId.value === null ? '新建公告' : '编辑公告'))
+const submitLabel = computed(() => (editingId.value === null ? '立即发布' : '保存修改'))
 
 const load = async (): Promise<void> => {
   loading.value = true
@@ -104,8 +105,16 @@ const submit = async (): Promise<void> => {
   const payload = { title: form.title.trim(), content: form.content.trim() }
   try {
     if (editingId.value === null) {
-      await createAnnouncement(payload)
-      ElMessage.success('公告草稿已创建')
+      const created = await createAnnouncement(payload)
+      try {
+        await publishAnnouncement(created.id)
+      } catch {
+        dialogVisible.value = false
+        ElMessage.warning('公告已保存为草稿，但发布失败，请在列表中重新发布')
+        await load()
+        return
+      }
+      ElMessage.success('公告已发布')
     } else {
       await updateAnnouncement(editingId.value, payload)
       ElMessage.success('公告已更新')
@@ -421,7 +430,7 @@ onMounted(load)
           :loading="pending"
           :disabled="pending || formInvalid"
           @click="submit"
-          >保存草稿</el-button
+          >{{ submitLabel }}</el-button
         >
       </template>
     </el-dialog>
