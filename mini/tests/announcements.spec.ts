@@ -23,13 +23,27 @@ describe('announcements service', () => {
     await announcements.list()
     await announcements.detail(7)
 
-    expect(get).toHaveBeenNthCalledWith(1, '/api/mini/announcements/latest')
+    expect(get).toHaveBeenNthCalledWith(
+      1,
+      '/api/mini/announcements/latest',
+      undefined,
+      undefined,
+      { silentError: true },
+    )
     expect(get).toHaveBeenNthCalledWith(
       2,
       '/api/mini/announcements',
       { page: 0, size: 20 },
+      undefined,
+      { silentError: true },
     )
-    expect(get).toHaveBeenNthCalledWith(3, '/api/mini/announcements/7')
+    expect(get).toHaveBeenNthCalledWith(
+      3,
+      '/api/mini/announcements/7',
+      undefined,
+      undefined,
+      { silentError: true },
+    )
   })
 })
 

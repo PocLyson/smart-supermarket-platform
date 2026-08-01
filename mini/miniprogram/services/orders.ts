@@ -29,7 +29,7 @@ export const createOrdersService = (
     client.post<CustomerOrder>('/api/mini/orders', request, {
       ...authHeaders(session),
       'Idempotency-Key': idempotencyKey,
-    }),
+    }, { silentError: true }),
   list: (query: { page: number; size: number }): Promise<OrderPage> =>
     client.get<OrderPage>(
       '/api/mini/orders',

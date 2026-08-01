@@ -26,7 +26,12 @@ describe('merchant contact service', () => {
       phone: '18653045492',
       customerServiceEnabled: true,
     })
-    expect(get).toHaveBeenCalledWith('/api/mini/store/contact')
+    expect(get).toHaveBeenCalledWith(
+      '/api/mini/store/contact',
+      undefined,
+      undefined,
+      { silentError: true },
+    )
   })
 
   it('keeps the emergency phone and hides online service when contact loading fails', async () => {

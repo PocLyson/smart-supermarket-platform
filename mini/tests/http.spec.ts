@@ -140,6 +140,42 @@ describe('mini HTTP client', () => {
     )
   })
 
+  it.each([
+    {
+      name: 'business response',
+      transport: (options: Parameters<Parameters<typeof createHttpClient>[0]['transport']>[0]) =>
+        options.success({
+          statusCode: 409,
+          data: {
+            code: 'PRODUCT_UNAVAILABLE',
+            message: '部分商品已下架，请移除后重试',
+            requestId: 'request-stale-product',
+            data: null,
+          },
+        }),
+    },
+    {
+      name: 'transport failure',
+      transport: (options: Parameters<Parameters<typeof createHttpClient>[0]['transport']>[0]) =>
+        options.fail(),
+    },
+  ])('keeps $name silent when the caller owns error presentation', async ({ transport }) => {
+    const showError = vi.fn()
+    const client = createHttpClient({
+      apiBaseUrl: () => 'https://api.test',
+      showError,
+      onUnauthorized: vi.fn(),
+      transport,
+    })
+
+    await expect(
+      client.get('/api/mini/announcements/latest', undefined, undefined, {
+        silentError: true,
+      }),
+    ).rejects.toBeInstanceOf(Error)
+    expect(showError).not.toHaveBeenCalled()
+  })
+
   it('sends authenticated account deletion with the DELETE method', async () => {
     let sentMethod = ''
     let sentHeaders: Record<string, string> | undefined

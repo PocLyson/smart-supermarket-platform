@@ -8,26 +8,34 @@ export interface ApiResponse<T> {
   data: T
 }
 
+export interface HttpRequestOptions {
+  silentError?: boolean
+}
+
 export interface HttpClient {
   get<T>(
     path: string,
     query?: Record<string, unknown>,
     headers?: Record<string, string>,
+    options?: HttpRequestOptions,
   ): Promise<T>
   post<T>(
     path: string,
     data?: unknown,
     headers?: Record<string, string>,
+    options?: HttpRequestOptions,
   ): Promise<T>
   put<T>(
     path: string,
     data?: unknown,
     headers?: Record<string, string>,
+    options?: HttpRequestOptions,
   ): Promise<T>
   delete<T>(
     path: string,
     data?: unknown,
     headers?: Record<string, string>,
+    options?: HttpRequestOptions,
   ): Promise<T>
 }
 
@@ -94,15 +102,19 @@ export const createHttpClient = (
     method: TransportOptions['method'],
     data?: unknown,
     headers?: Record<string, string>,
+    options?: HttpRequestOptions,
   ): Promise<T> =>
     new Promise((resolve, reject) => {
+      const presentError = (message: string) => {
+        if (!options?.silentError) dependencies.showError(message)
+      }
       let baseUrl: string
       try {
         baseUrl = dependencies.apiBaseUrl()
       } catch (error) {
         const message =
           error instanceof Error ? error.message : '小程序 API 地址配置错误'
-        dependencies.showError(message)
+        presentError(message)
         reject(new Error(message))
         return
       }
@@ -115,7 +127,7 @@ export const createHttpClient = (
           if (statusCode === 401) dependencies.onUnauthorized()
           if (!isApiResponse(responseData)) {
             const error = new NetworkUncertainError('服务响应异常，请稍后重试')
-            dependencies.showError(error.message)
+            presentError(error.message)
             reject(error)
             return
           }
@@ -123,7 +135,7 @@ export const createHttpClient = (
             const error = new NetworkUncertainError(
               responseData.message || '服务响应异常，请稍后重试',
             )
-            dependencies.showError(error.message)
+            presentError(error.message)
             reject(error)
             return
           }
@@ -141,12 +153,12 @@ export const createHttpClient = (
             responseData.code,
             responseData.requestId,
           )
-          dependencies.showError(error.message)
+          presentError(error.message)
           reject(error)
         },
         fail: () => {
           const error = new NetworkUncertainError()
-          dependencies.showError(error.message)
+          presentError(error.message)
           reject(error)
         },
       })
@@ -157,22 +169,26 @@ export const createHttpClient = (
       path: string,
       query?: Record<string, unknown>,
       headers?: Record<string, string>,
-    ) => request<T>(path, 'GET', compactQuery(query), headers),
+      options?: HttpRequestOptions,
+    ) => request<T>(path, 'GET', compactQuery(query), headers, options),
     post: <T>(
       path: string,
       data?: unknown,
       headers?: Record<string, string>,
-    ) => request<T>(path, 'POST', data, headers),
+      options?: HttpRequestOptions,
+    ) => request<T>(path, 'POST', data, headers, options),
     put: <T>(
       path: string,
       data?: unknown,
       headers?: Record<string, string>,
-    ) => request<T>(path, 'PUT', data, headers),
+      options?: HttpRequestOptions,
+    ) => request<T>(path, 'PUT', data, headers, options),
     delete: <T>(
       path: string,
       data?: unknown,
       headers?: Record<string, string>,
-    ) => request<T>(path, 'DELETE', data, headers),
+      options?: HttpRequestOptions,
+    ) => request<T>(path, 'DELETE', data, headers, options),
   }
 }
 
