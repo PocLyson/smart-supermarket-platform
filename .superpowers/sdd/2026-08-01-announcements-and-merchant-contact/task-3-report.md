@@ -65,3 +65,24 @@ npm test -- AnnouncementView.spec.ts  # 8 passed
 npm test -- --run                     # 14 files, 64 tests passed
 npm run build                          # vue-tsc 与 vite build 成功
 ```
+
+## Fix round 2：末页收缩回退
+
+**文件：**
+
+- 修改 `admin/src/views/announcements/AnnouncementView.vue`
+- 修改 `admin/tests/AnnouncementView.spec.ts`
+- 更新本报告
+
+**RED：** 新增末页收缩用例：第 2 页在删除或状态迁移后返回 `items: []`、`total: 20`，要求自动请求第 1 页且总请求数固定为 3。实现前聚焦测试只发生两次请求，停留在空页。另新增正常第 1 页空列表用例，确认只显示空态且不额外请求。
+
+**GREEN：** `load` 在收到空结果且当前不在第 1 页时，计算最后有效页并回退至“上一页与最后有效页中更靠前者”，仅重新请求一次；不递归重试，因此不会形成循环。第 1 页正常空列表不会进入回退分支，继续显示原有空态。
+
+**验证：**
+
+```powershell
+cd admin
+npm test -- AnnouncementView.spec.ts  # 10 passed
+npm test -- --run                     # 14 files, 66 tests passed
+npm run build                          # vue-tsc 与 vite build 成功
+```

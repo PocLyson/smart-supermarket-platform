@@ -115,6 +115,38 @@ describe('AnnouncementView', () => {
     expect(pagination.props('currentPage')).toBe(1)
   })
 
+  it('returns to the last valid page once when a shrinking final page becomes empty', async () => {
+    vi.mocked(announcementApi.listAnnouncements)
+      .mockResolvedValueOnce({ items: announcements, page: 0, size: 20, total: 21 })
+      .mockResolvedValueOnce({ items: [], page: 1, size: 20, total: 20 })
+      .mockResolvedValueOnce({ items: announcements, page: 0, size: 20, total: 20 })
+    const wrapper = mount(AnnouncementView)
+    await flushPromises()
+
+    wrapper.getComponent(ElPagination).vm.$emit('current-change', 2)
+    await flushPromises()
+
+    expect(announcementApi.listAnnouncements).toHaveBeenNthCalledWith(2, { page: 1, size: 20 })
+    expect(announcementApi.listAnnouncements).toHaveBeenNthCalledWith(3, { page: 0, size: 20 })
+    expect(announcementApi.listAnnouncements).toHaveBeenCalledTimes(3)
+    expect(wrapper.text()).toContain('营业调整')
+  })
+
+  it('keeps the normal empty first page in the empty state', async () => {
+    vi.mocked(announcementApi.listAnnouncements).mockReset()
+    vi.mocked(announcementApi.listAnnouncements).mockResolvedValue({
+      items: [],
+      page: 0,
+      size: 20,
+      total: 0,
+    })
+    const wrapper = mount(AnnouncementView)
+    await flushPromises()
+
+    expect(wrapper.get('[role="status"]').text()).toContain('还没有公告')
+    expect(announcementApi.listAnnouncements).toHaveBeenCalledTimes(1)
+  })
+
   it('creates an announcement from the editor', async () => {
     vi.mocked(announcementApi.createAnnouncement).mockResolvedValue(announcements[0])
     const wrapper = mount(AnnouncementView)

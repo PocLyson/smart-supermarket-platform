@@ -44,11 +44,20 @@ const load = async (): Promise<void> => {
   loading.value = true
   loadError.value = ''
   try {
-    const result = await listAnnouncements({
+    let result = await listAnnouncements({
       ...(status.value ? { status: status.value } : {}),
       page: currentPage.value - 1,
       size: pageSize,
     })
+    if (!result.items.length && currentPage.value > 1) {
+      const lastPage = Math.max(1, Math.ceil(result.total / pageSize))
+      currentPage.value = Math.min(currentPage.value - 1, lastPage)
+      result = await listAnnouncements({
+        ...(status.value ? { status: status.value } : {}),
+        page: currentPage.value - 1,
+        size: pageSize,
+      })
+    }
     items.value = result.items
     total.value = result.total
   } catch (error) {
