@@ -24,7 +24,13 @@ public class AnnouncementService {
     }
 
     @Transactional(readOnly = true)
-    public Page<AnnouncementView> listAdmin(AnnouncementStatus status, int page, int size) {
+    public Page<AnnouncementView> listAdmin(
+        AnnouncementStatus status,
+        int page,
+        int size,
+        CurrentPrincipal actor
+    ) {
+        requireOwner(actor);
         var pageable = PageRequest.of(
             Math.max(page, 0),
             Math.min(Math.max(size, 1), 100),
@@ -37,7 +43,8 @@ public class AnnouncementService {
     }
 
     @Transactional(readOnly = true)
-    public AnnouncementView detailAdmin(long id) {
+    public AnnouncementView detailAdmin(long id, CurrentPrincipal actor) {
+        requireOwner(actor);
         return AnnouncementView.from(find(id));
     }
 

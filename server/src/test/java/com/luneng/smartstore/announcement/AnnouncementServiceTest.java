@@ -118,15 +118,32 @@ class AnnouncementServiceTest extends IntegrationTestBase {
     }
 
     @Test
-    void onlyOwnerCanMutateAnnouncements() {
+    void onlyOwnerCanUseEveryAdminAnnouncementOperation() {
         AnnouncementView created = create("营业调整", "周日20点闭店");
 
+        assertOwnerOnly(() -> service.listAdmin(null, 0, 20, cashier));
+        assertOwnerOnly(() -> service.detailAdmin(created.id(), cashier));
+        assertOwnerOnly(() -> service.create(
+            new AnnouncementWriteRequest("收银员公告", "不应创建"), cashier, "cashier-create"
+        ));
+        assertOwnerOnly(() -> service.update(
+            created.id(), new AnnouncementWriteRequest("收银员标题", "不应更新"), cashier,
+            "cashier-update"
+        ));
         assertThatThrownBy(() -> service.publish(created.id(), cashier, "cashier-publish"))
             .isInstanceOf(BusinessException.class);
-        assertThat(service.detailAdmin(created.id()).status()).isEqualTo(AnnouncementStatus.DRAFT);
+        assertOwnerOnly(() -> service.offline(created.id(), cashier, "cashier-offline"));
+        assertOwnerOnly(() -> service.delete(created.id(), cashier, "cashier-delete"));
+        assertThat(service.detailAdmin(created.id(), owner).status()).isEqualTo(AnnouncementStatus.DRAFT);
     }
 
     private AnnouncementView create(String title, String content) {
         return service.create(new AnnouncementWriteRequest(title, content), owner, "announcement-create");
+    }
+
+    private void assertOwnerOnly(org.assertj.core.api.ThrowableAssert.ThrowingCallable operation) {
+        assertThatThrownBy(operation)
+            .isInstanceOf(BusinessException.class)
+            .hasMessageContaining("仅店主");
     }
 }
