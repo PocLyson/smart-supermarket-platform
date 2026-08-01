@@ -13,6 +13,8 @@ import java.util.UUID;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -23,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class ImageStorageService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ImageStorageService.class);
     private static final long MAX_BYTES = 5L * 1024 * 1024;
     private static final long MAX_PIXELS = 40_000_000L;
     private static final Map<String, ImageType> TYPES = Map.of(
@@ -97,6 +100,20 @@ public class ImageStorageService {
             return new StoredImage(resource, mediaType);
         } catch (IOException exception) {
             throw new jakarta.persistence.EntityNotFoundException();
+        }
+    }
+
+    public void deleteLocalImage(String imageUrl) {
+        if (imageUrl == null || !imageUrl.matches(
+            "^/files/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.(jpg|png|webp)$"
+        )) {
+            return;
+        }
+        String generatedName = imageUrl.substring("/files/".length());
+        try {
+            Files.deleteIfExists(safePath(generatedName));
+        } catch (IOException | RuntimeException exception) {
+            LOGGER.warn("Failed to remove unused product image {}", imageUrl, exception);
         }
     }
 

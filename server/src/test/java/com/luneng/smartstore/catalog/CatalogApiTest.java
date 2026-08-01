@@ -12,9 +12,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.luneng.smartstore.auth.ActorType;
 import com.luneng.smartstore.auth.CurrentPrincipal;
 import com.luneng.smartstore.auth.JwtService;
+import com.luneng.smartstore.common.api.BusinessException;
 import com.luneng.smartstore.support.IntegrationTestBase;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -57,7 +62,11 @@ class CatalogApiTest extends IntegrationTestBase {
     @BeforeEach
     void setUpCatalog() {
         jdbcTemplate.update("delete from operation_log");
+        jdbcTemplate.update("delete from order_status_history");
+        jdbcTemplate.update("delete from idempotency_record");
         jdbcTemplate.update("delete from inventory_ledger");
+        jdbcTemplate.update("delete from order_item");
+        jdbcTemplate.update("delete from customer_order");
         jdbcTemplate.update("delete from online_inventory");
         jdbcTemplate.update("delete from product");
         jdbcTemplate.update("delete from category");
@@ -204,6 +213,230 @@ class CatalogApiTest extends IntegrationTestBase {
     }
 
     @Test
+    void ownerCanPermanentlyDeleteAnArchivedProductAndItsInventoryData() throws Exception {
+        Path uploadRoot = Path.of(
+            System.getProperty("java.io.tmpdir"),
+            "smart-store-test-uploads"
+        );
+        Files.createDirectories(uploadRoot);
+        String generatedName = UUID.randomUUID() + ".jpg";
+        Path coverImage = uploadRoot.resolve(generatedName);
+        Files.write(coverImage, new byte[] {1, 2, 3});
+        jdbcTemplate.update("update product set archived = true, on_shelf = false where id = 10");
+        jdbcTemplate.update(
+            "update product set cover_image_url = ? where id = 10",
+            "/files/" + generatedName
+        );
+        jdbcTemplate.update(
+            "insert into inventory_ledger(product_id, quantity_delta, quantity_before, "
+                + "quantity_after, reason) values (10, 5, 15, 20, '测试库存')"
+        );
+
+        mockMvc.perform(delete("/api/admin/products/10/permanent")
+                .header("Authorization", "Bearer " + ownerToken))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.deleted").value(true));
+
+        assertThat(countRows("product", 10)).isZero();
+        assertThat(countRows("online_inventory", 10)).isZero();
+        assertThat(countRows("inventory_ledger", 10)).isZero();
+        assertThat(auditCount("PRODUCT_PERMANENT_DELETE")).isEqualTo(1);
+        assertThat(coverImage).doesNotExist();
+    }
+
+    @Test
+    void permanentDeleteKeepsAnImageStillUsedByAnotherProduct() throws Exception {
+        Path uploadRoot = Path.of(
+            System.getProperty("java.io.tmpdir"),
+            "smart-store-test-uploads"
+        );
+        Files.createDirectories(uploadRoot);
+        String generatedName = UUID.randomUUID() + ".jpg";
+        Path sharedImage = uploadRoot.resolve(generatedName);
+        Files.write(sharedImage, new byte[] {1, 2, 3});
+        String imageUrl = "/files/" + generatedName;
+        jdbcTemplate.update(
+            "update product set archived = true, on_shelf = false, cover_image_url = ? where id = 10",
+            imageUrl
+        );
+        jdbcTemplate.update("update product set cover_image_url = ? where id = 11", imageUrl);
+
+        mockMvc.perform(delete("/api/admin/products/10/permanent")
+                .header("Authorization", "Bearer " + ownerToken))
+            .andExpect(status().isOk());
+
+        assertThat(sharedImage).exists();
+        Files.deleteIfExists(sharedImage);
+    }
+
+    @Test
+    void concurrentImageAssignmentCannotCreateABrokenProductReference() throws Exception {
+        Path uploadRoot = Path.of(
+            System.getProperty("java.io.tmpdir"),
+            "smart-store-test-uploads"
+        );
+        Files.createDirectories(uploadRoot);
+        String generatedName = UUID.randomUUID() + ".jpg";
+        String imageUrl = "/files/" + generatedName;
+        Path image = uploadRoot.resolve(generatedName);
+        Files.write(image, new byte[] {1, 2, 3});
+        jdbcTemplate.update(
+            "update product set archived = true, on_shelf = false, cover_image_url = ? where id = 10",
+            imageUrl
+        );
+
+        var executor = Executors.newFixedThreadPool(2);
+        var ready = new CountDownLatch(2);
+        var start = new CountDownLatch(1);
+        try {
+            Future<CatalogService.ProductDeletion> deleteFuture = executor.submit(() -> {
+                ready.countDown();
+                assertThat(start.await(5, TimeUnit.SECONDS)).isTrue();
+                return catalogService.permanentDelete(10L, owner, "concurrent-delete");
+            });
+            Future<CatalogService.ProductView> updateFuture = executor.submit(() -> {
+                ready.countDown();
+                assertThat(start.await(5, TimeUnit.SECONDS)).isTrue();
+                return catalogService.updateProduct(
+                    11L,
+                    new ProductWriteRequest(
+                        "缺货新品", 1L, 690, "件", imageUrl, "暂时无库存", true, null
+                    ),
+                    owner,
+                    "concurrent-image-update"
+                );
+            });
+            assertThat(ready.await(5, TimeUnit.SECONDS)).isTrue();
+            start.countDown();
+            assertThat(deleteFuture.get(10, TimeUnit.SECONDS).deleted()).isTrue();
+            try {
+                updateFuture.get(10, TimeUnit.SECONDS);
+            } catch (ExecutionException exception) {
+                assertThat(exception.getCause())
+                    .isInstanceOf(BusinessException.class)
+                    .extracting(error -> ((BusinessException) error).getCode())
+                    .isEqualTo("PRODUCT_IMAGE_UNAVAILABLE");
+            }
+        } finally {
+            executor.shutdownNow();
+        }
+
+        String assignedImage = jdbcTemplate.queryForObject(
+            "select cover_image_url from product where id = 11",
+            String.class
+        );
+        if (imageUrl.equals(assignedImage)) {
+            assertThat(image).exists();
+            Files.deleteIfExists(image);
+        } else {
+            assertThat(image).doesNotExist();
+        }
+    }
+
+    @Test
+    void permanentDeleteUsesCurrentStateAndRejectsAConcurrentlyRestoredProduct()
+        throws Exception {
+        jdbcTemplate.update("update product set archived = true, on_shelf = false where id = 10");
+        var candidateRead = new CountDownLatch(1);
+        var restoreCommitted = new CountDownLatch(1);
+        doAnswer(invocation -> {
+            Object candidate = invocation.callRealMethod();
+            if ("permanent-delete-writer".equals(Thread.currentThread().getName())) {
+                candidateRead.countDown();
+                assertThat(restoreCommitted.await(10, TimeUnit.SECONDS)).isTrue();
+            }
+            return candidate;
+        }).when(catalogRepository).productDeletionCandidate(anyLong());
+
+        var executor = Executors.newSingleThreadExecutor();
+        try {
+            Future<CatalogService.ProductDeletion> deleteFuture = executor.submit(() -> {
+                Thread.currentThread().setName("permanent-delete-writer");
+                return catalogService.permanentDelete(10L, owner, "delete-after-restore");
+            });
+            assertThat(candidateRead.await(5, TimeUnit.SECONDS)).isTrue();
+            catalogService.restore(10L, owner, "concurrent-restore");
+            restoreCommitted.countDown();
+
+            try {
+                deleteFuture.get(10, TimeUnit.SECONDS);
+                throw new AssertionError("concurrently restored product must not be deleted");
+            } catch (ExecutionException exception) {
+                assertThat(exception.getCause())
+                    .isInstanceOf(BusinessException.class)
+                    .extracting(error -> ((BusinessException) error).getCode())
+                    .isEqualTo("PRODUCT_NOT_ARCHIVED");
+            }
+        } finally {
+            restoreCommitted.countDown();
+            executor.shutdownNow();
+        }
+
+        assertThat(countRows("product", 10)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject(
+            "select archived from product where id = 10",
+            Boolean.class
+        )).isFalse();
+        assertThat(auditCount("PRODUCT_PERMANENT_DELETE")).isZero();
+    }
+
+    @Test
+    void permanentDeleteRejectsAnActiveProduct() throws Exception {
+        mockMvc.perform(delete("/api/admin/products/10/permanent")
+                .header("Authorization", "Bearer " + ownerToken))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.code").value("PRODUCT_NOT_ARCHIVED"));
+
+        assertThat(countRows("product", 10)).isEqualTo(1);
+    }
+
+    @Test
+    void permanentDeleteRejectsAProductUsedByAnOrder() throws Exception {
+        jdbcTemplate.update("update product set archived = true, on_shelf = false where id = 10");
+        jdbcTemplate.update(
+            "insert into customer_user(id, openid, enabled) values (90, 'catalog-delete-customer', true)"
+                + " on duplicate key update enabled = true"
+        );
+        jdbcTemplate.update(
+            """
+            insert into customer_order(
+                id, order_no, customer_id, idempotency_key, pickup_name, phone,
+                total_cent, status, payment_status, inventory_released
+            ) values (90, 'PD202608010001', 90, 'permanent-delete-order', '测试顾客',
+                      '13800000000', 590, 'COMPLETED', 'PAID', true)
+            """
+        );
+        jdbcTemplate.update(
+            """
+            insert into order_item(
+                order_id, product_id, product_name, unit, unit_price_cent, quantity, subtotal_cent
+            ) values (90, 10, '纯牛奶', '盒', 590, 1, 590)
+            """
+        );
+
+        mockMvc.perform(delete("/api/admin/products/10/permanent")
+                .header("Authorization", "Bearer " + ownerToken))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.code").value("PRODUCT_HAS_ORDER_HISTORY"));
+
+        assertThat(countRows("product", 10)).isEqualTo(1);
+        assertThat(countRows("online_inventory", 10)).isEqualTo(1);
+        assertThat(auditCount("PRODUCT_PERMANENT_DELETE")).isZero();
+    }
+
+    @Test
+    void cashierCannotPermanentlyDeleteAnArchivedProduct() throws Exception {
+        jdbcTemplate.update("update product set archived = true, on_shelf = false where id = 10");
+
+        mockMvc.perform(delete("/api/admin/products/10/permanent")
+                .header("Authorization", "Bearer " + cashierToken))
+            .andExpect(status().isForbidden());
+
+        assertThat(countRows("product", 10)).isEqualTo(1);
+        assertThat(auditCount("PRODUCT_PERMANENT_DELETE")).isZero();
+    }
+
+    @Test
     void concurrentArchiveAndRestoreEachRecordExactlyOneAudit() throws Exception {
         runConcurrently(() -> catalogService.archive(10L, owner, "concurrent-archive"));
         assertThat(auditCount("PRODUCT_ARCHIVE")).isEqualTo(1);
@@ -328,6 +561,15 @@ class CatalogApiTest extends IntegrationTestBase {
             "select count(*) from operation_log where object_type = 'PRODUCT' and action = ?",
             Integer.class,
             action
+        );
+    }
+
+    private int countRows(String table, long productId) {
+        return jdbcTemplate.queryForObject(
+            "select count(*) from " + table + " where "
+                + ("product".equals(table) ? "id" : "product_id") + " = ?",
+            Integer.class,
+            productId
         );
     }
 }

@@ -210,6 +210,11 @@ public class InventoryRepository {
         return total == null ? 0 : total;
     }
 
+    public void deleteForProduct(long productId) {
+        jdbcTemplate.update("delete from inventory_ledger where product_id = ?", productId);
+        jdbcTemplate.update("delete from online_inventory where product_id = ?", productId);
+    }
+
     public record InventoryRow(
         long productId,
         String productName,

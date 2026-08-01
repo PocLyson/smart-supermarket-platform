@@ -42,6 +42,90 @@ public class CatalogRepository {
         );
     }
 
+    public Optional<ProductDeletionCandidate> productDeletionCandidate(long id) {
+        return entityManager.createQuery(
+            "select p.coverImageUrl, p.archived from Product p where p.id = :id",
+            Object[].class
+        )
+            .setParameter("id", id)
+            .getResultList()
+            .stream()
+            .findFirst()
+            .map(row -> new ProductDeletionCandidate((String) row[0], (Boolean) row[1]));
+    }
+
+    public boolean hasOrderHistory(long productId) {
+        return entityManager.createQuery(
+            "select count(i) from OrderItem i where i.productId = :productId",
+            Long.class
+        ).setParameter("productId", productId).getSingleResult() > 0;
+    }
+
+    public boolean hasOtherProductUsingImageForUpdate(long productId, String coverImageUrl) {
+        if (coverImageUrl == null || coverImageUrl.isBlank()) {
+            return false;
+        }
+        return !entityManager.createQuery(
+            "select p from Product p where p.id <> :productId "
+                + "and p.coverImageUrl = :coverImageUrl",
+            Product.class
+        )
+            .setParameter("productId", productId)
+            .setParameter("coverImageUrl", coverImageUrl)
+            .setLockMode(LockModeType.PESSIMISTIC_WRITE)
+            .setMaxResults(1)
+            .getResultList().isEmpty();
+    }
+
+    public boolean lockImageForReference(String coverImageUrl) {
+        if (!isLocalImage(coverImageUrl)) {
+            return true;
+        }
+        ensureImageGuard(coverImageUrl);
+        Object value = entityManager.createNativeQuery(
+            "select deleting from product_image_guard where image_url = :imageUrl for update"
+        ).setParameter("imageUrl", coverImageUrl).getSingleResult();
+        return !asBoolean(value);
+    }
+
+    public boolean lockImageForDeletion(String coverImageUrl) {
+        if (!isLocalImage(coverImageUrl)) {
+            return false;
+        }
+        ensureImageGuard(coverImageUrl);
+        entityManager.createNativeQuery(
+            "select deleting from product_image_guard where image_url = :imageUrl for update"
+        ).setParameter("imageUrl", coverImageUrl).getSingleResult();
+        return true;
+    }
+
+    public void markImageForDeletion(String coverImageUrl) {
+        entityManager.createNativeQuery(
+            "update product_image_guard set deleting = true where image_url = :imageUrl"
+        ).setParameter("imageUrl", coverImageUrl).executeUpdate();
+    }
+
+    private void ensureImageGuard(String coverImageUrl) {
+        entityManager.createNativeQuery(
+            "insert ignore into product_image_guard(image_url, deleting) values (:imageUrl, false)"
+        ).setParameter("imageUrl", coverImageUrl).executeUpdate();
+    }
+
+    private boolean isLocalImage(String coverImageUrl) {
+        return coverImageUrl != null && coverImageUrl.startsWith("/files/");
+    }
+
+    private boolean asBoolean(Object value) {
+        if (value instanceof Boolean booleanValue) {
+            return booleanValue;
+        }
+        return ((Number) value).intValue() != 0;
+    }
+
+    public void delete(Product product) {
+        entityManager.remove(product);
+    }
+
     public List<Category> categories(boolean publicOnly) {
         String jpql = publicOnly
             ? "select c from Category c where c.enabled = true order by c.sortOrder, c.id"
@@ -98,5 +182,8 @@ public class CatalogRepository {
     }
 
     public record ProductPage(List<Product> items, long total) {
+    }
+
+    public record ProductDeletionCandidate(String coverImageUrl, boolean archived) {
     }
 }

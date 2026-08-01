@@ -22,6 +22,7 @@ vi.mock('@/api/catalog', () => ({
   setProductShelf: vi.fn(),
   archiveProduct: vi.fn(),
   restoreProduct: vi.fn(),
+  permanentlyDeleteProduct: vi.fn(),
 }))
 
 describe('product money and editor behavior', () => {
@@ -339,6 +340,91 @@ describe('product money and editor behavior', () => {
     })
   })
 
+  it('permanently deletes an archived product only after irreversible confirmation', async () => {
+    const archivedProduct: catalogApi.Product = {
+      id: 10,
+      name: '待永久删除商品',
+      categoryId: 1,
+      categoryName: '乳品',
+      priceCent: 590,
+      unit: '盒',
+      coverImageUrl: '',
+      description: '',
+      onShelf: false,
+      archived: true,
+      archivedAt: '2026-08-01T10:00:00Z',
+      archivedBy: 1,
+    }
+    vi.mocked(catalogApi.listProducts).mockResolvedValue({
+      items: [archivedProduct], page: 0, size: 20, total: 1,
+    })
+    vi.mocked(catalogApi.permanentlyDeleteProduct).mockResolvedValue({ deleted: true })
+    vi.spyOn(ElMessageBox, 'confirm').mockResolvedValue('confirm' as never)
+    const messageSpy = vi.spyOn(ElMessage, 'success')
+    const wrapper = mount(ProductView)
+    await flushPromises()
+
+    await wrapper.get('#product-keyword').setValue('永久删除')
+    await wrapper.get('[data-test="product-archive-filter"]').setValue('ARCHIVED')
+    await wrapper.get('[data-test="product-search"]').trigger('click')
+    await flushPromises()
+    wrapper.findComponent({ name: 'ElPagination' }).vm.$emit('current-change', 3)
+    await flushPromises()
+    vi.mocked(catalogApi.listProducts).mockClear()
+    vi.mocked(catalogApi.listProducts).mockResolvedValueOnce({
+      items: [], page: 2, size: 20, total: 0,
+    })
+
+    await wrapper.get('[data-test="permanent-delete-10"]').trigger('click')
+    await flushPromises()
+
+    expect(ElMessageBox.confirm).toHaveBeenCalledWith(
+      expect.stringContaining('无法恢复'),
+      '永久删除商品',
+      expect.objectContaining({ confirmButtonText: '永久删除', type: 'error' }),
+    )
+    expect(catalogApi.permanentlyDeleteProduct).toHaveBeenCalledWith(10)
+    expect(catalogApi.listProducts).toHaveBeenCalledWith({
+      keyword: '永久删除',
+      categoryId: undefined,
+      archiveStatus: 'ARCHIVED',
+      page: 2,
+      size: 20,
+    })
+    expect(wrapper.find('[data-test="permanent-delete-10"]').exists()).toBe(false)
+    expect(messageSpy).toHaveBeenCalledWith('商品已永久删除')
+  })
+
+  it('does not permanently delete an archived product when confirmation is cancelled', async () => {
+    vi.mocked(catalogApi.listProducts).mockResolvedValueOnce({
+      items: [{
+        id: 10,
+        name: '保留商品',
+        categoryId: 1,
+        categoryName: '乳品',
+        priceCent: 590,
+        unit: '盒',
+        coverImageUrl: '',
+        description: '',
+        onShelf: false,
+        archived: true,
+        archivedAt: '2026-08-01T10:00:00Z',
+        archivedBy: 1,
+      }],
+      page: 0,
+      size: 20,
+      total: 1,
+    })
+    vi.spyOn(ElMessageBox, 'confirm').mockRejectedValue('cancel')
+    const wrapper = mount(ProductView)
+    await flushPromises()
+
+    await wrapper.get('[data-test="permanent-delete-10"]').trigger('click')
+    await flushPromises()
+
+    expect(catalogApi.permanentlyDeleteProduct).not.toHaveBeenCalled()
+  })
+
   it.each([
     {
       state: 'active',
@@ -374,7 +460,7 @@ describe('product money and editor behavior', () => {
         archivedAt: '2026-08-01T10:00:00Z',
         archivedBy: 1,
       } satisfies catalogApi.Product,
-      actions: ['恢复'],
+      actions: ['恢复', '永久删除'],
     },
   ])('shows only the $state product actions on mobile', async ({ product, actions }) => {
     vi.mocked(catalogApi.listProducts).mockResolvedValueOnce({

@@ -97,3 +97,6 @@ export const archiveProduct = (id: number): Promise<Product> =>
 
 export const restoreProduct = (id: number): Promise<Product> =>
   request(`/api/admin/products/${id}/restore`, { method: 'POST' })
+
+export const permanentlyDeleteProduct = (id: number): Promise<{ deleted: boolean }> =>
+  request(`/api/admin/products/${id}/permanent`, { method: 'DELETE' })

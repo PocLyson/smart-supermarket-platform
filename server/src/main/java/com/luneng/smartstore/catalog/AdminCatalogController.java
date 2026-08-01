@@ -101,6 +101,19 @@ public class AdminCatalogController {
         );
     }
 
+    @DeleteMapping("/products/{id}/permanent")
+    ApiResponse<CatalogService.ProductDeletion> permanentDelete(
+        @PathVariable long id,
+        @AuthenticationPrincipal CurrentPrincipal principal,
+        HttpServletRequest request
+    ) {
+        String requestId = RequestIdFilter.requestId(request);
+        return ApiResponse.success(
+            requestId,
+            service.permanentDelete(id, principal, requestId)
+        );
+    }
+
     @PostMapping("/products")
     ApiResponse<CatalogService.ProductView> createProduct(
         @Valid @RequestBody ProductWriteRequest body,

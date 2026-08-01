@@ -2,6 +2,8 @@ package com.luneng.smartstore.catalog;
 
 import com.luneng.smartstore.audit.AuditService;
 import com.luneng.smartstore.auth.CurrentPrincipal;
+import com.luneng.smartstore.common.api.BusinessException;
+import com.luneng.smartstore.file.ImageStorageService;
 import com.luneng.smartstore.inventory.InventoryRepository;
 import com.luneng.smartstore.inventory.InventoryService;
 import jakarta.persistence.EntityNotFoundException;
@@ -9,6 +11,8 @@ import java.time.Instant;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 public class CatalogService {
@@ -16,17 +20,20 @@ public class CatalogService {
     private final AuditService auditService;
     private final InventoryRepository inventoryRepository;
     private final InventoryService inventoryService;
+    private final ImageStorageService imageStorageService;
 
     public CatalogService(
         CatalogRepository repository,
         AuditService auditService,
         InventoryRepository inventoryRepository,
-        InventoryService inventoryService
+        InventoryService inventoryService,
+        ImageStorageService imageStorageService
     ) {
         this.repository = repository;
         this.auditService = auditService;
         this.inventoryRepository = inventoryRepository;
         this.inventoryService = inventoryService;
+        this.imageStorageService = imageStorageService;
     }
 
     @Transactional(readOnly = true)
@@ -120,6 +127,7 @@ public class CatalogService {
     ) {
         Category category = repository.category(request.categoryId())
             .orElseThrow(EntityNotFoundException::new);
+        requireUsableImage(request.coverImageUrl());
         Product product = repository.save(new Product(
             category,
             request.name(),
@@ -154,6 +162,7 @@ public class CatalogService {
         CurrentPrincipal actor,
         String requestId
     ) {
+        requireUsableImage(request.coverImageUrl());
         Product product = repository.productForUpdate(id)
             .orElseThrow(EntityNotFoundException::new);
         Category category = repository.category(request.categoryId())
@@ -233,6 +242,75 @@ public class CatalogService {
         return ProductView.from(product, inventoryRepository.current(id));
     }
 
+    @Transactional
+    public ProductDeletion permanentDelete(
+        long id,
+        CurrentPrincipal actor,
+        String requestId
+    ) {
+        CatalogRepository.ProductDeletionCandidate candidate =
+            repository.productDeletionCandidate(id)
+            .orElseThrow(EntityNotFoundException::new);
+        if (!candidate.archived()) {
+            throw new BusinessException("PRODUCT_NOT_ARCHIVED", "请先删除商品，再执行永久删除");
+        }
+        String coverImageUrl = candidate.coverImageUrl();
+        boolean localImage = repository.lockImageForDeletion(coverImageUrl);
+        Product product = repository.productForUpdate(id)
+            .orElseThrow(EntityNotFoundException::new);
+        if (!product.isArchived()) {
+            throw new BusinessException("PRODUCT_NOT_ARCHIVED", "请先删除商品，再执行永久删除");
+        }
+        if (repository.hasOrderHistory(id)) {
+            throw new BusinessException(
+                "PRODUCT_HAS_ORDER_HISTORY",
+                "该商品存在历史订单，为保留订单记录不能永久删除"
+            );
+        }
+        if (!java.util.Objects.equals(coverImageUrl, product.getCoverImageUrl())) {
+            throw new BusinessException(
+                "PRODUCT_CHANGED_RETRY",
+                "商品信息刚刚发生变化，请刷新后重试"
+            );
+        }
+        String productName = product.getName();
+        boolean deleteImage = localImage
+            && !repository.hasOtherProductUsingImageForUpdate(id, coverImageUrl);
+        if (deleteImage) {
+            repository.markImageForDeletion(coverImageUrl);
+        }
+        auditService.record(
+            actor,
+            "PRODUCT_PERMANENT_DELETE",
+            "PRODUCT",
+            Long.toString(id),
+            productName,
+            requestId
+        );
+        inventoryRepository.deleteForProduct(id);
+        repository.delete(product);
+        if (deleteImage && coverImageUrl != null && !coverImageUrl.isBlank()) {
+            TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        imageStorageService.deleteLocalImage(coverImageUrl);
+                    }
+                }
+            );
+        }
+        return new ProductDeletion(true);
+    }
+
+    private void requireUsableImage(String coverImageUrl) {
+        if (!repository.lockImageForReference(coverImageUrl)) {
+            throw new BusinessException(
+                "PRODUCT_IMAGE_UNAVAILABLE",
+                "商品图片已被清理，请重新上传图片"
+            );
+        }
+    }
+
     public record CategoryWriteRequest(String name, int sortOrder, boolean enabled) {
     }
 
@@ -282,5 +360,8 @@ public class CatalogService {
     }
 
     public record ProductList(List<ProductView> items, long total, int page, int size) {
+    }
+
+    public record ProductDeletion(boolean deleted) {
     }
 }

@@ -6,6 +6,7 @@ import {
   createProduct,
   listCategories,
   listProducts,
+  permanentlyDeleteProduct,
   restoreProduct,
   setProductShelf,
   updateProduct,
@@ -290,6 +291,31 @@ const restore = async (product: Product): Promise<void> => {
   }
 }
 
+const permanentlyDelete = async (product: Product): Promise<void> => {
+  if (isActionPending(product.id)) return
+  setActionPending(product.id, true)
+  try {
+    await ElMessageBox.confirm(
+      `永久删除“${product.name}”后无法恢复，库存记录和未被其他商品使用的图片也会被清理。若商品存在历史订单，系统将拒绝删除。`,
+      '永久删除商品',
+      {
+        confirmButtonText: '永久删除',
+        cancelButtonText: '取消',
+        type: 'error',
+      },
+    )
+    await permanentlyDeleteProduct(product.id)
+    await load()
+    ElMessage.success('商品已永久删除')
+  } catch (error) {
+    if (error !== 'cancel' && error !== 'close') {
+      reportUnexpectedError(error, '商品永久删除失败')
+    }
+  } finally {
+    setActionPending(product.id, false)
+  }
+}
+
 onMounted(load)
 </script>
 
@@ -449,6 +475,14 @@ onMounted(load)
                   :disabled="isActionPending(row.id)"
                   @click="restore(row)"
                 >恢复</el-button>
+                <el-button
+                  :data-test="`permanent-delete-${row.id}`"
+                  link
+                  type="danger"
+                  :loading="isActionPending(row.id)"
+                  :disabled="isActionPending(row.id)"
+                  @click="permanentlyDelete(row)"
+                >永久删除</el-button>
               </template>
               <template v-else>
                 <el-button :data-test="`edit-${row.id}`" link type="primary" @click="openEditor(row)">编辑</el-button>
@@ -504,14 +538,24 @@ onMounted(load)
               <div class="product-mobile-card__price">
                 <span class="price-text">¥{{ centToYuan(product.priceCent) }}</span>
                 <template v-if="product.archived">
-                  <el-button
-                    :data-test="`restore-mobile-${product.id}`"
-                    link
-                    type="primary"
-                    :loading="isActionPending(product.id)"
-                    :disabled="isActionPending(product.id)"
-                    @click="restore(product)"
-                  >恢复</el-button>
+                  <div class="product-mobile-card__actions">
+                    <el-button
+                      :data-test="`restore-mobile-${product.id}`"
+                      link
+                      type="primary"
+                      :loading="isActionPending(product.id)"
+                      :disabled="isActionPending(product.id)"
+                      @click="restore(product)"
+                    >恢复</el-button>
+                    <el-button
+                      :data-test="`permanent-delete-mobile-${product.id}`"
+                      link
+                      type="danger"
+                      :loading="isActionPending(product.id)"
+                      :disabled="isActionPending(product.id)"
+                      @click="permanentlyDelete(product)"
+                    >永久删除</el-button>
+                  </div>
                 </template>
                 <template v-else>
                   <el-button link type="primary" @click="openEditor(product)">编辑</el-button>
@@ -679,6 +723,14 @@ onMounted(load)
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
+}
+.product-mobile-card__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.product-mobile-card__actions :deep(.el-button + .el-button) {
+  margin-left: 0;
 }
 .product-cell div {
   display: grid;
