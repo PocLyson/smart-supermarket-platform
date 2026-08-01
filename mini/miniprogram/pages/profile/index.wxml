@@ -43,7 +43,7 @@
       <text class="card-title">门店服务</text>
       <view class="service-row"><text>当前门店</text><text class="service-value">鲁能超市李老家分店</text></view>
       <view class="service-row"><text>取货方式</text><text class="service-value">到店自取</text></view>
-      <view class="merchant-contact-actions">
+      <view wx:if="{{loggedIn}}" class="merchant-contact-actions">
         <button wx:if="{{storeContact.customerServiceEnabled}}" class="merchant-contact-button is-secondary" open-type="contact">联系在线客服</button>
         <button class="merchant-contact-button is-primary" bindtap="onCallStore">拨打门店电话</button>
       </view>

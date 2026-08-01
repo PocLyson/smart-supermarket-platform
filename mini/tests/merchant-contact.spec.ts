@@ -90,6 +90,12 @@ describe('merchant phone helper', () => {
 })
 
 describe('merchant contact page markup', () => {
+  it('shows profile contact actions only after customer login', () => {
+    const markup = read('pages/profile/index.wxml')
+
+    expect(markup).toContain('<view wx:if="{{loggedIn}}" class="merchant-contact-actions">')
+  })
+
   it.each([
     'pages/profile/index.wxml',
     'pages/order-detail/index.wxml',
