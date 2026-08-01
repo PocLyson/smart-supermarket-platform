@@ -1,6 +1,7 @@
 package com.luneng.smartstore.catalog;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import jakarta.persistence.PersistenceContext;
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +36,12 @@ public class CatalogRepository {
         return Optional.ofNullable(entityManager.find(Product.class, id));
     }
 
+    public Optional<Product> productForUpdate(long id) {
+        return Optional.ofNullable(
+            entityManager.find(Product.class, id, LockModeType.PESSIMISTIC_WRITE)
+        );
+    }
+
     public List<Category> categories(boolean publicOnly) {
         String jpql = publicOnly
             ? "select c from Category c where c.enabled = true order by c.sortOrder, c.id"
@@ -47,13 +54,14 @@ public class CatalogRepository {
         String keyword,
         int page,
         int size,
-        boolean publicOnly
+        boolean publicOnly,
+        ProductArchiveStatus archiveStatus
     ) {
         String filters = """
              where (:categoryId is null or p.category.id = :categoryId)
                and (:keyword = '' or lower(p.name) like lower(concat('%', :keyword, '%')))
             """
-            + (publicOnly ? " and p.onShelf = true and p.category.enabled = true" : "");
+            + archiveFilter(publicOnly, archiveStatus);
         String inventoryJoin = publicOnly
             ? " left join OnlineInventory i on i.productId = p.id"
             : "";
@@ -76,6 +84,17 @@ public class CatalogRepository {
         count.setParameter("categoryId", categoryId);
         count.setParameter("keyword", keyword == null ? "" : keyword.trim());
         return new ProductPage(query.getResultList(), count.getSingleResult());
+    }
+
+    private String archiveFilter(boolean publicOnly, ProductArchiveStatus archiveStatus) {
+        if (publicOnly) {
+            return " and p.archived = false and p.onShelf = true and p.category.enabled = true";
+        }
+        return switch (archiveStatus) {
+            case ACTIVE -> " and p.archived = false";
+            case ARCHIVED -> " and p.archived = true";
+            case ALL -> "";
+        };
     }
 
     public record ProductPage(List<Product> items, long total) {

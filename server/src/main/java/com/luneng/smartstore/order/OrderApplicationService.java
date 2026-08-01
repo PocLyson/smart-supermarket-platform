@@ -72,10 +72,10 @@ public class OrderApplicationService {
         long totalCent = 0;
         for (Map.Entry<Long, Integer> entry : quantities.entrySet()) {
             Product product = catalogRepository.product(entry.getKey())
-                .filter(Product::isOnShelf)
+                .filter(item -> item.isOnShelf() && !item.isArchived())
                 .orElseThrow(() -> new BusinessException(
                     "PRODUCT_UNAVAILABLE",
-                    "商品不存在或已下架",
+                    "部分商品已下架，请移除后重试",
                     HttpStatus.CONFLICT
                 ));
             long subtotal = Math.multiplyExact(product.getPriceCent(), entry.getValue());

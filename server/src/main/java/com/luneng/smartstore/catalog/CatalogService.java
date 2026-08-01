@@ -5,6 +5,7 @@ import com.luneng.smartstore.auth.CurrentPrincipal;
 import com.luneng.smartstore.inventory.InventoryRepository;
 import com.luneng.smartstore.inventory.InventoryService;
 import jakarta.persistence.EntityNotFoundException;
+import java.time.Instant;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -71,12 +72,20 @@ public class CatalogService {
         String keyword,
         int page,
         int size,
-        boolean publicOnly
+        boolean publicOnly,
+        ProductArchiveStatus archiveStatus
     ) {
         int safePage = Math.max(page, 0);
         int safeSize = Math.min(Math.max(size, 1), 100);
         CatalogRepository.ProductPage result =
-            repository.products(categoryId, keyword, safePage, safeSize, publicOnly);
+            repository.products(
+                categoryId,
+                keyword,
+                safePage,
+                safeSize,
+                publicOnly,
+                archiveStatus
+            );
         return new ProductList(
             result.items().stream()
                 .map(product -> ProductView.from(
@@ -93,7 +102,11 @@ public class CatalogService {
     @Transactional(readOnly = true)
     public ProductView product(long id, boolean publicOnly) {
         Product product = repository.product(id).orElseThrow(EntityNotFoundException::new);
-        if (publicOnly && (!product.isOnShelf() || !product.getCategory().isEnabled())) {
+        if (publicOnly && (
+            product.isArchived()
+                || !product.isOnShelf()
+                || !product.getCategory().isEnabled()
+        )) {
             throw new EntityNotFoundException();
         }
         return ProductView.from(product, inventoryRepository.current(product.getId()));
@@ -176,6 +189,48 @@ public class CatalogService {
         return ProductView.from(product, inventoryRepository.current(product.getId()));
     }
 
+    @Transactional
+    public ProductView archive(
+        long id,
+        CurrentPrincipal actor,
+        String requestId
+    ) {
+        Product product = repository.productForUpdate(id)
+            .orElseThrow(EntityNotFoundException::new);
+        if (product.archive(actor.id())) {
+            auditService.record(
+                actor,
+                "PRODUCT_ARCHIVE",
+                "PRODUCT",
+                Long.toString(id),
+                product.getName(),
+                requestId
+            );
+        }
+        return ProductView.from(product, inventoryRepository.current(id));
+    }
+
+    @Transactional
+    public ProductView restore(
+        long id,
+        CurrentPrincipal actor,
+        String requestId
+    ) {
+        Product product = repository.productForUpdate(id)
+            .orElseThrow(EntityNotFoundException::new);
+        if (product.restore(actor.id())) {
+            auditService.record(
+                actor,
+                "PRODUCT_RESTORE",
+                "PRODUCT",
+                Long.toString(id),
+                product.getName(),
+                requestId
+            );
+        }
+        return ProductView.from(product, inventoryRepository.current(id));
+    }
+
     public record CategoryWriteRequest(String name, int sortOrder, boolean enabled) {
     }
 
@@ -200,6 +255,9 @@ public class CatalogService {
         String coverImageUrl,
         String description,
         boolean onShelf,
+        boolean archived,
+        Instant archivedAt,
+        Long archivedBy,
         int availableStock
     ) {
         static ProductView from(Product product, int availableStock) {
@@ -213,6 +271,9 @@ public class CatalogService {
                 product.getCoverImageUrl(),
                 product.getDescription(),
                 product.isOnShelf(),
+                product.isArchived(),
+                product.getArchivedAt(),
+                product.getArchivedBy(),
                 availableStock
             );
         }

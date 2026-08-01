@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import java.util.List;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -65,11 +66,38 @@ public class AdminCatalogController {
         @RequestParam(defaultValue = "") String keyword,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "20") int size,
+        @RequestParam(defaultValue = "ACTIVE") ProductArchiveStatus archiveStatus,
         HttpServletRequest request
     ) {
         return ApiResponse.success(
             RequestIdFilter.requestId(request),
-            service.products(categoryId, keyword, page, size, false)
+            service.products(categoryId, keyword, page, size, false, archiveStatus)
+        );
+    }
+
+    @DeleteMapping("/products/{id}")
+    ApiResponse<CatalogService.ProductView> archive(
+        @PathVariable long id,
+        @AuthenticationPrincipal CurrentPrincipal principal,
+        HttpServletRequest request
+    ) {
+        String requestId = RequestIdFilter.requestId(request);
+        return ApiResponse.success(
+            requestId,
+            service.archive(id, principal, requestId)
+        );
+    }
+
+    @PostMapping("/products/{id}/restore")
+    ApiResponse<CatalogService.ProductView> restore(
+        @PathVariable long id,
+        @AuthenticationPrincipal CurrentPrincipal principal,
+        HttpServletRequest request
+    ) {
+        String requestId = RequestIdFilter.requestId(request);
+        return ApiResponse.success(
+            requestId,
+            service.restore(id, principal, requestId)
         );
     }
 

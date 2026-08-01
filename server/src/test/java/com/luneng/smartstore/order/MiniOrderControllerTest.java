@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.luneng.smartstore.auth.ActorType;
 import com.luneng.smartstore.auth.CurrentPrincipal;
 import com.luneng.smartstore.auth.JwtService;
+import com.luneng.smartstore.catalog.CatalogService;
 import com.luneng.smartstore.support.IntegrationTestBase;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,9 @@ class MiniOrderControllerTest extends IntegrationTestBase {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private CatalogService catalogService;
 
     private String customerToken;
 
@@ -236,6 +240,77 @@ class MiniOrderControllerTest extends IntegrationTestBase {
                 .header("Authorization", "Bearer " + customerToken))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.total").value(1));
+    }
+
+    @Test
+    void createOrderRejectsProductArchivedAfterItWasAddedToCart() throws Exception {
+        jdbcTemplate.update(
+            "update product set archived = true, archived_at = now(), archived_by = 9, on_shelf = false where id = 10"
+        );
+
+        mockMvc.perform(post("/api/mini/orders")
+                .header("Authorization", "Bearer " + customerToken)
+                .header("Idempotency-Key", "archived-product")
+                .contentType(APPLICATION_JSON)
+                .content("""
+                    {
+                      "pickupName": "李先生",
+                      "phone": "13800138000",
+                      "items": [{"productId": 10, "quantity": 2}]
+                    }
+                    """))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.code").value("PRODUCT_UNAVAILABLE"))
+            .andExpect(jsonPath("$.message").value("部分商品已下架，请移除后重试"));
+
+        org.assertj.core.api.Assertions.assertThat(jdbcTemplate.queryForObject(
+            "select count(*) from customer_order",
+            Integer.class
+        )).isZero();
+        org.assertj.core.api.Assertions.assertThat(jdbcTemplate.queryForObject(
+            "select available_quantity from online_inventory where product_id = 10",
+            Integer.class
+        )).isEqualTo(10);
+    }
+
+    @Test
+    void archivingProductPreservesExistingOrderAndInventoryLedger() throws Exception {
+        mockMvc.perform(post("/api/mini/orders")
+                .header("Authorization", "Bearer " + customerToken)
+                .header("Idempotency-Key", "history-before-archive")
+                .contentType(APPLICATION_JSON)
+                .content("""
+                    {
+                      "pickupName": "李先生",
+                      "phone": "13800138000",
+                      "items": [{"productId": 10, "quantity": 2}]
+                    }
+                    """))
+            .andExpect(status().isOk());
+        int ledgerCount = jdbcTemplate.queryForObject(
+            "select count(*) from inventory_ledger",
+            Integer.class
+        );
+
+        catalogService.archive(
+            10L,
+            new CurrentPrincipal(9L, ActorType.STAFF, "OWNER", "history-owner"),
+            "history-archive"
+        );
+
+        mockMvc.perform(get("/api/mini/orders")
+                .header("Authorization", "Bearer " + customerToken))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.total").value(1))
+            .andExpect(jsonPath("$.data.items[0].totalCent").value(1180));
+        org.assertj.core.api.Assertions.assertThat(jdbcTemplate.queryForObject(
+            "select count(*) from order_item",
+            Integer.class
+        )).isEqualTo(1);
+        org.assertj.core.api.Assertions.assertThat(jdbcTemplate.queryForObject(
+            "select count(*) from inventory_ledger",
+            Integer.class
+        )).isEqualTo(ledgerCount);
     }
 
     private void insertOrder(String orderNo, String status) {

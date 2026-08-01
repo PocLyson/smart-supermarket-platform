@@ -34,7 +34,14 @@ public class MiniCatalogController {
     ) {
         return ApiResponse.success(
             RequestIdFilter.requestId(request),
-            service.products(categoryId, keyword, page, size, true)
+            service.products(
+                categoryId,
+                keyword,
+                page,
+                size,
+                true,
+                ProductArchiveStatus.ACTIVE
+            )
         );
     }
 
