@@ -2,6 +2,12 @@ import { profileService } from '../../services/auth'
 import { ordersService } from '../../services/orders'
 import { sessionStore } from '../../store/session'
 import type { OrderStatus } from '../../types/order'
+import type { StoreContact } from '../../types/store'
+import {
+  callStorePhone,
+  EMERGENCY_STORE_PHONE,
+  loadStoreContact as loadMerchantContact,
+} from '../../utils/merchant-contact'
 import {
   buildActiveOrderCounts,
   buildProfileView,
@@ -16,6 +22,10 @@ Page({
     orderCounts: emptyOrderCounts(),
     loading: false,
     error: '',
+    storeContact: {
+      phone: EMERGENCY_STORE_PHONE,
+      customerServiceEnabled: false,
+    } as StoreContact,
   },
 
   onShow() {
@@ -25,6 +35,11 @@ Page({
       this.setData({ orderCounts: emptyOrderCounts() })
     }
     void this.loadProfile()
+    void this.loadStoreContact()
+  },
+
+  async loadStoreContact() {
+    this.setData({ storeContact: await loadMerchantContact() })
   },
 
   async loadOrderCounts() {
@@ -89,6 +104,10 @@ Page({
 
   onSettings() {
     wx.navigateTo({ url: '/pages/settings/index' })
+  },
+
+  onCallStore() {
+    void callStorePhone(this.data.storeContact.phone)
   },
 
   onRetry() {

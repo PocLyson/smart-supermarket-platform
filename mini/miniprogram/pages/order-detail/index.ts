@@ -1,4 +1,10 @@
 import { ordersService } from '../../services/orders'
+import type { StoreContact } from '../../types/store'
+import {
+  callStorePhone,
+  EMERGENCY_STORE_PHONE,
+  loadStoreContact as loadMerchantContact,
+} from '../../utils/merchant-contact'
 import {
   canCustomerCancel,
   orderStatusLabel,
@@ -38,6 +44,10 @@ Page({
     } as OrderStatusPresentation,
     orderStatusLabel,
     paymentStatusLabel,
+    storeContact: {
+      phone: EMERGENCY_STORE_PHONE,
+      customerServiceEnabled: false,
+    } as StoreContact,
   },
 
   onLoad(query: Record<string, string | undefined>) {
@@ -48,6 +58,11 @@ Page({
     }
     this.setData({ orderNo })
     void this.loadOrder()
+    void this.loadStoreContact()
+  },
+
+  async loadStoreContact() {
+    this.setData({ storeContact: await loadMerchantContact() })
   },
 
   async loadOrder() {
@@ -105,5 +120,9 @@ Page({
     } finally {
       this.setData({ cancelling: false })
     }
+  },
+
+  onCallStore() {
+    void callStorePhone(this.data.storeContact.phone)
   },
 })

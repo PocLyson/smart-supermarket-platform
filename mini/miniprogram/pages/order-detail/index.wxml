@@ -35,6 +35,14 @@
       <view wx:if="{{order.cancellationReason}}" class="cancellation-note">取消原因：{{order.cancellationReason}}</view>
     </view>
 
+    <view class="card merchant-contact-card">
+      <view class="section-title">联系商家</view>
+      <view class="merchant-contact-actions">
+        <button wx:if="{{storeContact.customerServiceEnabled}}" class="merchant-contact-button is-secondary" open-type="contact">联系在线客服</button>
+        <button class="merchant-contact-button is-primary" bindtap="onCallStore">拨打门店电话</button>
+      </view>
+    </view>
+
     <view wx:if="{{order.customerNote}}" class="card customer-note-card">
       <view class="section-title">顾客备注</view>
       <text class="customer-note-text">{{order.customerNote}}</text>
@@ -70,6 +78,5 @@
 
     <view wx:if="{{error}}" class="error-banner" role="alert">{{error}}</view>
     <button wx:if="{{canCancel}}" class="button-danger {{cancelling ? 'is-disabled' : ''}}" loading="{{cancelling}}" disabled="{{cancelling}}" bindtap="onCancel">取消订单</button>
-    <view wx:else class="contact-note">如需修改或取消订单，请联系门店工作人员。</view>
   </view>
 </view>

@@ -193,6 +193,41 @@
   font-weight: var(--weight-semibold);
 }
 
+.merchant-contact-actions {
+  display: flex;
+  margin-top: var(--space-4);
+  gap: var(--space-3);
+}
+
+.merchant-contact-button {
+  display: flex;
+  min-height: 80rpx;
+  flex: 1;
+  margin: 0;
+  border: var(--border-width-default) solid var(--primary-200);
+  border-radius: var(--radius-md);
+  font-size: var(--type-helper-size);
+  font-weight: var(--weight-semibold);
+  line-height: 1;
+  align-items: center;
+  justify-content: center;
+}
+
+.merchant-contact-button::after {
+  border: 0;
+}
+
+.merchant-contact-button.is-secondary {
+  background: var(--primary-50);
+  color: var(--primary-600);
+}
+
+.merchant-contact-button.is-primary {
+  border-color: var(--primary-600);
+  background: var(--primary-600);
+  color: #FFFFFF;
+}
+
 .profile-error {
   display: flex;
   margin-bottom: var(--space-4);
