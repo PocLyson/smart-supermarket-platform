@@ -121,6 +121,47 @@ describe('admin order workflow', () => {
     expect(wrapper.text()).toContain('饮料要常温')
   })
 
+  it('renders a customer note as plain text and hides an empty note', async () => {
+    vi.mocked(ordersApi.getOrder).mockResolvedValue({
+      ...pendingOrder,
+      customerNote: '<b>冰饮</b>',
+    })
+    const noteWrapper = mount(OrderDetailView, {
+      props: { orderNo: pendingOrder.orderNo },
+    })
+    await flushPromises()
+
+    expect(noteWrapper.text()).toContain('<b>冰饮</b>')
+    expect(noteWrapper.find('b').exists()).toBe(false)
+
+    vi.mocked(ordersApi.getOrder).mockResolvedValue(pendingOrder)
+    const emptyWrapper = mount(OrderDetailView, {
+      props: { orderNo: pendingOrder.orderNo },
+    })
+    await flushPromises()
+
+    expect(emptyWrapper.text()).not.toContain('顾客备注')
+  })
+
+  it('does not render customer notes in the order list', async () => {
+    vi.mocked(ordersApi.listOrders).mockResolvedValue({
+      items: [
+        {
+          ...pendingOrder,
+          customerNote: '仅详情可见',
+        } as unknown as ordersApi.AdminOrderSummary,
+      ],
+      page: 0,
+      size: 20,
+      total: 1,
+    })
+
+    const wrapper = mount(OrderListView)
+    await flushPromises()
+
+    expect(wrapper.text()).not.toContain('仅详情可见')
+  })
+
   it('requires a reason for rejection and applies the successful mutation response', async () => {
     vi.mocked(ordersApi.rejectOrder).mockResolvedValue(cancelledOrder)
     const wrapper = mount(OrderDetailView, { props: { orderNo: pendingOrder.orderNo } })

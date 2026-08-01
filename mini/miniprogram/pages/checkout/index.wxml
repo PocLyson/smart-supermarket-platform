@@ -42,12 +42,13 @@
     <textarea
       class="order-note-input"
       value="{{customerNote}}"
-      maxlength="100"
+      maxlength="-1"
       placeholder="如：饮料要常温、易碎品请轻放"
       placeholder-class="order-note-placeholder"
       bindinput="onCustomerNoteInput"
     />
     <text class="order-note-count">{{customerNoteCount}} / 100</text>
+    <text wx:if="{{customerNoteError}}" class="field-error">{{customerNoteError}}</text>
   </view>
 
   <view class="card checkout-section">
@@ -68,6 +69,6 @@
       <view><text class="summary-label">应付合计</text><text class="price">{{displayTotal}}</text></view>
       <text class="total-helper">以服务端最终校验为准</text>
     </view>
-    <button class="button-primary checkout-submit {{submitting || profileLoading || !pickupReady || !items.length ? 'is-disabled' : ''}}" loading="{{submitting}}" disabled="{{submitting || profileLoading || !pickupReady || !items.length}}" bindtap="onSubmit">{{submitting ? '正在提交' : '提交订单'}}</button>
+    <button class="button-primary checkout-submit {{submitting || profileLoading || !pickupReady || !items.length || customerNoteCount > 100 ? 'is-disabled' : ''}}" loading="{{submitting}}" disabled="{{submitting || profileLoading || !pickupReady || !items.length || customerNoteCount > 100}}" bindtap="onSubmit">{{submitting ? '正在提交' : '提交订单'}}</button>
   </view>
 </view>

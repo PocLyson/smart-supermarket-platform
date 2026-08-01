@@ -88,6 +88,14 @@ const validateContact = (profile: CustomerProfile): CustomerProfile => {
   return { pickupName, phone }
 }
 
+const normalizeCustomerNote = (note: string): string => {
+  const normalizedNote = note.trim()
+  if (normalizedNote.length > 100) {
+    throw new Error('订单备注不能超过 100 个字符')
+  }
+  return normalizedNote
+}
+
 const toRequestItems = (
   items: CartItem[],
 ): CreateOrderRequest['items'] =>
@@ -119,7 +127,7 @@ export const createCheckout = (dependencies: CheckoutDependencies): Checkout => 
       contact = { ...profile }
     },
     updateCustomerNote: (note) => {
-      customerNote = note.slice(0, 100)
+      customerNote = note
     },
     isSubmitting: () => submitting,
     submit: async () => {
@@ -139,12 +147,14 @@ export const createCheckout = (dependencies: CheckoutDependencies): Checkout => 
             phone: pending.request.phone,
           }
         : validateContact(contact)
+      const normalizedNote = pending
+        ? undefined
+        : normalizeCustomerNote(customerNote)
       submitting = true
       try {
         await dependencies.auth.ensureSession()
         await dependencies.profile.save(validContact)
         if (!pending) {
-          const normalizedNote = customerNote.trim()
           pending = {
             idempotencyKey: dependencies.createIdempotencyKey(),
             request: {
@@ -170,6 +180,7 @@ export const createCheckout = (dependencies: CheckoutDependencies): Checkout => 
           )
           dependencies.cart.remove(pending.purchasedProductIds)
           dependencies.pendingStorage.clear()
+          customerNote = ''
           return order
         } catch (error) {
           if (error instanceof NetworkUncertainError) {

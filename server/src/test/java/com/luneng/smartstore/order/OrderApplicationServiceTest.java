@@ -76,10 +76,34 @@ class OrderApplicationServiceTest extends IntegrationTestBase {
 
     @Test
     void duplicateIdempotencyKeyReturnsOriginalOrder() {
-        OrderView first = service.create(command);
-        OrderView second = service.create(command);
+        CreateOrderCommand firstCommand = new CreateOrderCommand(
+            command.customerId(),
+            command.idempotencyKey(),
+            command.pickupName(),
+            command.phone(),
+            "备注 A",
+            command.items()
+        );
+        CreateOrderCommand retryCommand = new CreateOrderCommand(
+            command.customerId(),
+            command.idempotencyKey(),
+            command.pickupName(),
+            command.phone(),
+            "备注 B",
+            command.items()
+        );
+
+        OrderView first = service.create(firstCommand);
+        OrderView second = service.create(retryCommand);
 
         assertThat(second.orderNo()).isEqualTo(first.orderNo());
+        assertThat(first.customerNote()).isEqualTo("备注 A");
+        assertThat(second.customerNote()).isEqualTo("备注 A");
+        assertThat(jdbcTemplate.queryForObject(
+            "select customer_note from customer_order where order_no = ?",
+            String.class,
+            first.orderNo()
+        )).isEqualTo("备注 A");
         assertThat(orderRepository.count()).isEqualTo(1);
     }
 

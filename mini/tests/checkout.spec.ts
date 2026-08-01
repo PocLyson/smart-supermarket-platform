@@ -99,6 +99,38 @@ describe('checkout', () => {
     expect(result.orderNo).toBe('202607280001')
   })
 
+  it('does not reuse a successful order note for the next order', async () => {
+    const { checkout, orders } = setup()
+    checkout.updateCustomerNote('第一单备注')
+
+    await checkout.submit()
+    await checkout.submit()
+
+    expect(
+      orders.create.mock.calls.map(([, request]) => request.customerNote),
+    ).toEqual(['第一单备注', undefined])
+  })
+
+  it('accepts one hundred effective characters surrounded by whitespace', async () => {
+    const { checkout, orders } = setup()
+    const note = '备'.repeat(100)
+    checkout.updateCustomerNote(`  ${note}  `)
+
+    await checkout.submit()
+
+    expect(orders.create.mock.calls[0][1].customerNote).toBe(note)
+  })
+
+  it('rejects a note with one hundred and one effective characters', async () => {
+    const { checkout, orders } = setup()
+    checkout.updateCustomerNote(`  ${'备'.repeat(101)}  `)
+
+    await expect(checkout.submit()).rejects.toThrow(
+      '订单备注不能超过 100 个字符',
+    )
+    expect(orders.create).not.toHaveBeenCalled()
+  })
+
   it('rejects an invalid pickup contact before creating an order', async () => {
     const { checkout, orders } = setup()
     checkout.updateContact({ pickupName: ' ', phone: '123' })
@@ -126,7 +158,7 @@ describe('checkout', () => {
     await expect(checkout.submit()).rejects.toThrow('订单结果尚未确认')
     expect(orders.list).toHaveBeenCalledTimes(1)
 
-    checkout.updateCustomerNote('改成冰的')
+    checkout.updateCustomerNote('改'.repeat(101))
     await checkout.submit()
 
     expect(orders.create.mock.calls.map(([key]) => key)).toEqual([

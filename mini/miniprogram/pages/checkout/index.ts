@@ -16,6 +16,7 @@ Page({
     phone: '',
     customerNote: '',
     customerNoteCount: 0,
+    customerNoteError: '',
     items: presentItems(),
     totalCent: cart.selectedTotalCent(),
     displayTotal: formatMoney(cart.selectedTotalCent()),
@@ -26,6 +27,15 @@ Page({
     error: '',
     imageFailed: false,
     fallbackImage: '/assets/icons/image-placeholder.svg',
+  },
+
+  onLoad() {
+    this.setData({
+      customerNote: '',
+      customerNoteCount: 0,
+      customerNoteError: '',
+    })
+    checkout.updateCustomerNote('')
   },
 
   onShow() {
@@ -106,8 +116,11 @@ Page({
   },
 
   onCustomerNoteInput(event: WechatMiniprogram.Input) {
-    const customerNote = event.detail.value.slice(0, 100)
-    this.setData({ customerNote, customerNoteCount: customerNote.length })
+    const customerNote = event.detail.value
+    const customerNoteCount = customerNote.trim().length
+    const customerNoteError =
+      customerNoteCount > 100 ? '订单备注不能超过 100 个字符' : ''
+    this.setData({ customerNote, customerNoteCount, customerNoteError })
     checkout.updateCustomerNote(customerNote)
   },
 
