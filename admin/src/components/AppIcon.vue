@@ -8,6 +8,7 @@ type IconName =
   | 'inventory'
   | 'staff'
   | 'audit'
+  | 'announcements'
   | 'logout'
   | 'empty'
   | 'error'
@@ -35,6 +36,7 @@ const paths: Record<IconName, string[]> = {
     'M17 11l2 2 3-4',
   ],
   audit: ['M12 3 5 6v5c0 4.6 2.8 8.1 7 10 4.2-1.9 7-5.4 7-10V6z', 'm9 12 2 2 4-5'],
+  announcements: ['M4 11v2h3l4 4V7l-4 4zm9-2h2l4-3v12l-4-3h-2z', 'M7 17v3h3'],
   logout: ['M10 17l5-5-5-5M15 12H3', 'M14 4h6v16h-6'],
   empty: ['M4 8h16v11H4z', 'M8 4h8l2 4H6z', 'M9 13h6'],
   error: ['M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z', 'M12 7v6M12 17h.01'],

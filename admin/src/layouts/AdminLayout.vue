@@ -64,6 +64,7 @@ const logout = async (): Promise<void> => {
           <RouterLink to="/inventory"><AppIcon name="inventory" />线上库存</RouterLink>
           <RouterLink to="/staff"><AppIcon name="staff" />员工账号</RouterLink>
           <RouterLink to="/audit"><AppIcon name="audit" />操作审计</RouterLink>
+          <RouterLink to="/announcements"><AppIcon name="announcements" />公告管理</RouterLink>
         </template>
       </nav>
       <div class="account">

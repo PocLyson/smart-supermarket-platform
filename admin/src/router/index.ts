@@ -8,7 +8,7 @@ import {
 import { useAuthStore } from '@/stores/auth'
 import AdminLayout from '@/layouts/AdminLayout.vue'
 
-const ownerOnlyRoutes = ['/products', '/categories', '/inventory', '/staff', '/audit']
+const ownerOnlyRoutes = ['/products', '/categories', '/inventory', '/staff', '/audit', '/announcements']
 
 const routes: RouteRecordRaw[] = [
   {
@@ -65,6 +65,11 @@ const routes: RouteRecordRaw[] = [
         path: 'audit',
         component: () => import('@/views/audit/AuditLogView.vue'),
         meta: { ownerOnly: true, title: '操作审计' },
+      },
+      {
+        path: 'announcements',
+        component: () => import('@/views/announcements/AnnouncementView.vue'),
+        meta: { ownerOnly: true, title: '公告管理' },
       },
       {
         path: 'forbidden',
