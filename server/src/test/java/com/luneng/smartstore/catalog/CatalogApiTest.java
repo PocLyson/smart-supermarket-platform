@@ -1,6 +1,8 @@
 package com.luneng.smartstore.catalog;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doAnswer;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -11,6 +13,7 @@ import com.luneng.smartstore.auth.ActorType;
 import com.luneng.smartstore.auth.CurrentPrincipal;
 import com.luneng.smartstore.auth.JwtService;
 import com.luneng.smartstore.support.IntegrationTestBase;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -22,6 +25,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 @AutoConfigureMockMvc
 class CatalogApiTest extends IntegrationTestBase {
@@ -33,6 +37,9 @@ class CatalogApiTest extends IntegrationTestBase {
 
     @Autowired
     private CatalogService catalogService;
+
+    @MockitoSpyBean
+    private CatalogRepository catalogRepository;
 
     @Autowired
     private JwtService jwtService;
@@ -203,6 +210,95 @@ class CatalogApiTest extends IntegrationTestBase {
 
         runConcurrently(() -> catalogService.restore(10L, owner, "concurrent-restore"));
         assertThat(auditCount("PRODUCT_RESTORE")).isEqualTo(1);
+    }
+
+    @Test
+    void concurrentShelfCannotOverwriteACommittedArchive() throws Exception {
+        jdbcTemplate.update("update product set on_shelf = false where id = 10");
+        runCatalogWriteAgainstArchive(
+            "shelf-writer",
+            () -> catalogService.shelf(10L, true, owner, "concurrent-shelf")
+        );
+
+        assertArchivedOffShelfWithSingleAudit();
+    }
+
+    @Test
+    void concurrentUpdateCannotOverwriteACommittedArchive() throws Exception {
+        runCatalogWriteAgainstArchive(
+            "update-writer",
+            () -> catalogService.updateProduct(
+                10L,
+                new ProductWriteRequest(
+                    "并发更新后的牛奶", 1L, 690, "盒", null, "并发更新", true, null
+                ),
+                owner,
+                "concurrent-update"
+            )
+        );
+
+        assertArchivedOffShelfWithSingleAudit();
+    }
+
+    private void runCatalogWriteAgainstArchive(
+        String writerThread,
+        java.util.concurrent.Callable<CatalogService.ProductView> writer
+    ) throws Exception {
+        var writerRead = new CountDownLatch(1);
+        var archiveCommitted = new CountDownLatch(1);
+        coordinateCatalogRead(writerThread, writerRead, archiveCommitted);
+        var executor = Executors.newFixedThreadPool(2);
+        try {
+            Future<CatalogService.ProductView> writeFuture = executor.submit(() -> {
+                Thread.currentThread().setName(writerThread);
+                return writer.call();
+            });
+            assertThat(writerRead.await(5, TimeUnit.SECONDS)).isTrue();
+            Future<CatalogService.ProductView> archiveFuture = executor.submit(() -> {
+                Thread.currentThread().setName("archive-writer");
+                return catalogService.archive(10L, owner, "concurrent-archive");
+            });
+            try {
+                archiveFuture.get(10, TimeUnit.SECONDS);
+            } finally {
+                archiveCommitted.countDown();
+            }
+            writeFuture.get(10, TimeUnit.SECONDS);
+        } finally {
+            archiveCommitted.countDown();
+            executor.shutdownNow();
+        }
+    }
+
+    private void coordinateCatalogRead(
+        String writerThread,
+        CountDownLatch writerRead,
+        CountDownLatch archiveCommitted
+    ) {
+        doAnswer(invocation -> {
+            Object product = invocation.callRealMethod();
+            if (writerThread.equals(Thread.currentThread().getName())) {
+                writerRead.countDown();
+                assertThat(archiveCommitted.await(10, TimeUnit.SECONDS)).isTrue();
+            }
+            return product;
+        }).when(catalogRepository).product(anyLong());
+        doAnswer(invocation -> {
+            Object product = invocation.callRealMethod();
+            if (writerThread.equals(Thread.currentThread().getName())) {
+                writerRead.countDown();
+            }
+            return product;
+        }).when(catalogRepository).productForUpdate(anyLong());
+    }
+
+    private void assertArchivedOffShelfWithSingleAudit() {
+        Map<String, Object> state = jdbcTemplate.queryForMap(
+            "select archived, on_shelf from product where id = 10"
+        );
+        assertThat(state.get("archived")).isEqualTo(true);
+        assertThat(state.get("on_shelf")).isEqualTo(false);
+        assertThat(auditCount("PRODUCT_ARCHIVE")).isEqualTo(1);
     }
 
     private void runConcurrently(java.util.concurrent.Callable<CatalogService.ProductView> operation)

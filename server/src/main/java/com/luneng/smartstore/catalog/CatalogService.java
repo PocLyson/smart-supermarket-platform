@@ -154,7 +154,8 @@ public class CatalogService {
         CurrentPrincipal actor,
         String requestId
     ) {
-        Product product = repository.product(id).orElseThrow(EntityNotFoundException::new);
+        Product product = repository.productForUpdate(id)
+            .orElseThrow(EntityNotFoundException::new);
         Category category = repository.category(request.categoryId())
             .orElseThrow(EntityNotFoundException::new);
         product.update(
@@ -180,7 +181,8 @@ public class CatalogService {
         CurrentPrincipal actor,
         String requestId
     ) {
-        Product product = repository.product(id).orElseThrow(EntityNotFoundException::new);
+        Product product = repository.productForUpdate(id)
+            .orElseThrow(EntityNotFoundException::new);
         product.setOnShelf(onShelf);
         auditService.record(
             actor, "PRODUCT_SHELF", "PRODUCT", Long.toString(id),

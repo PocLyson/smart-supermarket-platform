@@ -71,7 +71,7 @@ public class OrderApplicationService {
         List<PricedItem> pricedItems = new ArrayList<>();
         long totalCent = 0;
         for (Map.Entry<Long, Integer> entry : quantities.entrySet()) {
-            Product product = catalogRepository.product(entry.getKey())
+            Product product = catalogRepository.productForUpdate(entry.getKey())
                 .filter(item -> item.isOnShelf() && !item.isArchived())
                 .orElseThrow(() -> new BusinessException(
                     "PRODUCT_UNAVAILABLE",
