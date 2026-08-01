@@ -54,4 +54,50 @@ describe('AuditLogView', () => {
     expect(wrapper.text()).toContain('更新商品')
     expect(wrapper.text()).toContain('商品 · 1')
   })
+
+  it('shows order removal audit actions in customer-friendly Chinese', async () => {
+    vi.mocked(auditApi.listAuditLogs).mockResolvedValueOnce({
+      items: [
+        {
+          actorId: 1,
+          actorType: 'STAFF',
+          action: 'ORDER_ARCHIVE',
+          objectType: 'ORDER',
+          objectId: 'ORDER-1',
+          resultSummary: '后台订单归档',
+          requestId: 'req-archive',
+          createdAt: '2026-07-29T10:00:00Z',
+        },
+        {
+          actorId: 8,
+          actorType: 'CUSTOMER',
+          action: 'ORDER_CUSTOMER_HIDE',
+          objectType: 'ORDER',
+          objectId: 'ORDER-2',
+          resultSummary: '顾客从订单列表删除',
+          requestId: 'req-customer-hide',
+          createdAt: '2026-07-29T10:01:00Z',
+        },
+        {
+          actorId: 1,
+          actorType: 'STAFF',
+          action: 'ORDER_RESTORE',
+          objectType: 'ORDER',
+          objectId: 'ORDER-3',
+          resultSummary: '恢复完成',
+          requestId: 'req-restore',
+          createdAt: '2026-07-29T10:02:00Z',
+        },
+      ],
+      page: 0,
+      size: 20,
+      total: 3,
+    })
+    const wrapper = mount(AuditLogView)
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('后台删除订单')
+    expect(wrapper.text()).toContain('顾客删除订单')
+    expect(wrapper.text()).toContain('恢复归档订单')
+  })
 })

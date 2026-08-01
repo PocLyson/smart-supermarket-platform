@@ -127,6 +127,26 @@
   color: var(--primary-600);
   font-size: var(--type-caption-size);
   align-items: center;
+  gap: var(--space-1);
+}
+
+.order-status-badge {
+  position: absolute;
+  top: 6rpx;
+  right: 18rpx;
+  display: flex;
+  box-sizing: border-box;
+  min-width: 36rpx;
+  height: 36rpx;
+  padding: 0 10rpx;
+  border-radius: var(--radius-round);
+  background: var(--primary-600);
+  color: #FFFFFF;
+  font-size: 20rpx;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  align-items: center;
+  justify-content: center;
 }
 
 .all-orders-icon {
@@ -141,6 +161,7 @@
 }
 
 .order-status-item {
+  position: relative;
   display: flex;
   min-height: 120rpx;
   color: var(--color-text-primary);
@@ -157,14 +178,6 @@
   opacity: 0.72;
 }
 
-.order-status-item.is-highlight {
-  color: var(--primary-600);
-}
-
-.order-status-item.is-highlight .order-status-icon {
-  opacity: 1;
-}
-
 .service-row {
   display: flex;
   min-height: 96rpx;
@@ -178,37 +191,6 @@
 .service-value {
   color: var(--color-text-primary);
   font-weight: var(--weight-semibold);
-}
-
-.card-description {
-  margin: var(--space-1) 0 var(--space-4);
-  color: var(--color-text-tertiary);
-  font-size: var(--type-helper-size);
-  line-height: var(--type-helper-line);
-}
-
-.field-label {
-  display: block;
-  margin-bottom: var(--space-2);
-  color: var(--color-text-primary);
-  font-size: var(--type-label-size);
-  font-weight: var(--weight-medium);
-}
-
-.profile-field {
-  margin-bottom: var(--space-4);
-}
-
-.field-error {
-  border-color: var(--color-error);
-  background: var(--color-error-bg);
-}
-
-.field-error-copy {
-  display: block;
-  margin: calc(var(--space-3) * -1) 0 var(--space-4);
-  color: var(--color-error-text);
-  font-size: var(--type-helper-size);
 }
 
 .profile-error {

@@ -13,11 +13,11 @@ export interface ProductSummary {
   unit: string
   coverImageUrl: string
   onShelf: boolean
+  availableStock: number
 }
 
 export interface ProductDetail extends ProductSummary {
   description: string
-  availableStock?: number
 }
 
 export interface PageResult<T> {

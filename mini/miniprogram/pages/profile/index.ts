@@ -1,31 +1,57 @@
 import { profileService } from '../../services/auth'
+import { ordersService } from '../../services/orders'
 import { sessionStore } from '../../store/session'
-import { buildProfileView, validateProfile } from './presentation'
+import type { OrderStatus } from '../../types/order'
+import {
+  buildActiveOrderCounts,
+  buildProfileView,
+} from './presentation'
 
 const loggedOutView = buildProfileView(false)
+const emptyOrderCounts = () => buildActiveOrderCounts([])
 
 Page({
   data: {
     ...loggedOutView,
-    pickupName: '',
-    phone: '',
+    orderCounts: emptyOrderCounts(),
     loading: false,
-    saving: false,
     error: '',
-    pickupNameError: '',
-    phoneError: '',
   },
 
   onShow() {
+    if (sessionStore.current()) {
+      void this.loadOrderCounts()
+    } else {
+      this.setData({ orderCounts: emptyOrderCounts() })
+    }
     void this.loadProfile()
+  },
+
+  async loadOrderCounts() {
+    try {
+      const statuses: OrderStatus[] = []
+      let page = 0
+      let loaded = 0
+      let total = 0
+      do {
+        const result = await ordersService.list({ page, size: 100 })
+        statuses.push(...result.items.map((order) => order.status))
+        loaded += result.items.length
+        total = result.total
+        page += 1
+        if (result.items.length === 0) break
+      } while (loaded < total)
+      this.setData({ orderCounts: buildActiveOrderCounts(statuses) })
+    } catch {
+      this.setData({ orderCounts: emptyOrderCounts() })
+    }
   },
 
   async loadProfile() {
     if (!sessionStore.current()) {
       this.setData({
         ...loggedOutView,
-        pickupName: '',
-        phone: '',
+        orderCounts: emptyOrderCounts(),
         loading: false,
         error: '',
       })
@@ -36,8 +62,6 @@ Page({
       const profile = await profileService.get()
       this.setData({
         ...buildProfileView(true, profile),
-        pickupName: profile.pickupName || '',
-        phone: profile.phone || '',
       })
     } catch (error) {
       this.setData({
@@ -52,48 +76,8 @@ Page({
     wx.navigateTo({ url: '/pages/auth/index?from=profile' })
   },
 
-  onPickupNameInput(event: WechatMiniprogram.Input) {
-    this.setData({ pickupName: event.detail.value, pickupNameError: '' })
-  },
-
-  onPhoneInput(event: WechatMiniprogram.Input) {
-    this.setData({ phone: event.detail.value, phoneError: '' })
-  },
-
-  async onSave() {
-    const error = validateProfile(this.data.pickupName, this.data.phone)
-    if (error) {
-      this.setData({
-        pickupNameError: !this.data.pickupName.trim()
-          ? '请输入取货人姓名'
-          : '',
-        phoneError: /^1\d{10}$/.test(this.data.phone)
-          ? ''
-          : '请输入正确的11位手机号',
-      })
-      return
-    }
-    this.setData({ saving: true, error: '' })
-    try {
-      const profile = await profileService.save({
-        pickupName: this.data.pickupName.trim(),
-        phone: this.data.phone,
-      })
-      const current = sessionStore.current()
-      if (current) sessionStore.save({ ...current, profileComplete: true })
-      this.setData({ ...buildProfileView(true, profile) })
-      wx.showToast({ title: '取货信息已保存', icon: 'success' })
-    } catch (saveError) {
-      this.setData({
-        error: saveError instanceof Error ? saveError.message : '保存失败',
-      })
-    } finally {
-      this.setData({ saving: false })
-    }
-  },
-
   onOrders() {
-    wx.redirectTo({ url: '/pages/orders/index' })
+    wx.navigateTo({ url: '/pages/orders/index' })
   },
 
   onOrderStatus(event: WechatMiniprogram.TouchEvent) {

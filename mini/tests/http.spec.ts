@@ -106,4 +106,37 @@ describe('mini HTTP client', () => {
       NetworkUncertainError,
     )
   })
+
+  it('sends authenticated account deletion with the DELETE method', async () => {
+    let sentMethod = ''
+    let sentHeaders: Record<string, string> | undefined
+    const client = createHttpClient({
+      apiBaseUrl: () => 'https://api.test',
+      showError: vi.fn(),
+      onUnauthorized: vi.fn(),
+      transport: (options) => {
+        sentMethod = options.method
+        sentHeaders = options.headers
+        options.success({
+          statusCode: 200,
+          data: {
+            code: 'OK',
+            message: '成功',
+            requestId: 'request-delete',
+            data: { deleted: true },
+          },
+        })
+      },
+    })
+
+    await expect(
+      client.delete<{ deleted: boolean }>(
+        '/api/mini/account',
+        undefined,
+        { Authorization: 'Bearer token' },
+      ),
+    ).resolves.toEqual({ deleted: true })
+    expect(sentMethod).toBe('DELETE')
+    expect(sentHeaders).toEqual({ Authorization: 'Bearer token' })
+  })
 })

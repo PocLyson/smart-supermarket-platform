@@ -19,7 +19,7 @@ const authHeaders = (
 }
 
 export const createOrdersService = (
-  client: Pick<HttpClient, 'get' | 'post'>,
+  client: Pick<HttpClient, 'get' | 'post' | 'delete'>,
   session: SessionStore,
 ) => ({
   create: (
@@ -45,6 +45,12 @@ export const createOrdersService = (
   cancel: (orderNo: string): Promise<CustomerOrder> =>
     client.post<CustomerOrder>(
       `/api/mini/orders/${encodeURIComponent(orderNo)}/cancel`,
+      undefined,
+      authHeaders(session),
+    ),
+  remove: (orderNo: string): Promise<{ deleted: boolean }> =>
+    client.delete<{ deleted: boolean }>(
+      `/api/mini/orders/${encodeURIComponent(orderNo)}`,
       undefined,
       authHeaders(session),
     ),

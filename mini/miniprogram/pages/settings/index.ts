@@ -2,9 +2,15 @@ import { profileService } from '../../services/auth'
 import { clearLocalUsageData } from '../../store/local-usage-data'
 import { sessionStore } from '../../store/session'
 import {
+  ACCOUNT_DELETION_SUCCESS_FEEDBACK,
   buildSettingsView,
+  canClearLocalUsage,
+  completeAccountDeletion,
+  completeLogout,
   confirmAccountDeletion,
   confirmLocalUsageCleanup,
+  LOCAL_CLEANUP_SUCCESS_FEEDBACK,
+  LOGOUT_SUCCESS_FEEDBACK,
   type ConfirmationOptions,
 } from './presentation'
 
@@ -20,11 +26,17 @@ const showConfirmation = (
     })
   })
 
-const returnToProfile = (): void => {
-  wx.navigateBack({
-    fail: () => wx.reLaunch({ url: '/pages/profile/index' }),
+const returnToProfile = (): Promise<void> =>
+  new Promise((resolve) => {
+    wx.navigateBack({
+      success: () => resolve(),
+      fail: () =>
+        wx.reLaunch({
+          url: '/pages/profile/index',
+          complete: () => resolve(),
+        }),
+    })
   })
-}
 
 Page({
   data: {
@@ -41,31 +53,19 @@ Page({
     })
   },
 
-  onTerms() {
-    wx.navigateTo({
-      url: '/pages/legal/index?type=terms',
-      fail: () =>
-        wx.showToast({ title: '页面暂时无法打开', icon: 'none' }),
-    })
-  },
-
-  onPrivacy() {
-    wx.navigateTo({
-      url: '/pages/legal/index?type=privacy',
-      fail: () =>
-        wx.showToast({ title: '页面暂时无法打开', icon: 'none' }),
-    })
+  onPickupInfo() {
+    wx.navigateTo({ url: '/pages/pickup-info/index' })
   },
 
   async onClearLocalData() {
-    if (this.data.clearing) return
+    if (!canClearLocalUsage(this.data.loggedIn, this.data.clearing)) return
     const confirmed = await confirmLocalUsageCleanup(showConfirmation)
     if (!confirmed) return
 
     this.setData({ clearing: true, error: '' })
     try {
       clearLocalUsageData()
-      wx.showToast({ title: '本地使用记录已清除', icon: 'success' })
+      wx.showToast(LOCAL_CLEANUP_SUCCESS_FEEDBACK)
     } catch {
       this.setData({ error: '本地记录清除失败，请稍后重试' })
     } finally {
@@ -80,8 +80,12 @@ Page({
       cancelText: '取消',
       success: ({ confirm }) => {
         if (!confirm) return
-        sessionStore.clear()
-        returnToProfile()
+        void completeLogout({
+          clearSession: () => sessionStore.clear(),
+          showSuccess: () =>
+            wx.showToast(LOGOUT_SUCCESS_FEEDBACK),
+          returnToProfile,
+        })
       },
     })
   },
@@ -94,11 +98,14 @@ Page({
     this.setData({ deleting: true, error: '' })
     try {
       await profileService.deleteAccount()
-      clearLocalUsageData()
-      sessionStore.clear()
-      wx.clearStorageSync()
-      wx.showToast({ title: '账号已注销', icon: 'success' })
-      returnToProfile()
+      await completeAccountDeletion({
+        clearLocalUsage: clearLocalUsageData,
+        clearSession: () => sessionStore.clear(),
+        clearAllStorage: () => wx.clearStorageSync(),
+        showSuccess: () =>
+          wx.showToast(ACCOUNT_DELETION_SUCCESS_FEEDBACK),
+        returnToProfile,
+      })
     } catch (error) {
       this.setData({
         error:

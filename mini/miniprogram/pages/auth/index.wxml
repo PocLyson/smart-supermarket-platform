@@ -7,17 +7,29 @@
     <view class="permission-list">
       <view class="permission-row">
         <image class="permission-icon" src="/assets/icons/user.svg" mode="aspectFit" />
-        <view><text class="permission-title">微信头像和昵称</text><text class="permission-copy">用于账号展示</text></view>
+        <view><text class="permission-title">微信登录凭证</text><text class="permission-copy">仅用于识别账号并建立登录会话</text></view>
       </view>
       <view class="permission-row">
         <image class="permission-icon" src="/assets/icons/order.svg" mode="aspectFit" />
-        <view><text class="permission-title">订单与取货信息</text><text class="permission-copy">用于同步进度和到店取货</text></view>
+        <view><text class="permission-title">订单与取货信息</text><text class="permission-copy">姓名和手机号仅在你主动填写后保存</text></view>
       </view>
     </view>
 
-    <button class="button-primary auth-primary" loading="{{loading}}" disabled="{{loading}}" bindtap="onAuthorize">{{loading ? '正在登录' : '微信登录'}}</button>
+    <view class="consent-row" role="checkbox" aria-checked="{{agreed}}" bindtap="onToggleConsent">
+      <view class="consent-checkbox {{agreed ? 'is-checked' : ''}}">
+        <text wx:if="{{agreed}}">✓</text>
+      </view>
+      <view class="consent-copy">
+        <text>我已阅读并同意</text>
+        <text class="legal-link" data-type="terms" catchtap="onOpenLegal">《用户服务协议》</text>
+        <text>和</text>
+        <text class="legal-link" data-type="privacy" catchtap="onOpenLegal">《隐私政策》</text>
+      </view>
+    </view>
+
+    <button class="button-primary auth-primary" loading="{{loading}}" disabled="{{loading || !agreed}}" bindtap="onAuthorize">{{loading ? '正在登录' : '微信登录'}}</button>
     <button class="button-secondary auth-secondary" disabled="{{loading}}" bindtap="onCancel">暂不登录</button>
     <text wx:if="{{error}}" class="auth-error" role="alert">{{error}}</text>
-    <text class="auth-legal">登录即表示同意《用户服务协议》和《隐私政策》</text>
+    <text class="auth-legal">你可以暂不登录并继续浏览商品</text>
   </view>
 </view>

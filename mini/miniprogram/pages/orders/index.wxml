@@ -8,11 +8,18 @@
     <view class="order-filter {{selectedStatus === 'PREPARING' ? 'is-active' : ''}}" data-status="PREPARING" bindtap="onFilterTap">备货中</view>
     <view class="order-filter {{selectedStatus === 'READY_FOR_PICKUP' ? 'is-active' : ''}}" data-status="READY_FOR_PICKUP" bindtap="onFilterTap">待取货</view>
   </view>
-  <view wx:if="{{error}}" class="state-panel">
+  <view wx:if="{{authRequired}}" class="state-panel orders-auth-required">
+    <image class="orders-state-icon" src="/assets/icons/user.svg" mode="aspectFit" />
+    <text class="orders-state-title">登录后查看订单</text>
+    <text class="orders-state-copy">登录后可查看订单状态和历史记录</text>
+    <view class="button-primary orders-state-action" role="button" hover-class="orders-state-action-hover" bindtap="onLogin">微信登录</view>
+    <view class="orders-state-secondary" role="button" hover-class="orders-state-secondary-hover" bindtap="onBackToProfile">返回我的</view>
+  </view>
+  <view wx:elif="{{error}}" class="state-panel">
     <image class="orders-state-icon" src="/assets/icons/close-circle.svg" mode="aspectFit" />
     <text class="orders-state-title">订单加载失败</text>
     <text class="orders-state-copy">{{error}}</text>
-    <button class="button-secondary orders-state-action" size="mini" data-reset="true" bindtap="loadOrders">重新加载</button>
+    <view class="button-secondary orders-state-action" role="button" hover-class="orders-state-action-hover" data-reset="true" bindtap="loadOrders">重新加载</view>
   </view>
   <view wx:elif="{{loading && !orders.length}}" class="orders-skeleton">
     <view wx:for="{{[1, 2, 3]}}" wx:key="*this" class="card skeleton-order">
@@ -25,7 +32,7 @@
     <image class="orders-state-icon" src="/assets/icons/order.svg" mode="aspectFit" />
     <text class="orders-state-title">还没有订单</text>
     <text class="orders-state-copy">挑选商品并提交订单后，进度会显示在这里</text>
-    <button class="button-primary orders-state-action" bindtap="onGoShopping">去逛逛</button>
+    <view class="button-primary orders-state-action" role="button" hover-class="orders-state-action-hover" bindtap="onGoShopping">去逛逛</view>
   </view>
   <view wx:else>
     <view wx:for="{{orders}}" wx:key="orderNo" class="card order-card" hover-class="order-card-hover" data-order-no="{{item.orderNo}}" bindtap="onOpenOrder">
@@ -43,11 +50,20 @@
         </view>
       </view>
       <view class="row-between order-card-foot">
-        <text class="payment-tag payment-{{item.paymentStatus}}">{{paymentStatusLabel[item.paymentStatus]}}</text>
+        <view class="order-card-actions">
+          <text class="payment-tag payment-{{item.paymentStatus}}">{{paymentStatusLabel[item.paymentStatus]}}</text>
+          <view
+            wx:if="{{item.deletable}}"
+            class="order-delete {{deletingOrderNo === item.orderNo ? 'is-disabled' : ''}}"
+            role="button"
+            data-order-no="{{item.orderNo}}"
+            catchtap="onDeleteOrder"
+          >{{deletingOrderNo === item.orderNo ? '删除中' : '删除'}}</view>
+        </view>
         <view><text class="order-total-label">合计</text><text class="price">{{item.displayTotal}}</text><text class="order-arrow">›</text></view>
       </view>
     </view>
     <view wx:if="{{loading}}" class="state-panel">加载中...</view>
-    <view wx:elif="{{reachedEnd && orders.length}}" class="state-panel">已经到底了</view>
+    <view wx:elif="{{reachedEnd && orders.length}}" class="state-panel orders-end">已经到底了</view>
   </view>
 </view>

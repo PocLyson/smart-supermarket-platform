@@ -1,4 +1,5 @@
 import { cart } from '../../store/cart'
+import { requireCustomerLogin } from '../../utils/auth-guard'
 import { formatMoney } from '../../utils/money'
 
 const presentCart = () => {
@@ -77,6 +78,7 @@ Page({
       wx.showToast({ title: '请先选择商品', icon: 'none' })
       return
     }
+    if (!requireCustomerLogin()) return
     wx.navigateTo({ url: '/pages/checkout/index' })
   },
 

@@ -61,7 +61,7 @@ export const createAuthService = ({
 })
 
 export const createProfileService = (
-  client: Pick<HttpClient, 'get' | 'put'>,
+  client: Pick<HttpClient, 'get' | 'put' | 'delete'>,
   session: SessionStore,
 ) => ({
   get: (): Promise<CustomerProfile> => {
@@ -79,6 +79,15 @@ export const createProfileService = (
     return client.put<CustomerProfile>(
       '/api/mini/profile',
       profile,
+      authorization(current.accessToken),
+    )
+  },
+  deleteAccount: async (): Promise<void> => {
+    const current = session.current()
+    if (!current) throw new Error('请先登录')
+    await client.delete<{ deleted: boolean }>(
+      '/api/mini/account',
+      undefined,
       authorization(current.accessToken),
     )
   },

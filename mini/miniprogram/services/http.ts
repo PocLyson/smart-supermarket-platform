@@ -24,6 +24,11 @@ export interface HttpClient {
     data?: unknown,
     headers?: Record<string, string>,
   ): Promise<T>
+  delete<T>(
+    path: string,
+    data?: unknown,
+    headers?: Record<string, string>,
+  ): Promise<T>
 }
 
 export interface TransportOptions {
@@ -146,6 +151,11 @@ export const createHttpClient = (
       data?: unknown,
       headers?: Record<string, string>,
     ) => request<T>(path, 'PUT', data, headers),
+    delete: <T>(
+      path: string,
+      data?: unknown,
+      headers?: Record<string, string>,
+    ) => request<T>(path, 'DELETE', data, headers),
   }
 }
 

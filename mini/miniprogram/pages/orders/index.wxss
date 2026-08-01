@@ -61,6 +61,22 @@
   align-items: center;
 }
 
+.order-card-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.order-delete {
+  padding: var(--space-2);
+  color: var(--color-danger);
+  font-size: var(--type-caption-size);
+}
+
+.order-delete.is-disabled {
+  color: var(--color-text-disabled);
+}
+
 .order-product-summary {
   display: flex;
   margin-bottom: var(--space-3);
@@ -114,6 +130,13 @@
   align-items: center;
 }
 
+.orders-end {
+  padding: 20rpx var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: 24rpx;
+  line-height: 36rpx;
+}
+
 .orders-state-icon {
   width: 88rpx;
   height: 88rpx;
@@ -135,7 +158,30 @@
 }
 
 .orders-state-action {
+  display: flex;
+  box-sizing: border-box;
+  min-width: 200rpx;
+  min-height: 72rpx;
   margin-top: var(--space-4);
+  padding: 0 var(--space-5);
+  line-height: 1;
+  align-items: center;
+  justify-content: center;
+}
+
+.orders-state-action-hover,
+.orders-state-secondary-hover {
+  opacity: 0.78;
+}
+
+.orders-state-secondary {
+  display: flex;
+  min-height: 72rpx;
+  margin-top: var(--space-2);
+  color: var(--color-text-secondary);
+  font-size: var(--type-helper-size);
+  align-items: center;
+  justify-content: center;
 }
 
 .skeleton-block {

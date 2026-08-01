@@ -1,6 +1,7 @@
 import { catalogService } from '../../services/catalog'
 import { cart } from '../../store/cart'
 import type { ProductDetail } from '../../types/catalog'
+import { requireCustomerLogin } from '../../utils/auth-guard'
 import { formatMoney } from '../../utils/money'
 
 Page({
@@ -33,7 +34,7 @@ Page({
       this.setData({
         product,
         displayPrice: formatMoney(product.priceCent),
-        outOfStock: product.availableStock === 0,
+        outOfStock: product.availableStock <= 0,
       })
     } catch (error) {
       this.setData({
@@ -47,6 +48,7 @@ Page({
   onAddToCart() {
     const product = this.data.product
     if (!product || this.data.outOfStock) return
+    if (!requireCustomerLogin()) return
     for (let count = 0; count < this.data.quantity; count += 1) {
       cart.add({
         productId: product.id,

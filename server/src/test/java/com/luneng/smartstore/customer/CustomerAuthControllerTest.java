@@ -1,5 +1,6 @@
 package com.luneng.smartstore.customer;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -46,6 +47,11 @@ class CustomerAuthControllerTest extends IntegrationTestBase {
             .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
             .andExpect(jsonPath("$.data.profileComplete").value(false))
             .andExpect(jsonPath("$.data.sessionKey").doesNotExist());
+
+        String sessionIndex = redisTemplate.keys("auth:customer-sessions:*").stream()
+            .findFirst()
+            .orElseThrow();
+        assertThat(redisTemplate.opsForSet().size(sessionIndex)).isEqualTo(1);
     }
 
     @Test

@@ -49,4 +49,15 @@ describe('local cart', () => {
     ])
     expect(createCart(storage).selectedTotalCent()).toBe(0)
   })
+
+  it('clears both the in-memory and persisted cart after account deletion', () => {
+    const storage = memoryStorage()
+    const cart = createCart(storage)
+    cart.add(milk)
+
+    cart.clear()
+
+    expect(cart.items()).toEqual([])
+    expect(createCart(storage).items()).toEqual([])
+  })
 })

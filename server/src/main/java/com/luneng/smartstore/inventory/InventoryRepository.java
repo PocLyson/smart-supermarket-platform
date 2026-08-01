@@ -1,6 +1,7 @@
 package com.luneng.smartstore.inventory;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -44,24 +45,49 @@ public class InventoryRepository {
     }
 
     public List<InventoryRow> list() {
-        return jdbcTemplate.query(
-            """
+        return list(null, null);
+    }
+
+    public List<InventoryRow> list(Long categoryId, InventoryService.StockStatus stockStatus) {
+        StringBuilder sql = new StringBuilder("""
             select p.id as product_id,
                    p.name as product_name,
+                   c.id as category_id,
+                   c.name as category_name,
                    coalesce(i.available_quantity, 0) as available_quantity,
                    p.unit,
                    coalesce(i.updated_at, p.updated_at) as updated_at
               from product p
+              join category c on c.id = p.category_id
               left join online_inventory i on i.product_id = p.id
-             order by p.id
-            """,
+             where 1 = 1
+            """);
+        List<Object> parameters = new ArrayList<>();
+        if (categoryId != null) {
+            sql.append(" and p.category_id = ?");
+            parameters.add(categoryId);
+        }
+        if (stockStatus != null) {
+            switch (stockStatus) {
+                case IN_STOCK -> sql.append(" and coalesce(i.available_quantity, 0) > 0");
+                case LOW_STOCK ->
+                    sql.append(" and coalesce(i.available_quantity, 0) between 1 and 5");
+                case OUT_OF_STOCK -> sql.append(" and coalesce(i.available_quantity, 0) = 0");
+            }
+        }
+        sql.append(" order by p.id");
+        return jdbcTemplate.query(
+            sql.toString(),
             (resultSet, rowNumber) -> new InventoryRow(
                 resultSet.getLong("product_id"),
                 resultSet.getString("product_name"),
+                resultSet.getLong("category_id"),
+                resultSet.getString("category_name"),
                 resultSet.getInt("available_quantity"),
                 resultSet.getString("unit"),
                 resultSet.getObject("updated_at", LocalDateTime.class)
-            )
+            ),
+            parameters.toArray()
         );
     }
 
@@ -70,16 +96,21 @@ public class InventoryRepository {
             """
             select i.product_id,
                    p.name as product_name,
+                   c.id as category_id,
+                   c.name as category_name,
                    i.available_quantity,
                    p.unit,
                    i.updated_at
               from online_inventory i
               join product p on p.id = i.product_id
+              join category c on c.id = p.category_id
              where i.product_id = ?
             """,
             (resultSet, rowNumber) -> new InventoryRow(
                 resultSet.getLong("product_id"),
                 resultSet.getString("product_name"),
+                resultSet.getLong("category_id"),
+                resultSet.getString("category_name"),
                 resultSet.getInt("available_quantity"),
                 resultSet.getString("unit"),
                 resultSet.getObject("updated_at", LocalDateTime.class)
@@ -182,6 +213,8 @@ public class InventoryRepository {
     public record InventoryRow(
         long productId,
         String productName,
+        long categoryId,
+        String categoryName,
         int availableQuantity,
         String unit,
         LocalDateTime updatedAt

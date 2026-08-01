@@ -8,7 +8,10 @@ import {
 import { formatMoney } from '../../utils/money'
 import {
   buildOrderStatusPresentation,
+  formatPickupCode,
+  presentOrderHistory,
   resolveOrderProductImage,
+  type PresentedOrderHistory,
   type OrderStatusPresentation,
 } from './presentation'
 
@@ -28,6 +31,7 @@ Page({
         imageUrl: string
       }
     >,
+    displayHistory: [] as PresentedOrderHistory[],
     statusPresentation: {
       title: '',
       description: '',
@@ -60,10 +64,8 @@ Page({
           imageUrl: resolveOrderProductImage(item.productId),
         })),
         statusPresentation: buildOrderStatusPresentation(order.status),
-        pickupCode: order.orderNo
-          .replace(/\D/g, '')
-          .slice(-6)
-          .replace(/(\d{3})(\d{3})/, '$1 $2'),
+        displayHistory: presentOrderHistory(order.history),
+        pickupCode: formatPickupCode(order.pickupCode),
       })
     } catch (error) {
       this.setData({
@@ -93,6 +95,7 @@ Page({
         order,
         canCancel: false,
         statusPresentation: buildOrderStatusPresentation(order.status),
+        displayHistory: presentOrderHistory(order.history),
       })
       wx.showToast({ title: '订单已取消', icon: 'success' })
     } catch (error) {

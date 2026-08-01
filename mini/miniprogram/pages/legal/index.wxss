@@ -18,9 +18,9 @@
 
 .legal-title {
   color: var(--color-text-primary);
-  font-size: var(--type-page-title-size);
+  font-size: 40rpx;
   font-weight: var(--weight-bold);
-  line-height: var(--type-page-title-line);
+  line-height: 56rpx;
 }
 
 .legal-updated {
@@ -44,16 +44,18 @@
 .section-title {
   margin-bottom: var(--space-2);
   color: var(--color-text-primary);
-  font-size: var(--type-section-title-size);
+  font-size: 32rpx;
   font-weight: var(--weight-bold);
-  line-height: var(--type-section-title-line);
+  line-height: 46rpx;
 }
 
 .section-paragraph {
   color: var(--color-text-secondary);
-  font-size: var(--type-body-size);
-  line-height: 1.8;
-  text-align: justify;
+  font-size: 28rpx;
+  line-height: 46rpx;
+  letter-spacing: 0;
+  text-align: left;
+  word-break: break-all;
 }
 
 .section-paragraph + .section-paragraph {

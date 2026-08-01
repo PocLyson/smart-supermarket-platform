@@ -19,20 +19,42 @@ import { orderStatusLabel, paymentStatusLabel } from './orderPresentation'
 import UiStatePanel from '@/components/UiStatePanel.vue'
 import AppIcon from '@/components/AppIcon.vue'
 import { ElMessage } from 'element-plus'
+import {
+  parseOrderListContext,
+  serializeOrderListContext,
+} from './orderListContext'
 
 type MutationKind = 'accept' | 'reject' | 'ready' | 'pay' | 'complete' | 'cancel'
 
-const props = defineProps<{ orderNo: string }>()
+const props = withDefaults(
+  defineProps<{
+    orderNo: string
+    returnQuery?: Record<string, unknown>
+  }>(),
+  {
+    returnQuery: () => ({}),
+  },
+)
+const backTarget = computed(() => ({
+  name: 'orders',
+  query: serializeOrderListContext(parseOrderListContext(props.returnQuery)),
+}))
 const order = ref<AdminOrderDetail>()
 const loading = ref(false)
 const loadError = ref('')
 const dialogVisible = ref(false)
 const pending = ref(false)
 const mutationError = ref('')
-const form = reactive<{ kind: MutationKind; reason: string; paymentMethod: PaymentMethod }>({
+const form = reactive<{
+  kind: MutationKind
+  reason: string
+  paymentMethod: PaymentMethod
+  pickupCode: string
+}>({
   kind: 'accept',
   reason: '',
   paymentMethod: 'CASH',
+  pickupCode: '',
 })
 
 const actionMeta: Record<MutationKind, { title: string; nextState: string }> = {
@@ -69,6 +91,7 @@ const openMutation = (kind: MutationKind): void => {
   form.kind = kind
   form.reason = ''
   form.paymentMethod = 'CASH'
+  form.pickupCode = ''
   mutationError.value = ''
   dialogVisible.value = true
 }
@@ -78,18 +101,27 @@ const executeMutation = async (): Promise<void> => {
     mutationError.value = '请输入原因'
     return
   }
+  if (form.kind === 'complete' && !/^\d{6}$/.test(form.pickupCode)) {
+    mutationError.value = '请输入6位取货码'
+    return
+  }
   pending.value = true
   mutationError.value = ''
   try {
     const orderNo = props.orderNo
-    if (form.kind === 'accept') await acceptOrder(orderNo)
-    else if (form.kind === 'reject') await rejectOrder(orderNo, { reason: form.reason.trim() })
-    else if (form.kind === 'ready') await markOrderReady(orderNo)
-    else if (form.kind === 'pay') await markOrderPaid(orderNo, { method: form.paymentMethod })
-    else if (form.kind === 'complete') await completeOrder(orderNo)
-    else await cancelOrder(orderNo, { reason: form.reason.trim() })
+    let updatedOrder: AdminOrderDetail
+    if (form.kind === 'accept') updatedOrder = await acceptOrder(orderNo)
+    else if (form.kind === 'reject') {
+      updatedOrder = await rejectOrder(orderNo, { reason: form.reason.trim() })
+    } else if (form.kind === 'ready') updatedOrder = await markOrderReady(orderNo)
+    else if (form.kind === 'pay') {
+      updatedOrder = await markOrderPaid(orderNo, { method: form.paymentMethod })
+    } else if (form.kind === 'complete') {
+      updatedOrder = await completeOrder(orderNo, { pickupCode: form.pickupCode })
+    }
+    else updatedOrder = await cancelOrder(orderNo, { reason: form.reason.trim() })
+    order.value = updatedOrder
     dialogVisible.value = false
-    await load()
     ElMessage.success(`${actionMeta[form.kind].title}已完成`)
   } catch (error) {
     mutationError.value =
@@ -106,7 +138,7 @@ onMounted(load)
   <section v-loading="loading" class="page-stack">
     <header class="page-header">
       <div>
-        <RouterLink class="back-link" to="/orders">
+        <RouterLink class="back-link" :to="backTarget">
           <AppIcon name="chevron-left" />返回订单列表
         </RouterLink>
         <p class="page-kicker">订单履约</p>
@@ -164,6 +196,15 @@ onMounted(load)
     />
 
     <template v-if="!loading && order">
+      <article
+        class="surface-card pickup-verification-card"
+        data-test="pickup-verification-help"
+      >
+        <div>
+          <span>取货码核销</span>
+          <small>完成订单时，请输入顾客小程序中的6位取货码</small>
+        </div>
+      </article>
       <div class="summary-grid">
         <article class="surface-card">
           <span>订单状态</span>
@@ -303,6 +344,19 @@ onMounted(load)
           <option value="WECHAT_QR">门店微信收款码</option>
         </select>
       </div>
+      <div v-if="form.kind === 'complete'" class="form-field">
+        <label for="pickup-code">顾客取货码</label>
+        <input
+          id="pickup-code"
+          v-model="form.pickupCode"
+          data-test="pickup-code-input"
+          class="text-control pickup-code-input"
+          inputmode="numeric"
+          maxlength="6"
+          placeholder="请输入6位取货码"
+        />
+        <p class="helper-text">请让顾客出示小程序订单详情中的取货码，核对无误后完成订单。</p>
+      </div>
       <p v-if="mutationError" class="inline-alert" role="alert">{{ mutationError }}</p>
       <template #footer>
         <el-button :disabled="pending" @click="dialogVisible = false">取消</el-button>
@@ -321,6 +375,35 @@ onMounted(load)
 </template>
 
 <style scoped>
+.pickup-verification-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+  border: 1px solid var(--primary-200);
+  background: linear-gradient(135deg, var(--primary-50), #fff);
+}
+
+.pickup-verification-card div {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.pickup-verification-card span {
+  color: var(--primary-800);
+  font-size: var(--font-size-title);
+  font-weight: 700;
+}
+
+.pickup-verification-card small {
+  color: var(--color-text-secondary);
+}
+
+.pickup-code-input {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.18em;
+}
+
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -425,6 +508,10 @@ onMounted(load)
   }
 }
 @media (max-width: 560px) {
+  .pickup-verification-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
   .summary-grid {
     grid-template-columns: 1fr;
   }

@@ -36,6 +36,7 @@ export interface ProductWriteRequest {
   coverImageUrl: string
   description: string
   onShelf: boolean
+  initialStock?: number
 }
 
 export interface ProductQuery {

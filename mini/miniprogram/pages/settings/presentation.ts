@@ -14,10 +14,64 @@ export type ShowConfirmation = (
   options: ConfirmationOptions,
 ) => Promise<boolean>
 
+export interface LogoutActions {
+  clearSession: () => void
+  showSuccess: () => void
+  returnToProfile: () => Promise<void>
+}
+
+export interface AccountDeletionCompletionActions extends LogoutActions {
+  clearLocalUsage: () => void
+  clearAllStorage: () => void
+}
+
+export const LOCAL_CLEANUP_SUCCESS_FEEDBACK = {
+  title: '清除成功',
+  icon: 'success' as const,
+}
+
+export const LOGOUT_SUCCESS_FEEDBACK = {
+  title: '账号已退出',
+  icon: 'success' as const,
+}
+
+export const ACCOUNT_DELETION_SUCCESS_FEEDBACK = {
+  title: '账号已注销',
+  icon: 'success' as const,
+}
+
 export const buildSettingsView = (loggedIn: boolean): SettingsView => ({
   loggedIn,
   accountStatus: loggedIn ? '微信账号 · 已登录' : '未登录',
 })
+
+export const canClearLocalUsage = (
+  loggedIn: boolean,
+  clearing: boolean,
+): boolean => loggedIn && !clearing
+
+export const completeLogout = ({
+  clearSession,
+  showSuccess,
+  returnToProfile,
+}: LogoutActions): Promise<void> => {
+  clearSession()
+  return returnToProfile().then(showSuccess)
+}
+
+export const completeAccountDeletion = async ({
+  clearLocalUsage,
+  clearSession,
+  clearAllStorage,
+  showSuccess,
+  returnToProfile,
+}: AccountDeletionCompletionActions): Promise<void> => {
+  clearLocalUsage()
+  clearSession()
+  clearAllStorage()
+  await returnToProfile()
+  showSuccess()
+}
 
 export const confirmLocalUsageCleanup = (
   showConfirmation: ShowConfirmation,

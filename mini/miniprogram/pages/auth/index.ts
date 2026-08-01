@@ -2,12 +2,19 @@ import { authService } from '../../services/auth'
 
 Page({
   data: {
+    agreed: false,
     loading: false,
     error: '',
   },
 
   async onAuthorize() {
     if (this.data.loading) return
+    if (!this.data.agreed) {
+      this.setData({
+        error: '请先阅读并同意《用户服务协议》和《隐私政策》',
+      })
+      return
+    }
     this.setData({ loading: true, error: '' })
     try {
       await authService.loginWithWechat()
@@ -25,6 +32,20 @@ Page({
     } finally {
       this.setData({ loading: false })
     }
+  },
+
+  onToggleConsent() {
+    this.setData({
+      agreed: !this.data.agreed,
+      error: '',
+    })
+  },
+
+  onOpenLegal(event: WechatMiniprogram.TouchEvent) {
+    const type = event.currentTarget.dataset.type as 'terms' | 'privacy'
+    wx.navigateTo({
+      url: `/pages/legal/index?type=${type}`,
+    })
   },
 
   onCancel() {

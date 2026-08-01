@@ -26,6 +26,7 @@ interface ProductForm {
   coverImageUrl: string
   description: string
   onShelf: boolean
+  initialStock: string
 }
 
 const products = ref<Product[]>([])
@@ -51,6 +52,7 @@ const form = reactive<ProductForm>({
   coverImageUrl: '',
   description: '',
   onShelf: true,
+  initialStock: '0',
 })
 const rules: FormRules<ProductForm> = {
   name: [{ required: true, message: '请输入商品名称', trigger: 'blur' }],
@@ -69,6 +71,19 @@ const rules: FormRules<ProductForm> = {
     },
   ],
   unit: [{ required: true, message: '请输入商品单位', trigger: 'blur' }],
+  initialStock: [
+    {
+      validator: (_rule, value: string, callback) => {
+        const stock = Number(value)
+        if (!Number.isInteger(stock) || stock < 0) {
+          callback(new Error('初始库存必须是大于等于0的整数'))
+          return
+        }
+        callback()
+      },
+      trigger: 'blur',
+    },
+  ],
 }
 
 const load = async (): Promise<void> => {
@@ -130,6 +145,7 @@ const openEditor = (product?: Product): void => {
     coverImageUrl: product?.coverImageUrl ?? '',
     description: product?.description ?? '',
     onShelf: product?.onShelf ?? true,
+    initialStock: '0',
   })
   errorMessage.value = ''
   dialogVisible.value = true
@@ -156,7 +172,7 @@ const toPayload = (): ProductWriteRequest => {
   if (!form.name.trim()) throw new Error('请输入商品名称')
   if (!form.categoryId) throw new Error('请选择商品分类')
   if (!form.unit.trim()) throw new Error('请输入商品单位')
-  return {
+  const payload: ProductWriteRequest = {
     name: form.name.trim(),
     categoryId: Number(form.categoryId),
     priceCent: yuanToCent(form.priceYuan),
@@ -165,6 +181,8 @@ const toPayload = (): ProductWriteRequest => {
     description: form.description.trim(),
     onShelf: form.onShelf,
   }
+  if (!editingId.value) payload.initialStock = Number(form.initialStock)
+  return payload
 }
 
 const submit = async (): Promise<void> => {
@@ -434,6 +452,15 @@ onMounted(load)
         </el-form-item>
         <el-form-item label="单位" prop="unit">
           <input v-model="form.unit" data-test="product-unit" class="text-control" />
+        </el-form-item>
+        <el-form-item v-if="!editingId" label="初始库存" prop="initialStock">
+          <input
+            v-model="form.initialStock"
+            data-test="product-initial-stock"
+            class="text-control"
+            inputmode="numeric"
+          />
+          <p class="helper-text">新品保存后立即计入可售库存；填写0时顾客端显示暂时缺货。</p>
         </el-form-item>
         <el-form-item label="商品封面">
           <ProductImageUpload

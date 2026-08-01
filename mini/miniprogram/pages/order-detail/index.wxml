@@ -53,12 +53,12 @@
 
     <view class="card status-timeline">
       <view class="section-title">状态记录</view>
-      <view wx:for="{{order.history}}" wx:key="index" class="timeline-item">
+      <view wx:for="{{displayHistory}}" wx:key="index" class="timeline-item">
         <view class="timeline-mark"><view class="timeline-dot"></view><view class="timeline-line"></view></view>
         <view class="timeline-content">
-          <view class="timeline-title">{{orderStatusLabel[item.status]}}</view>
-          <view class="muted">{{item.createdAt}}</view>
-          <view wx:if="{{item.reason}}" class="muted">{{item.reason}}</view>
+          <view class="timeline-title">{{item.title}}</view>
+          <view class="timeline-description">{{item.description}}</view>
+          <view wx:if="{{item.displayTime}}" class="timeline-time">{{item.displayTime}}</view>
         </view>
       </view>
     </view>

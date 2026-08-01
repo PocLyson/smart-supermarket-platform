@@ -27,10 +27,11 @@ public class AdminOrderService {
     }
 
     @Transactional(readOnly = true)
-    public Page<OrderView> list(
+    public Page<AdminOrderView> list(
         OrderStatus status,
         PaymentStatus paymentStatus,
         String keyword,
+        boolean archived,
         int page,
         int size
     ) {
@@ -38,38 +39,39 @@ public class AdminOrderService {
             status,
             paymentStatus,
             keyword == null ? "" : keyword.trim(),
+            archived,
             PageRequest.of(
                 Math.max(page, 0),
                 Math.min(Math.max(size, 1), 100),
                 Sort.by(Sort.Direction.DESC, "createdAt")
             )
-        ).map(OrderView::from);
+        ).map(AdminOrderView::from);
     }
 
     @Transactional(readOnly = true)
-    public OrderView detail(String orderNo) {
-        return OrderView.from(repository.findDetailedByOrderNo(orderNo)
+    public AdminOrderView detail(String orderNo) {
+        return AdminOrderView.from(repository.findAdminDetailedByOrderNo(orderNo)
             .orElseThrow(EntityNotFoundException::new));
     }
 
     @Transactional
-    public OrderView accept(String orderNo, CurrentPrincipal actor, String requestId) {
+    public AdminOrderView accept(String orderNo, CurrentPrincipal actor, String requestId) {
         CustomerOrder order = locked(orderNo);
         order.accept(actor.id());
         audit(actor, "ORDER_ACCEPT", order, "PREPARING", requestId);
-        return OrderView.from(order);
+        return AdminOrderView.from(order);
     }
 
     @Transactional
-    public OrderView markReady(String orderNo, CurrentPrincipal actor, String requestId) {
+    public AdminOrderView markReady(String orderNo, CurrentPrincipal actor, String requestId) {
         CustomerOrder order = locked(orderNo);
         order.markReady(actor.id());
         audit(actor, "ORDER_READY", order, "READY_FOR_PICKUP", requestId);
-        return OrderView.from(order);
+        return AdminOrderView.from(order);
     }
 
     @Transactional
-    public OrderView markPaid(
+    public AdminOrderView markPaid(
         String orderNo,
         PaymentMethod method,
         CurrentPrincipal actor,
@@ -78,19 +80,24 @@ public class AdminOrderService {
         CustomerOrder order = locked(orderNo);
         order.markPaid(method);
         audit(actor, "ORDER_PAY", order, method.name(), requestId);
-        return OrderView.from(order);
+        return AdminOrderView.from(order);
     }
 
     @Transactional
-    public OrderView complete(String orderNo, CurrentPrincipal actor, String requestId) {
+    public AdminOrderView complete(
+        String orderNo,
+        String pickupCode,
+        CurrentPrincipal actor,
+        String requestId
+    ) {
         CustomerOrder order = locked(orderNo);
-        order.complete(actor.id());
+        order.complete(actor.id(), pickupCode);
         audit(actor, "ORDER_COMPLETE", order, "COMPLETED", requestId);
-        return OrderView.from(order);
+        return AdminOrderView.from(order);
     }
 
     @Transactional
-    public OrderView reject(
+    public AdminOrderView reject(
         String orderNo,
         String reason,
         CurrentPrincipal actor,
@@ -107,7 +114,7 @@ public class AdminOrderService {
     }
 
     @Transactional
-    public OrderView cancel(
+    public AdminOrderView cancel(
         String orderNo,
         String reason,
         CurrentPrincipal actor,
@@ -116,7 +123,22 @@ public class AdminOrderService {
         return cancelLocked(locked(orderNo), reason, actor, requestId, "ORDER_CANCEL");
     }
 
-    private OrderView cancelLocked(
+    @Transactional
+    public void archive(String orderNo, CurrentPrincipal actor, String requestId) {
+        CustomerOrder order = locked(orderNo);
+        order.archiveForAdmin();
+        audit(actor, "ORDER_ARCHIVE", order, "后台订单归档", requestId);
+    }
+
+    @Transactional
+    public AdminOrderView restore(String orderNo, CurrentPrincipal actor, String requestId) {
+        CustomerOrder order = locked(orderNo);
+        order.restoreForAdmin();
+        audit(actor, "ORDER_RESTORE", order, "后台恢复归档订单", requestId);
+        return AdminOrderView.from(order);
+    }
+
+    private AdminOrderView cancelLocked(
         CustomerOrder order,
         String reason,
         CurrentPrincipal actor,
@@ -127,7 +149,7 @@ public class AdminOrderService {
         inventoryService.release(order.getOrderNo());
         order.markInventoryReleased();
         audit(actor, action, order, reason.trim(), requestId);
-        return OrderView.from(order);
+        return AdminOrderView.from(order);
     }
 
     private CustomerOrder locked(String orderNo) {

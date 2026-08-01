@@ -54,8 +54,14 @@ public class CatalogRepository {
                and (:keyword = '' or lower(p.name) like lower(concat('%', :keyword, '%')))
             """
             + (publicOnly ? " and p.onShelf = true and p.category.enabled = true" : "");
+        String inventoryJoin = publicOnly
+            ? " left join OnlineInventory i on i.productId = p.id"
+            : "";
+        String ordering = publicOnly
+            ? " order by case when coalesce(i.availableQuantity, 0) > 0 then 0 else 1 end, p.id desc"
+            : " order by p.id desc";
         var query = entityManager.createQuery(
-            "select p from Product p join fetch p.category" + filters + " order by p.id desc",
+            "select p from Product p join fetch p.category" + inventoryJoin + filters + ordering,
             Product.class
         );
         query.setParameter("categoryId", categoryId);

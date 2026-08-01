@@ -1,5 +1,7 @@
 package com.luneng.smartstore.order;
 
+import com.luneng.smartstore.audit.AuditService;
+import com.luneng.smartstore.auth.CurrentPrincipal;
 import com.luneng.smartstore.catalog.CatalogRepository;
 import com.luneng.smartstore.catalog.Product;
 import com.luneng.smartstore.common.api.BusinessException;
@@ -30,6 +32,7 @@ public class OrderApplicationService {
     private final InventoryService inventoryService;
     private final OrderNumberGenerator orderNumberGenerator;
     private final JdbcTemplate jdbcTemplate;
+    private final AuditService auditService;
 
     public OrderApplicationService(
         OrderRepository orderRepository,
@@ -37,7 +40,8 @@ public class OrderApplicationService {
         CatalogRepository catalogRepository,
         InventoryService inventoryService,
         OrderNumberGenerator orderNumberGenerator,
-        JdbcTemplate jdbcTemplate
+        JdbcTemplate jdbcTemplate,
+        AuditService auditService
     ) {
         this.orderRepository = orderRepository;
         this.customerRepository = customerRepository;
@@ -45,6 +49,7 @@ public class OrderApplicationService {
         this.inventoryService = inventoryService;
         this.orderNumberGenerator = orderNumberGenerator;
         this.jdbcTemplate = jdbcTemplate;
+        this.auditService = auditService;
     }
 
     @Transactional
@@ -129,7 +134,7 @@ public class OrderApplicationService {
 
     @Transactional(readOnly = true)
     public Page<OrderView> list(long customerId, int page, int size) {
-        return orderRepository.findAllByCustomerId(
+        return orderRepository.findAllByCustomerIdAndCustomerHiddenFalse(
             customerId,
             PageRequest.of(
                 Math.max(page, 0),
@@ -141,12 +146,34 @@ public class OrderApplicationService {
 
     @Transactional(readOnly = true)
     public OrderView detail(long customerId, String orderNo) {
-        CustomerOrder order = orderRepository.findDetailedByOrderNo(orderNo)
+        CustomerOrder order = orderRepository.findCustomerDetailedByOrderNo(orderNo)
             .orElseThrow(EntityNotFoundException::new);
         if (order.getCustomer().getId() != customerId) {
             throw new EntityNotFoundException();
         }
         return OrderView.from(order);
+    }
+
+    @Transactional
+    public void hideForCustomer(
+        CurrentPrincipal customer,
+        String orderNo,
+        String requestId
+    ) {
+        CustomerOrder order = orderRepository.findLockedByOrderNo(orderNo)
+            .orElseThrow(EntityNotFoundException::new);
+        if (order.getCustomer().getId() != customer.id()) {
+            throw new EntityNotFoundException();
+        }
+        order.hideForCustomer();
+        auditService.record(
+            customer,
+            "ORDER_CUSTOMER_HIDE",
+            "ORDER",
+            orderNo,
+            "顾客从订单列表删除",
+            requestId
+        );
     }
 
     private void lockCustomer(long customerId) {

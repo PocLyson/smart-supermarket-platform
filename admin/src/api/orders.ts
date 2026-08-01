@@ -47,6 +47,7 @@ export interface AdminOrderQuery {
   status?: OrderStatus
   paymentStatus?: PaymentStatus
   keyword?: string
+  archived?: boolean
   page?: number
   size?: number
 }
@@ -59,12 +60,21 @@ export interface PaymentRequest {
   method: PaymentMethod
 }
 
+export interface CompleteOrderRequest {
+  pickupCode: string
+}
+
+export interface DeleteOrderResult {
+  deleted: boolean
+}
+
 export const listOrders = (query: AdminOrderQuery = {}): Promise<PageResult<AdminOrderSummary>> =>
   request(
     `/api/admin/orders${toQueryString({
       status: query.status,
       paymentStatus: query.paymentStatus,
       keyword: query.keyword,
+      archived: query.archived,
       page: query.page,
       size: query.size,
     })}`,
@@ -73,29 +83,54 @@ export const listOrders = (query: AdminOrderQuery = {}): Promise<PageResult<Admi
 export const getOrder = (orderNo: string): Promise<AdminOrderDetail> =>
   request(`/api/admin/orders/${encodeURIComponent(orderNo)}`)
 
-export const acceptOrder = (orderNo: string): Promise<void> =>
+export const acceptOrder = (orderNo: string): Promise<AdminOrderDetail> =>
   request(`/api/admin/orders/${encodeURIComponent(orderNo)}/accept`, { method: 'POST' })
 
-export const rejectOrder = (orderNo: string, payload: ReasonRequest): Promise<void> =>
+export const rejectOrder = (
+  orderNo: string,
+  payload: ReasonRequest,
+): Promise<AdminOrderDetail> =>
   request(`/api/admin/orders/${encodeURIComponent(orderNo)}/reject`, {
     method: 'POST',
     ...jsonBody(payload),
   })
 
-export const markOrderReady = (orderNo: string): Promise<void> =>
+export const markOrderReady = (orderNo: string): Promise<AdminOrderDetail> =>
   request(`/api/admin/orders/${encodeURIComponent(orderNo)}/ready`, { method: 'POST' })
 
-export const markOrderPaid = (orderNo: string, payload: PaymentRequest): Promise<void> =>
+export const markOrderPaid = (
+  orderNo: string,
+  payload: PaymentRequest,
+): Promise<AdminOrderDetail> =>
   request(`/api/admin/orders/${encodeURIComponent(orderNo)}/pay`, {
     method: 'POST',
     ...jsonBody(payload),
   })
 
-export const completeOrder = (orderNo: string): Promise<void> =>
-  request(`/api/admin/orders/${encodeURIComponent(orderNo)}/complete`, { method: 'POST' })
+export const completeOrder = (
+  orderNo: string,
+  payload: CompleteOrderRequest,
+): Promise<AdminOrderDetail> =>
+  request(`/api/admin/orders/${encodeURIComponent(orderNo)}/complete`, {
+    method: 'POST',
+    ...jsonBody(payload),
+  })
 
-export const cancelOrder = (orderNo: string, payload: ReasonRequest): Promise<void> =>
+export const cancelOrder = (
+  orderNo: string,
+  payload: ReasonRequest,
+): Promise<AdminOrderDetail> =>
   request(`/api/admin/orders/${encodeURIComponent(orderNo)}/cancel`, {
     method: 'POST',
     ...jsonBody(payload),
+  })
+
+export const archiveOrder = (orderNo: string): Promise<DeleteOrderResult> =>
+  request(`/api/admin/orders/${encodeURIComponent(orderNo)}`, {
+    method: 'DELETE',
+  })
+
+export const restoreOrder = (orderNo: string): Promise<AdminOrderDetail> =>
+  request(`/api/admin/orders/${encodeURIComponent(orderNo)}/restore`, {
+    method: 'POST',
   })

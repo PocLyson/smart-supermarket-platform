@@ -159,6 +159,20 @@
   line-height: var(--type-card-title-line);
 }
 
+.timeline-description {
+  margin-top: var(--space-1);
+  color: var(--color-text-secondary);
+  font-size: var(--type-helper-size);
+  line-height: var(--type-helper-line);
+}
+
+.timeline-time {
+  margin-top: var(--space-1);
+  color: var(--color-text-tertiary);
+  font-size: var(--type-caption-size);
+  font-variant-numeric: tabular-nums;
+}
+
 .error-banner {
   margin-bottom: var(--space-4);
   padding: var(--space-3) var(--space-4);

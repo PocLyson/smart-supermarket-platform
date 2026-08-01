@@ -19,6 +19,7 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.http.HttpStatus;
 
 @Entity
 @Table(name = "customer_order")
@@ -66,6 +67,12 @@ public class CustomerOrder {
 
     @Column(name = "inventory_released", nullable = false)
     private boolean inventoryReleased;
+
+    @Column(name = "customer_hidden", nullable = false)
+    private boolean customerHidden;
+
+    @Column(name = "admin_hidden", nullable = false)
+    private boolean adminHidden;
 
     @Column(name = "accepted_at")
     private Instant acceptedAt;
@@ -167,10 +174,23 @@ public class CustomerOrder {
         paidAt = Instant.now();
     }
 
-    public void complete(long actorId) {
+    public void complete(long actorId, String pickupCode) {
         requireStatus(OrderStatus.READY_FOR_PICKUP, "当前状态不允许完成订单");
         if (paymentStatus != PaymentStatus.PAID) {
             throw new BusinessException("ORDER_STATE_CONFLICT", "订单未付款，不能完成");
+        }
+        if (pickupCode == null || !pickupCode.matches("\\d{6}")) {
+            throw new BusinessException(
+                "VALIDATION_ERROR",
+                "请输入6位取货码",
+                HttpStatus.BAD_REQUEST
+            );
+        }
+        if (!PickupCode.fromOrderNo(orderNo).equals(pickupCode)) {
+            throw new BusinessException(
+                "PICKUP_CODE_MISMATCH",
+                "取货码不正确，请与顾客核对后重试"
+            );
         }
         transition(OrderStatus.COMPLETED, actorId, "订单完成");
         completedAt = Instant.now();
@@ -197,6 +217,29 @@ public class CustomerOrder {
             actorId,
             cancelReason
         ));
+    }
+
+    public void hideForCustomer() {
+        requireTerminal("订单完成或取消后才能删除");
+        customerHidden = true;
+    }
+
+    public void archiveForAdmin() {
+        requireTerminal("订单完成或取消后才能删除");
+        adminHidden = true;
+    }
+
+    public void restoreForAdmin() {
+        if (!adminHidden) {
+            throw new BusinessException("ORDER_NOT_ARCHIVED", "订单不在归档中");
+        }
+        adminHidden = false;
+    }
+
+    private void requireTerminal(String message) {
+        if (status != OrderStatus.COMPLETED && status != OrderStatus.CANCELLED) {
+            throw new BusinessException("ORDER_STATE_CONFLICT", message);
+        }
     }
 
     private void transition(OrderStatus next, long actorId, String remark) {

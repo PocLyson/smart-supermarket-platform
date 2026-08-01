@@ -1,13 +1,26 @@
 import { describe, expect, it } from 'vitest'
 import {
+  buildActiveOrderCounts,
   buildProfileView,
   validateProfile,
 } from '../miniprogram/pages/profile/presentation'
 import { resolveTabNavigation } from '../miniprogram/components/app-tab-bar/navigation'
 import { createProfileService } from '../miniprogram/services/auth'
 import type { CustomerSession } from '../miniprogram/store/session'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 
 describe('profile presentation', () => {
+  it('labels the settings entry as account settings', () => {
+    const markup = readFileSync(
+      resolve(__dirname, '../miniprogram/pages/profile/index.wxml'),
+      'utf8',
+    )
+
+    expect(markup).toContain('<text>账号设置</text>')
+    expect(markup).not.toContain('账号与隐私')
+  })
+
   it('shows an actionable logged-out state when no session exists', () => {
     expect(buildProfileView(false)).toEqual({
       loggedIn: false,
@@ -33,6 +46,23 @@ describe('profile presentation', () => {
     expect(validateProfile('', '13800138000')).toBe('请输入取货人姓名')
     expect(validateProfile('李先生', '123')).toBe('请输入正确的11位手机号')
     expect(validateProfile('李先生', '13800138000')).toBeUndefined()
+  })
+
+  it('counts only unfinished orders for their matching profile shortcuts', () => {
+    expect(
+      buildActiveOrderCounts([
+        'PENDING_CONFIRMATION',
+        'PENDING_CONFIRMATION',
+        'PREPARING',
+        'READY_FOR_PICKUP',
+        'COMPLETED',
+        'CANCELLED',
+      ]),
+    ).toEqual({
+      pendingConfirmation: 2,
+      preparing: 1,
+      readyForPickup: 1,
+    })
   })
 
   it('calls the protected account deletion endpoint with the current token', async () => {

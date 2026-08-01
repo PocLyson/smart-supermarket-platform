@@ -48,7 +48,55 @@ describe('product money and editor behavior', () => {
       coverImageUrl: '',
       description: '',
       onShelf: true,
+      initialStock: 0,
     })
+  })
+
+  it('submits the initial stock when creating a product', async () => {
+    const wrapper = mount(ProductView)
+    await flushPromises()
+
+    await wrapper.get('[data-test="product-create"]').trigger('click')
+    await wrapper.get('[data-test="product-name"]').setValue('新鲜苹果')
+    await wrapper.get('[data-test="product-category"]').setValue('1')
+    await wrapper.get('[data-test="product-price"]').setValue('9.90')
+    await wrapper.get('[data-test="product-unit"]').setValue('斤')
+    await wrapper.get('[data-test="product-initial-stock"]').setValue('25')
+    await wrapper.get('[data-test="product-submit"]').trigger('click')
+    await flushPromises()
+
+    expect(catalogApi.createProduct).toHaveBeenCalledWith(
+      expect.objectContaining({ initialStock: 25 }),
+    )
+  })
+
+  it('does not show initial stock when editing an existing product', async () => {
+    vi.mocked(catalogApi.listProducts).mockResolvedValueOnce({
+      items: [
+        {
+          id: 1,
+          name: '纯牛奶',
+          categoryId: 1,
+          categoryName: '乳品',
+          priceCent: 590,
+          unit: '盒',
+          coverImageUrl: '',
+          description: '',
+          onShelf: true,
+        },
+      ],
+      page: 0,
+      size: 20,
+      total: 1,
+    })
+    const wrapper = mount(ProductView)
+    await flushPromises()
+
+    const editButton = wrapper.findAll('button').find((button) => button.text() === '编辑')
+    expect(editButton).toBeDefined()
+    await editButton!.trigger('click')
+
+    expect(wrapper.find('[data-test="product-initial-stock"]').exists()).toBe(false)
   })
 
   it('includes the uploaded image URL in the product write DTO', async () => {

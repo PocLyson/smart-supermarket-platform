@@ -11,6 +11,7 @@ public record ProductWriteRequest(
     @NotBlank String unit,
     String coverImageUrl,
     String description,
-    boolean onShelf
+    boolean onShelf,
+    @PositiveOrZero Integer initialStock
 ) {
 }

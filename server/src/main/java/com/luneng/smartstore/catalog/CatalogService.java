@@ -2,6 +2,8 @@ package com.luneng.smartstore.catalog;
 
 import com.luneng.smartstore.audit.AuditService;
 import com.luneng.smartstore.auth.CurrentPrincipal;
+import com.luneng.smartstore.inventory.InventoryRepository;
+import com.luneng.smartstore.inventory.InventoryService;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -11,10 +13,19 @@ import org.springframework.transaction.annotation.Transactional;
 public class CatalogService {
     private final CatalogRepository repository;
     private final AuditService auditService;
+    private final InventoryRepository inventoryRepository;
+    private final InventoryService inventoryService;
 
-    public CatalogService(CatalogRepository repository, AuditService auditService) {
+    public CatalogService(
+        CatalogRepository repository,
+        AuditService auditService,
+        InventoryRepository inventoryRepository,
+        InventoryService inventoryService
+    ) {
         this.repository = repository;
         this.auditService = auditService;
+        this.inventoryRepository = inventoryRepository;
+        this.inventoryService = inventoryService;
     }
 
     @Transactional(readOnly = true)
@@ -67,7 +78,12 @@ public class CatalogService {
         CatalogRepository.ProductPage result =
             repository.products(categoryId, keyword, safePage, safeSize, publicOnly);
         return new ProductList(
-            result.items().stream().map(ProductView::from).toList(),
+            result.items().stream()
+                .map(product -> ProductView.from(
+                    product,
+                    inventoryRepository.current(product.getId())
+                ))
+                .toList(),
             result.total(),
             safePage,
             safeSize
@@ -80,7 +96,7 @@ public class CatalogService {
         if (publicOnly && (!product.isOnShelf() || !product.getCategory().isEnabled())) {
             throw new EntityNotFoundException();
         }
-        return ProductView.from(product);
+        return ProductView.from(product, inventoryRepository.current(product.getId()));
     }
 
     @Transactional
@@ -100,11 +116,22 @@ public class CatalogService {
             request.description(),
             request.onShelf()
         ));
+        inventoryRepository.ensure(product.getId());
+        int initialStock = request.initialStock() == null ? 0 : request.initialStock();
+        if (initialStock > 0) {
+            inventoryService.adjust(
+                product.getId(),
+                initialStock,
+                "新品录入初始库存",
+                actor,
+                requestId
+            );
+        }
         auditService.record(
             actor, "PRODUCT_CREATE", "PRODUCT", product.getId().toString(),
             product.getName(), requestId
         );
-        return ProductView.from(product);
+        return ProductView.from(product, initialStock);
     }
 
     @Transactional
@@ -130,7 +157,7 @@ public class CatalogService {
             actor, "PRODUCT_UPDATE", "PRODUCT", Long.toString(id),
             product.getName(), requestId
         );
-        return ProductView.from(product);
+        return ProductView.from(product, inventoryRepository.current(product.getId()));
     }
 
     @Transactional
@@ -146,7 +173,7 @@ public class CatalogService {
             actor, "PRODUCT_SHELF", "PRODUCT", Long.toString(id),
             onShelf ? "上架" : "下架", requestId
         );
-        return ProductView.from(product);
+        return ProductView.from(product, inventoryRepository.current(product.getId()));
     }
 
     public record CategoryWriteRequest(String name, int sortOrder, boolean enabled) {
@@ -172,9 +199,10 @@ public class CatalogService {
         String unit,
         String coverImageUrl,
         String description,
-        boolean onShelf
+        boolean onShelf,
+        int availableStock
     ) {
-        static ProductView from(Product product) {
+        static ProductView from(Product product, int availableStock) {
             return new ProductView(
                 product.getId(),
                 product.getCategory().getId(),
@@ -184,7 +212,8 @@ public class CatalogService {
                 product.getUnit(),
                 product.getCoverImageUrl(),
                 product.getDescription(),
-                product.isOnShelf()
+                product.isOnShelf(),
+                availableStock
             );
         }
     }

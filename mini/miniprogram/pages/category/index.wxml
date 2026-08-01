@@ -1,5 +1,6 @@
 <view class="category-page">
   <view class="category-topbar">
+    <text class="category-nav-title">商品分类</text>
     <view class="category-search" role="button" aria-label="搜索店内商品" hover-class="category-search-hover" bindtap="onOpenSearch">
       <t-icon name="/assets/icons/search.svg" size="36rpx" />
       <text>搜索店内商品</text>
@@ -54,10 +55,13 @@
           <image class="category-product-image" src="{{imageFailed ? '/assets/icons/image-placeholder.svg' : (item.coverImageUrl || '/assets/icons/image-placeholder.svg')}}" mode="aspectFill" lazy-load binderror="onImageError" />
           <view class="category-product-copy">
             <text class="category-product-name">{{item.name}}</text>
-            <text class="stock-copy">库存充足 · 到店自取</text>
+            <text class="stock-copy {{item.outOfStock ? 'is-out-of-stock' : ''}}">{{item.outOfStock ? '暂时缺货 · 暂不可购买' : '库存充足 · 到店自取'}}</text>
             <view class="category-price-line">
               <view><text class="category-price">{{item.displayPrice}}</text><text class="category-unit">/{{item.unit}}</text></view>
-              <view class="quick-add" aria-label="查看并加购"><image class="quick-add-icon" src="/assets/icons/plus.svg" mode="aspectFit" /></view>
+              <view class="quick-add {{item.outOfStock ? 'is-disabled' : ''}}" role="button" aria-label="{{item.outOfStock ? '暂时缺货' : '加入购物车'}}" aria-disabled="{{item.outOfStock}}" data-id="{{item.id}}" catchtap="onQuickAdd">
+                <text wx:if="{{item.outOfStock}}" class="out-of-stock-action">缺货</text>
+                <image wx:else class="quick-add-icon" src="/assets/icons/plus.svg" mode="aspectFit" />
+              </view>
             </view>
           </view>
         </view>

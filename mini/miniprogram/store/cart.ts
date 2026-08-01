@@ -23,6 +23,7 @@ export interface Cart {
   setQuantity(productId: number, quantity: number): void
   setSelected(productId: number, selected: boolean): void
   remove(productIds: number[]): void
+  clear(): void
   selectedItems(): CartItem[]
   selectedTotalCent(): number
 }
@@ -80,6 +81,10 @@ export const createCart = (storage: CartStorage): Cart => {
     remove: (productIds) => {
       const removed = new Set(productIds)
       current = current.filter((item) => !removed.has(item.productId))
+      persist()
+    },
+    clear: () => {
+      current = []
       persist()
     },
     selectedItems: () =>

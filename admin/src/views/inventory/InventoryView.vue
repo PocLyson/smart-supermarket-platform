@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
+import { listCategories, type Category } from '@/api/catalog'
 import {
   adjustInventory,
   listInventory,
   type InventoryItem,
   type InventoryAdjustmentRequest,
+  type InventoryStockStatus,
 } from '@/api/inventory'
 import { reportUnexpectedError } from '@/utils/errors'
 import { formatDateTime } from '@/utils/date'
@@ -21,6 +23,12 @@ const errorMessage = ref('')
 const loading = ref(false)
 const loadError = ref('')
 const keyword = ref('')
+const categories = ref<Category[]>([])
+const categoryId = ref('')
+const stockStatus = ref<InventoryStockStatus | ''>('')
+const hasActiveFilters = computed(
+  () => Boolean(keyword.value.trim()) || Boolean(categoryId.value) || Boolean(stockStatus.value),
+)
 const filteredItems = computed(() => {
   const value = keyword.value.trim().toLowerCase()
   return value
@@ -32,13 +40,44 @@ const load = async (): Promise<void> => {
   loading.value = true
   loadError.value = ''
   try {
-    items.value = (await listInventory()).items
+    items.value = (
+      await listInventory({
+        categoryId: categoryId.value ? Number(categoryId.value) : undefined,
+        stockStatus: stockStatus.value || undefined,
+      })
+    ).items
   } catch (error) {
     loadError.value = error instanceof Error ? error.message : '库存加载失败'
     reportUnexpectedError(error, '库存加载失败')
   } finally {
     loading.value = false
   }
+}
+
+const loadCategories = async (): Promise<void> => {
+  try {
+    categories.value = await listCategories()
+  } catch (error) {
+    reportUnexpectedError(error, '分类加载失败')
+  }
+}
+
+const resetFilters = (): void => {
+  keyword.value = ''
+  categoryId.value = ''
+  stockStatus.value = ''
+}
+
+const stockLabel = (quantity: number): string => {
+  if (quantity === 0) return '无库存'
+  if (quantity <= 5) return '库存较低'
+  return '库存正常'
+}
+
+const stockTagStatus = (quantity: number): string => {
+  if (quantity === 0) return 'CANCELLED'
+  if (quantity <= 5) return 'PREPARING'
+  return 'COMPLETED'
 }
 
 const openAdjustment = (item: InventoryItem): void => {
@@ -74,7 +113,11 @@ const submit = async (): Promise<void> => {
   }
 }
 
-onMounted(load)
+watch([categoryId, stockStatus], load)
+onMounted(() => {
+  void load()
+  void loadCategories()
+})
 </script>
 
 <template>
@@ -101,8 +144,38 @@ onMounted(load)
           placeholder="输入商品名称"
         />
       </div>
+      <div class="filter-field">
+        <label for="inventory-category">商品分类</label>
+        <select
+          id="inventory-category"
+          v-model="categoryId"
+          class="text-control"
+          data-test="inventory-category"
+        >
+          <option value="">全部分类</option>
+          <option v-for="category in categories" :key="category.id" :value="String(category.id)">
+            {{ category.name }}
+          </option>
+        </select>
+      </div>
+      <div class="filter-field">
+        <label for="inventory-stock-status">库存状态</label>
+        <select
+          id="inventory-stock-status"
+          v-model="stockStatus"
+          class="text-control"
+          data-test="inventory-stock-status"
+        >
+          <option value="">全部库存</option>
+          <option value="IN_STOCK">有库存</option>
+          <option value="LOW_STOCK">库存较低（1–5）</option>
+          <option value="OUT_OF_STOCK">无库存</option>
+        </select>
+      </div>
       <div class="filter-actions">
-        <el-button native-type="button" :disabled="!keyword" @click="keyword = ''">清除</el-button>
+        <el-button native-type="button" :disabled="!hasActiveFilters" @click="resetFilters">
+          清除筛选
+        </el-button>
       </div>
     </form>
     <div class="surface-card data-region">
@@ -123,14 +196,15 @@ onMounted(load)
       <UiStatePanel
         v-else-if="!filteredItems.length"
         kind="empty"
-        :title="keyword ? '没有匹配的商品' : '还没有线上库存记录'"
-        :description="keyword ? '请尝试其他商品名称。' : '商品创建后会显示在这里。'"
-        :action-label="keyword ? '清除搜索' : '刷新'"
-        @action="keyword ? (keyword = '') : load()"
+        :title="hasActiveFilters ? '没有符合条件的商品' : '还没有线上库存记录'"
+        :description="hasActiveFilters ? '请调整分类、库存状态或商品名称。' : '商品创建后会显示在这里。'"
+        :action-label="hasActiveFilters ? '清除筛选' : '刷新'"
+        @action="hasActiveFilters ? resetFilters() : load()"
       />
       <div v-else class="responsive-table has-mobile-cards">
         <el-table :data="filteredItems">
           <el-table-column prop="productName" label="商品" min-width="200" />
+          <el-table-column prop="categoryName" label="分类" min-width="140" />
           <el-table-column label="可售库存" width="150" align="right">
             <template #default="{ row }">
               <strong class="stock-number">{{ row.availableQuantity }}</strong>
@@ -162,8 +236,11 @@ onMounted(load)
         <article v-for="item in filteredItems" :key="item.productId" class="mobile-data-card">
           <div class="mobile-data-card__header">
             <strong>{{ item.productName }}</strong>
-            <span class="status-tag" data-status="COMPLETED">库存正常</span>
+            <span class="status-tag" :data-status="stockTagStatus(item.availableQuantity)">
+              {{ stockLabel(item.availableQuantity) }}
+            </span>
           </div>
+          <span class="mobile-data-card__meta">{{ item.categoryName }}</span>
           <div class="mobile-data-card__row">
             <span class="mobile-data-card__meta">线上可售库存</span>
             <strong class="stock-number">{{ item.availableQuantity }} {{ item.unit }}</strong>

@@ -1,17 +1,25 @@
 <view class="page-shell checkout-page">
   <view class="page-intro">
     <text class="page-title">确认订单</text>
-    <text class="page-description">填写取货信息并核对商品</text>
+    <text class="page-description">核对取货信息与商品</text>
   </view>
   <view class="card checkout-section">
-    <view class="section-title">取货信息</view>
-    <label class="field-label">取货人姓名 <text class="required-mark">必填</text></label>
-    <input class="field {{pickupNameError ? 'field-error' : ''}}" placeholder-class="field-placeholder" value="{{pickupName}}" maxlength="40" placeholder="请输入取货人姓名" bindinput="onPickupNameInput" />
-    <text wx:if="{{pickupNameError}}" class="field-error-copy" role="alert">{{pickupNameError}}</text>
-    <label class="field-label phone-label">手机号码 <text class="required-mark">必填</text></label>
-    <input class="field {{phoneError ? 'field-error' : ''}}" placeholder-class="field-placeholder" value="{{phone}}" type="number" maxlength="11" placeholder="请输入11位手机号" bindinput="onPhoneInput" />
-    <text wx:if="{{phoneError}}" class="field-error-copy" role="alert">{{phoneError}}</text>
-    <text class="field-helper">用于门店备货异常时与你联系</text>
+    <view class="row-between pickup-heading">
+      <view class="section-title">取货信息</view>
+      <view wx:if="{{pickupReady}}" class="pickup-edit" role="button" bindtap="onEditPickup">修改</view>
+    </view>
+    <view wx:if="{{profileLoading}}" class="pickup-loading">正在读取默认取货信息...</view>
+    <block wx:elif="{{pickupReady}}">
+      <view class="checkout-info-row pickup-info-row"><text>取货人</text><text class="pickup-value">{{pickupName}}</text></view>
+      <view class="checkout-info-row pickup-info-row"><text>手机号码</text><text class="pickup-value">{{phone}}</text></view>
+      <text class="field-helper">可在设置中修改</text>
+    </block>
+    <view wx:else class="pickup-missing">
+      <text class="pickup-missing-title">{{profileError ? '取货信息暂时无法读取' : '请先完善取货信息'}}</text>
+      <text class="pickup-missing-copy">{{profileError || '保存一次后，后续下单将自动使用'}}</text>
+      <view wx:if="{{profileError}}" class="button-secondary pickup-action" role="button" bindtap="onRetryProfile">重新加载</view>
+      <view wx:else class="button-primary pickup-action" role="button" bindtap="onEditPickup">完善取货信息</view>
+    </view>
   </view>
 
   <view class="card checkout-section">
@@ -47,6 +55,6 @@
       <view><text class="summary-label">应付合计</text><text class="price">{{displayTotal}}</text></view>
       <text class="total-helper">以服务端最终校验为准</text>
     </view>
-    <button class="button-primary checkout-submit {{submitting || !items.length ? 'is-disabled' : ''}}" loading="{{submitting}}" disabled="{{submitting || !items.length}}" bindtap="onSubmit">{{submitting ? '正在提交' : '提交订单'}}</button>
+    <button class="button-primary checkout-submit {{submitting || profileLoading || !pickupReady || !items.length ? 'is-disabled' : ''}}" loading="{{submitting}}" disabled="{{submitting || profileLoading || !pickupReady || !items.length}}" bindtap="onSubmit">{{submitting ? '正在提交' : '提交订单'}}</button>
   </view>
 </view>

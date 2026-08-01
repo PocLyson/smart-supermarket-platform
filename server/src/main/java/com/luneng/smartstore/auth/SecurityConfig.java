@@ -58,7 +58,11 @@ public class SecurityConfig {
                     "/api/admin/security-test/owner-only"
                 ).hasRole("OWNER")
                 .requestMatchers("/api/admin/**").hasAnyRole("OWNER", "CASHIER")
-                .requestMatchers("/api/mini/profile", "/api/mini/orders/**").hasRole("CUSTOMER")
+                .requestMatchers(
+                    "/api/mini/account",
+                    "/api/mini/profile",
+                    "/api/mini/orders/**"
+                ).hasRole("CUSTOMER")
                 .anyRequest().authenticated()
             )
             .exceptionHandling(exceptions -> exceptions

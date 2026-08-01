@@ -64,11 +64,14 @@
           <image class="result-image" src="{{imageFailed ? '/assets/icons/image-placeholder.svg' : (item.coverImageUrl || '/assets/icons/image-placeholder.svg')}}" mode="aspectFill" lazy-load binderror="onImageError" />
           <view class="result-copy">
             <text class="result-name">{{item.name}}</text>
-            <text class="result-service">门店现货 · 到店自取</text>
+            <text class="result-service {{item.outOfStock ? 'is-out-of-stock' : ''}}">{{item.outOfStock ? '暂时缺货 · 暂不可购买' : '门店现货 · 到店自取'}}</text>
             <view class="result-price-line">
               <text class="result-price">{{item.displayPrice}}</text>
               <text class="result-unit">/{{item.unit}}</text>
-              <view class="result-add"><image class="result-add-icon" src="/assets/icons/plus.svg" mode="aspectFit" /></view>
+              <view class="result-add {{item.outOfStock ? 'is-disabled' : ''}}" role="button" aria-label="{{item.outOfStock ? '暂时缺货' : '加入购物车'}}" aria-disabled="{{item.outOfStock}}" data-id="{{item.id}}" catchtap="onQuickAdd">
+                <text wx:if="{{item.outOfStock}}" class="out-of-stock-action">缺货</text>
+                <image wx:else class="result-add-icon" src="/assets/icons/plus.svg" mode="aspectFit" />
+              </view>
             </view>
           </view>
         </view>

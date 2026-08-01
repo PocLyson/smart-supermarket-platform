@@ -44,12 +44,16 @@ const routes: RouteRecordRaw[] = [
         path: 'orders',
         name: 'orders',
         component: () => import('@/views/orders/OrderListView.vue'),
+        props: (route) => ({ initialQuery: route.query }),
         meta: { title: '订单管理' },
       },
       {
         path: 'orders/:orderNo',
         component: () => import('@/views/orders/OrderDetailView.vue'),
-        props: true,
+        props: (route) => ({
+          orderNo: route.params.orderNo,
+          returnQuery: route.query,
+        }),
         meta: { title: '订单详情' },
       },
       {

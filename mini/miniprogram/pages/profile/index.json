@@ -3,7 +3,6 @@
   "navigationBarTitleText": "我的",
   "backgroundColor": "#F7F9FC",
   "usingComponents": {
-    "app-tab-bar": "../../components/app-tab-bar/index",
-    "t-button": "tdesign-miniprogram/button/button"
+    "app-tab-bar": "../../components/app-tab-bar/index"
   }
 }

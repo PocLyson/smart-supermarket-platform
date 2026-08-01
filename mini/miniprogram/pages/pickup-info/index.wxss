@@ -1,0 +1,57 @@
+.pickup-info-page {
+  padding-bottom: calc(var(--space-8) + env(safe-area-inset-bottom));
+}
+
+.pickup-form {
+  padding: var(--space-5);
+}
+
+.field-label {
+  display: block;
+  margin-bottom: var(--space-2);
+  color: var(--color-text-primary);
+  font-size: var(--type-label-size);
+  font-weight: var(--weight-medium);
+}
+
+.phone-label {
+  margin-top: var(--space-5);
+}
+
+.field-error {
+  border-color: var(--color-error);
+  background: var(--color-error-bg);
+}
+
+.field-error-copy,
+.pickup-error {
+  color: var(--color-error-text);
+}
+
+.field-error-copy,
+.field-helper {
+  display: block;
+  margin-top: var(--space-2);
+  font-size: var(--type-helper-size);
+}
+
+.field-helper {
+  color: var(--color-text-tertiary);
+}
+
+.pickup-save {
+  width: 100%;
+  margin: var(--space-6) 0 0;
+}
+
+.pickup-error-title {
+  font-weight: var(--weight-semibold);
+}
+
+.pickup-retry {
+  display: flex;
+  min-height: 72rpx;
+  margin-top: var(--space-4);
+  align-items: center;
+  justify-content: center;
+}

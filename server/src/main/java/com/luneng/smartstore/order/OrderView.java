@@ -5,6 +5,7 @@ import java.util.List;
 
 public record OrderView(
     String orderNo,
+    String pickupCode,
     long totalCent,
     OrderStatus status,
     PaymentStatus paymentStatus,
@@ -20,6 +21,7 @@ public record OrderView(
     static OrderView from(CustomerOrder order) {
         return new OrderView(
             order.getOrderNo(),
+            PickupCode.fromOrderNo(order.getOrderNo()),
             order.getTotalCent(),
             order.getStatus(),
             order.getPaymentStatus(),

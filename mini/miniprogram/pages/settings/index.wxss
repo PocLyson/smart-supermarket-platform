@@ -90,8 +90,9 @@
 
 .delete-account-button {
   display: flex;
-  min-height: 88rpx;
-  margin: var(--space-3) 0 0;
+  width: 100%;
+  min-height: 72rpx;
+  margin: var(--space-2) 0 0;
   padding: 0;
   border: 0;
   background: transparent;
@@ -99,12 +100,19 @@
   font-size: var(--type-label-size);
   font-weight: var(--weight-medium);
   line-height: 1;
+  text-align: left;
   align-items: center;
   justify-content: flex-start;
 }
 
-.delete-account-button::after {
-  border: 0;
+.delete-account-button.is-disabled {
+  opacity: 0.55;
+}
+
+.delete-account-label {
+  display: block;
+  width: 100%;
+  text-align: left;
 }
 
 .danger-description {

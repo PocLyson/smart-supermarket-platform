@@ -33,6 +33,8 @@
 | GET | `/api/mini/products/{id}` | 已上架商品详情 |
 | GET | `/files/{generatedName}` | 商品图片，仅接受服务端生成的 UUID 文件名 |
 
+小程序商品列表和详情响应包含整数 `availableStock`。客户端在该值小于等于 `0` 时必须显示“暂时缺货”，并禁止加入购物车；创建订单时服务端仍会再次校验实时库存。顾客端商品列表全局按有库存商品优先、无库存商品最后排序，同一库存分组内按商品编号倒序；后台商品列表顺序不受影响。
+
 员工登录请求：
 
 ```json
@@ -53,6 +55,9 @@
 | GET | `/api/mini/orders?page=0&size=20` | 本人订单列表 |
 | GET | `/api/mini/orders/{orderNo}` | 本人订单详情 |
 | POST | `/api/mini/orders/{orderNo}/cancel` | 仅待确认状态可取消 |
+| DELETE | `/api/mini/orders/{orderNo}` | 仅已完成或已取消订单；只从该顾客列表隐藏，业务记录保留 |
+
+订单创建、列表和详情响应均包含六位数字 `pickupCode`，仅供顾客在小程序订单详情中出示。后台订单响应不返回完整取货码；员工完成订单时提交顾客出示的取货码，由服务端核验。
 
 创建订单：
 
@@ -81,10 +86,10 @@ Content-Type: application/json
 | POST | `/api/admin/categories` | `name`、`sortOrder`、`enabled` |
 | PUT | `/api/admin/categories/{id}` | 更新分类 |
 | GET | `/api/admin/products?categoryId=&keyword=&page=0&size=20` | 后台商品列表 |
-| POST | `/api/admin/products` | 创建商品 |
+| POST | `/api/admin/products` | 创建商品；可传非负整数 `initialStock` 作为初始可售库存，缺省为0 |
 | PUT | `/api/admin/products/{id}` | 更新商品 |
 | PATCH | `/api/admin/products/{id}/shelf` | `{"onShelf":true}` |
-| GET | `/api/admin/inventory` | 库存入口信息 |
+| GET | `/api/admin/inventory?categoryId=&stockStatus=` | 库存入口信息；`stockStatus` 可传 `IN_STOCK`、`LOW_STOCK`（1–5）或 `OUT_OF_STOCK` |
 | POST | `/api/admin/inventory/{productId}/adjustments` | `{"delta":10,"reason":"首批库存"}` |
 | POST | `/api/admin/files/images` | multipart 字段 `file` |
 
@@ -111,15 +116,16 @@ Content-Type: application/json
 | 方法 | 路径 | 请求/说明 |
 |---|---|---|
 | GET | `/api/admin/orders?status=&paymentStatus=&keyword=&page=0&size=20` | 按状态、付款状态、订单号、取货人或手机号筛选 |
-| GET | `/api/admin/orders/{orderNo}` | 订单快照和状态历史 |
+| GET | `/api/admin/orders/{orderNo}` | 订单快照和状态历史，不返回完整取货码 |
 | POST | `/api/admin/orders/{orderNo}/accept` | 接单 |
 | POST | `/api/admin/orders/{orderNo}/reject` | `{"reason":"拒单原因"}` |
 | POST | `/api/admin/orders/{orderNo}/ready` | 标记备货完成 |
 | POST | `/api/admin/orders/{orderNo}/pay` | `{"method":"CASH"}` 或 `WECHAT_QR` |
-| POST | `/api/admin/orders/{orderNo}/complete` | 已付款且待取货时完成 |
+| POST | `/api/admin/orders/{orderNo}/complete` | 已付款且待取货时提交 `{"pickupCode":"123456"}`；取货码核验通过后完成 |
 | POST | `/api/admin/orders/{orderNo}/cancel` | `{"reason":"取消原因"}` |
+| DELETE | `/api/admin/orders/{orderNo}` | 仅已完成或已取消订单；只从后台列表归档，顾客端不受影响 |
 
-每个成功写操作都会生成状态历史（付款除外）和操作日志。取消与库存返还处于同一数据库事务中。
+每个成功写操作都会生成状态历史（付款除外）和操作日志。取消与库存返还处于同一数据库事务中。订单删除采用双方独立的可见性标记，不物理删除订单、商品快照、库存流水、状态历史或审计日志。
 
 ## 员工与审计接口
 

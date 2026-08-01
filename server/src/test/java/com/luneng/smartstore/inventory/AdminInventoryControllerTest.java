@@ -50,6 +50,9 @@ class AdminInventoryControllerTest extends IntegrationTestBase {
             "insert into category(id, name, sort_order, enabled) values (1, '乳品饮料', 1, true)"
         );
         jdbcTemplate.update(
+            "insert into category(id, name, sort_order, enabled) values (2, '休闲零食', 2, true)"
+        );
+        jdbcTemplate.update(
             """
             insert into product(id, category_id, name, price_cent, unit, on_shelf)
             values (10, 1, '纯牛奶', 590, '盒', true)
@@ -62,7 +65,16 @@ class AdminInventoryControllerTest extends IntegrationTestBase {
             """
         );
         jdbcTemplate.update(
+            """
+            insert into product(id, category_id, name, price_cent, unit, on_shelf)
+            values (12, 2, '薯片', 490, '袋', true)
+            """
+        );
+        jdbcTemplate.update(
             "insert into online_inventory(product_id, available_quantity, version) values (10, 8, 0)"
+        );
+        jdbcTemplate.update(
+            "insert into online_inventory(product_id, available_quantity, version) values (12, 3, 0)"
         );
         ownerToken = login();
     }
@@ -79,7 +91,33 @@ class AdminInventoryControllerTest extends IntegrationTestBase {
             .andExpect(jsonPath("$.data.items[0].updatedAt").isNotEmpty())
             .andExpect(jsonPath("$.data.items[1].productId").value(11))
             .andExpect(jsonPath("$.data.items[1].availableQuantity").value(0))
-            .andExpect(jsonPath("$.data.total").value(2));
+            .andExpect(jsonPath("$.data.total").value(3));
+    }
+
+    @Test
+    void listFiltersByCategoryAndOutOfStockStatus() throws Exception {
+        mockMvc.perform(get("/api/admin/inventory")
+                .param("categoryId", "1")
+                .param("stockStatus", "OUT_OF_STOCK")
+                .header("Authorization", "Bearer " + ownerToken))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.items.length()").value(1))
+            .andExpect(jsonPath("$.data.items[0].productId").value(11))
+            .andExpect(jsonPath("$.data.items[0].categoryId").value(1))
+            .andExpect(jsonPath("$.data.items[0].availableQuantity").value(0))
+            .andExpect(jsonPath("$.data.total").value(1));
+    }
+
+    @Test
+    void listFiltersLowStockProducts() throws Exception {
+        mockMvc.perform(get("/api/admin/inventory")
+                .param("stockStatus", "LOW_STOCK")
+                .header("Authorization", "Bearer " + ownerToken))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.items.length()").value(1))
+            .andExpect(jsonPath("$.data.items[0].productId").value(12))
+            .andExpect(jsonPath("$.data.items[0].availableQuantity").value(3))
+            .andExpect(jsonPath("$.data.total").value(1));
     }
 
     @Test

@@ -1,5 +1,5 @@
 {
-  "appid": "touristappid",
+  "appid": "wx1c7df3ea8adc9644",
   "projectname": "smart-supermarket-mini",
   "miniprogramRoot": "miniprogram/",
   "compileType": "miniprogram",
@@ -39,8 +39,18 @@
   "condition": {},
   "simulatorPluginLibVersion": {},
   "packOptions": {
-    "ignore": [],
+    "ignore": [
+      {
+        "type": "suffix",
+        "value": ".d.ts"
+      },
+      {
+        "type": "suffix",
+        "value": ".wechatide.ib.json"
+      }
+    ],
     "include": []
   },
-  "editorSetting": {}
+  "editorSetting": {},
+  "libVersion": "3.17.0"
 }

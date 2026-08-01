@@ -2,12 +2,16 @@ import { catalogService } from '../../services/catalog'
 import type { Category, ProductSummary } from '../../types/catalog'
 import { buildSearchUrl } from '../search/presentation'
 import { formatMoney } from '../../utils/money'
+import { quickAddProduct } from '../../utils/quick-add'
 import {
   presentCategories,
   type PresentedCategory,
 } from '../../config/category-presentation'
 
-type ProductCard = ProductSummary & { displayPrice: string }
+type ProductCard = ProductSummary & {
+  displayPrice: string
+  outOfStock: boolean
+}
 
 const pageSize = 10
 
@@ -18,7 +22,7 @@ Page({
     products: [] as ProductCard[],
     selectedCategoryId: undefined as number | undefined,
     keyword: '',
-    page: 1,
+    page: 0,
     loading: false,
     error: '',
     empty: false,
@@ -58,7 +62,7 @@ Page({
 
   async loadProducts(reset: boolean) {
     if (this.data.loading && !reset) return
-    const page = reset ? 1 : this.data.page
+    const page = reset ? 0 : this.data.page
     this.setData({ loading: true, error: '' })
     try {
       const result = await catalogService.listProducts({
@@ -70,6 +74,7 @@ Page({
       const incoming = result.items.map((item) => ({
         ...item,
         displayPrice: formatMoney(item.priceCent),
+        outOfStock: item.availableStock <= 0,
       }))
       const products = reset ? incoming : [...this.data.products, ...incoming]
       this.setData({
@@ -116,6 +121,13 @@ Page({
     wx.navigateTo({
       url: `/pages/product/index?id=${Number(event.currentTarget.dataset.id)}`,
     })
+  },
+
+  onQuickAdd(event: WechatMiniprogram.TouchEvent) {
+    const productId = Number(event.currentTarget.dataset.id)
+    const product = this.data.products.find((item) => item.id === productId)
+    if (!product) return
+    quickAddProduct(product)
   },
 
   onImageError() {

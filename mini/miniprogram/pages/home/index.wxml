@@ -100,13 +100,16 @@
           <image class="product-image" src="{{imageFailed ? '/assets/icons/image-placeholder.svg' : (item.coverImageUrl || '/assets/icons/image-placeholder.svg')}}" mode="aspectFill" binderror="onImageError" />
           <view class="product-content">
             <text class="product-name">{{item.name}}</text>
-            <text class="deal-tag">门店精选</text>
+            <text class="deal-tag {{item.outOfStock ? 'is-out-of-stock' : ''}}">{{item.outOfStock ? '暂时缺货' : '门店精选'}}</text>
             <view class="product-meta">
               <view>
                 <text class="product-price">{{item.displayPrice}}</text>
                 <text class="product-unit">/{{item.unit}}</text>
               </view>
-              <view class="product-action" aria-label="查看商品"><image class="product-action-icon" src="/assets/icons/plus.svg" mode="aspectFit" /></view>
+              <view class="product-action {{item.outOfStock ? 'is-disabled' : ''}}" role="button" aria-label="{{item.outOfStock ? '暂时缺货' : '加入购物车'}}" aria-disabled="{{item.outOfStock}}" data-id="{{item.id}}" catchtap="onQuickAdd">
+                <text wx:if="{{item.outOfStock}}" class="out-of-stock-action">缺货</text>
+                <image wx:else class="product-action-icon" src="/assets/icons/plus.svg" mode="aspectFit" />
+              </view>
             </view>
           </view>
         </view>

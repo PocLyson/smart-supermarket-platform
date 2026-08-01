@@ -214,8 +214,8 @@ describe('approved navy fresh UI structure', () => {
     expect(profile).toContain('bindtap="onSettings"')
     expect(profile).not.toContain('bindtap="onDeleteAccount"')
     expect(profile).not.toContain('bindtap="onLogout"')
-    expect(profile).toContain('默认取货信息')
-    expect(settings).not.toContain('默认取货信息')
+    expect(profile).not.toContain('保存取货信息')
+    expect(settings).toContain('取货信息')
   })
 
   it('uses class selectors that the WeChat component compiler accepts', () => {

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -24,10 +25,14 @@ public class AdminInventoryController {
     }
 
     @GetMapping
-    ApiResponse<InventoryService.InventoryList> list(HttpServletRequest request) {
+    ApiResponse<InventoryService.InventoryList> list(
+        @RequestParam(required = false) Long categoryId,
+        @RequestParam(required = false) InventoryService.StockStatus stockStatus,
+        HttpServletRequest request
+    ) {
         return ApiResponse.success(
             RequestIdFilter.requestId(request),
-            service.list()
+            service.list(categoryId, stockStatus)
         );
     }
 

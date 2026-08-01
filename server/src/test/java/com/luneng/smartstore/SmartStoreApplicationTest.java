@@ -9,6 +9,7 @@ import com.luneng.smartstore.inventory.InventoryService;
 import com.luneng.smartstore.inventory.InventoryRepository;
 import com.luneng.smartstore.order.AdminOrderService;
 import com.luneng.smartstore.order.OrderApplicationService;
+import com.luneng.smartstore.order.OrderRepository;
 import com.luneng.smartstore.staff.StaffAccountRepository;
 import com.luneng.smartstore.staff.StaffManagementService;
 import org.junit.jupiter.api.Test;
@@ -56,6 +57,9 @@ class SmartStoreApplicationTest {
 
     @MockitoBean
     private OrderApplicationService orderApplicationService;
+
+    @MockitoBean
+    private OrderRepository orderRepository;
 
     @MockitoBean
     private AdminOrderService adminOrderService;

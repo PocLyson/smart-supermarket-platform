@@ -126,7 +126,8 @@ describe('navy fresh retail visual contract', () => {
     const profile = read('pages/profile/index.wxml')
 
     expect(appConfig.pages).toContain('pages/profile/index')
-    expect(profile).toContain('默认取货信息')
+    expect(appConfig.pages).toContain('pages/pickup-info/index')
+    expect(profile).not.toContain('保存取货信息')
     expect(profile).toContain('我的订单')
     expect(profile).toContain('<app-tab-bar value="profile"')
     expect(read('pages/orders/index.wxml')).not.toContain('<app-tab-bar')

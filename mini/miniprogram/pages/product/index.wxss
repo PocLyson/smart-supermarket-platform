@@ -12,9 +12,11 @@
 
 .product-stock-row {
   display: flex;
-  min-height: 72rpx;
+  box-sizing: border-box;
+  min-height: 96rpx;
   margin-top: var(--space-3);
   border-top: var(--border-width-default) solid var(--color-divider);
+  border-bottom: var(--border-width-default) solid var(--color-divider);
   color: var(--color-text-secondary);
   font-size: 24rpx;
   align-items: center;
@@ -47,8 +49,9 @@
 
 .quantity-row {
   display: flex;
-  min-height: 96rpx;
-  margin-top: var(--space-3);
+  box-sizing: border-box;
+  min-height: 112rpx;
+  margin-top: var(--space-4);
   border-top: var(--border-width-default) solid var(--color-divider);
   align-items: center;
   justify-content: space-between;
@@ -60,9 +63,10 @@
 }
 
 .quantity-stepper {
-  display: grid;
-  grid-template-columns: repeat(3, 88rpx);
-  min-height: 88rpx;
+  display: flex;
+  box-sizing: border-box;
+  width: 240rpx;
+  min-height: 80rpx;
   overflow: hidden;
   border: var(--border-width-default) solid var(--color-divider);
   border-radius: var(--radius-md);
@@ -71,21 +75,50 @@
 }
 
 .quantity-button {
-  min-width: 88rpx;
-  min-height: 88rpx;
+  display: flex;
+  box-sizing: border-box;
+  width: 80rpx;
+  min-width: 80rpx;
+  min-height: 80rpx;
+  flex: 0 0 80rpx;
   margin: 0;
   padding: 0;
   border: 0;
   background: #FFFFFF;
   color: var(--primary-600);
+  font-size: 32rpx;
+  line-height: 1;
+  align-items: center;
+  justify-content: center;
 }
 
 .quantity-button::after {
   border: 0;
 }
 
+.quantity-button.is-disabled {
+  background: var(--color-bg-subtle);
+  color: var(--color-disabled-text);
+  opacity: 1;
+}
+
+.quantity-value {
+  display: flex;
+  box-sizing: border-box;
+  width: 80rpx;
+  min-height: 80rpx;
+  flex: 0 0 80rpx;
+  border-right: var(--border-width-default) solid var(--color-divider);
+  border-left: var(--border-width-default) solid var(--color-divider);
+  color: var(--color-text-primary);
+  font-size: var(--type-body-size);
+  font-weight: var(--weight-semibold);
+  align-items: center;
+  justify-content: center;
+}
+
 .product-info {
-  padding: var(--space-5);
+  padding: var(--space-5) var(--space-5) 0;
 }
 
 .product-badges {
@@ -130,9 +163,7 @@
 
 .product-description {
   display: flex;
-  margin-top: var(--space-5);
-  padding-top: var(--space-4);
-  border-top: var(--border-width-default) solid var(--color-divider);
+  margin-top: var(--space-4);
   flex-direction: column;
   gap: var(--space-2);
 }

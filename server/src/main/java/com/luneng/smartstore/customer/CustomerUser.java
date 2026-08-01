@@ -45,6 +45,15 @@ public class CustomerUser {
         this.phone = phone;
     }
 
+    public void deactivate(String tombstoneOpenid) {
+        this.openid = tombstoneOpenid;
+        this.nickname = null;
+        this.avatarUrl = null;
+        this.pickupName = null;
+        this.phone = null;
+        this.enabled = false;
+    }
+
     public Long getId() {
         return id;
     }

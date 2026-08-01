@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -79,5 +80,16 @@ public class MiniOrderController {
             RequestIdFilter.requestId(request),
             service.cancelByCustomer(principal.id(), orderNo)
         );
+    }
+
+    @DeleteMapping("/{orderNo}")
+    ApiResponse<DeleteOrderResult> delete(
+        @AuthenticationPrincipal CurrentPrincipal principal,
+        @PathVariable String orderNo,
+        HttpServletRequest request
+    ) {
+        String requestId = RequestIdFilter.requestId(request);
+        service.hideForCustomer(principal, orderNo, requestId);
+        return ApiResponse.success(requestId, new DeleteOrderResult(true));
     }
 }

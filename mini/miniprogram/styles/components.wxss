@@ -129,6 +129,16 @@
   color: var(--color-disabled-text);
 }
 
+.is-out-of-stock {
+  color: var(--color-danger);
+}
+
+.out-of-stock-action {
+  font-size: 20rpx;
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}
+
 .state-panel {
   margin-bottom: var(--space-4);
   padding: var(--space-8) var(--space-4);

@@ -2,10 +2,14 @@ import { catalogService } from '../../services/catalog'
 import { RECENT_SEARCHES_STORAGE_KEY } from '../../store/local-usage-data'
 import type { ProductSummary } from '../../types/catalog'
 import { formatMoney } from '../../utils/money'
+import { quickAddProduct } from '../../utils/quick-add'
 
 const pageSize = 10
 
-type SearchProduct = ProductSummary & { displayPrice: string }
+type SearchProduct = ProductSummary & {
+  displayPrice: string
+  outOfStock: boolean
+}
 
 const readRecentSearches = (): string[] => {
   const value = wx.getStorageSync(RECENT_SEARCHES_STORAGE_KEY) as unknown
@@ -20,7 +24,7 @@ Page({
     searchedKeyword: '',
     recentSearches: [] as string[],
     products: [] as SearchProduct[],
-    page: 1,
+    page: 0,
     loading: false,
     error: '',
     hasSearched: false,
@@ -84,7 +88,7 @@ Page({
       return
     }
     if (this.data.loading) return
-    const page = reset ? 1 : this.data.page
+    const page = reset ? 0 : this.data.page
     this.setData({ loading: true, error: '', hasSearched: true })
     try {
       const result = await catalogService.listProducts({
@@ -95,6 +99,7 @@ Page({
       const incoming = result.items.map((item) => ({
         ...item,
         displayPrice: formatMoney(item.priceCent),
+        outOfStock: item.availableStock <= 0,
       }))
       const products = reset ? incoming : [...this.data.products, ...incoming]
       const recentSearches = [
@@ -124,6 +129,13 @@ Page({
     wx.navigateTo({
       url: `/pages/product/index?id=${Number(event.currentTarget.dataset.id)}`,
     })
+  },
+
+  onQuickAdd(event: WechatMiniprogram.TouchEvent) {
+    const productId = Number(event.currentTarget.dataset.id)
+    const product = this.data.products.find((item) => item.id === productId)
+    if (!product) return
+    quickAddProduct(product)
   },
 
   onImageError() {

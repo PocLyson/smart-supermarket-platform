@@ -29,13 +29,17 @@ export interface OrderItemSnapshot {
 }
 
 export interface OrderStatusHistory {
-  status: OrderStatus
+  fromStatus?: OrderStatus | null
+  toStatus: OrderStatus
+  actorType: string
+  actorId: number
+  remark?: string | null
   createdAt: string
-  reason?: string
 }
 
 export interface CustomerOrder {
   orderNo: string
+  pickupCode: string
   status: OrderStatus
   paymentStatus: PaymentStatus
   pickupName: string

@@ -74,7 +74,12 @@ public class InventoryService {
 
     @Transactional(readOnly = true)
     public InventoryList list() {
-        List<InventoryItem> items = repository.list().stream()
+        return list(null, null);
+    }
+
+    @Transactional(readOnly = true)
+    public InventoryList list(Long categoryId, StockStatus stockStatus) {
+        List<InventoryItem> items = repository.list(categoryId, stockStatus).stream()
             .map(InventoryItem::from)
             .toList();
         return new InventoryList(items, items.size(), 0, items.size());
@@ -163,6 +168,8 @@ public class InventoryService {
     public record InventoryItem(
         long productId,
         String productName,
+        long categoryId,
+        String categoryName,
         int availableQuantity,
         String unit,
         LocalDateTime updatedAt
@@ -171,10 +178,18 @@ public class InventoryService {
             return new InventoryItem(
                 row.productId(),
                 row.productName(),
+                row.categoryId(),
+                row.categoryName(),
                 row.availableQuantity(),
                 row.unit(),
                 row.updatedAt()
             );
         }
+    }
+
+    public enum StockStatus {
+        IN_STOCK,
+        LOW_STOCK,
+        OUT_OF_STOCK
     }
 }

@@ -1,0 +1,27 @@
+<view class="page-shell pickup-info-page">
+  <view class="page-intro">
+    <text class="page-title">取货信息</text>
+    <text class="page-description">下单时将自动使用这里保存的信息</text>
+  </view>
+
+  <view wx:if="{{loading}}" class="state-panel">正在加载取货信息...</view>
+
+  <view wx:elif="{{error}}" class="state-panel pickup-error" role="alert">
+    <text class="pickup-error-title">取货信息加载失败</text>
+    <text>{{error}}</text>
+    <view class="button-secondary pickup-retry" role="button" bindtap="onRetry">重新加载</view>
+  </view>
+
+  <view wx:else class="card pickup-form">
+    <label class="field-label">取货人姓名</label>
+    <input class="field {{pickupNameError ? 'field-error' : ''}}" value="{{pickupName}}" maxlength="40" placeholder="请输入取货人姓名" placeholder-class="field-placeholder" bindinput="onPickupNameInput" />
+    <text wx:if="{{pickupNameError}}" class="field-error-copy" role="alert">{{pickupNameError}}</text>
+
+    <label class="field-label phone-label">手机号码</label>
+    <input class="field {{phoneError ? 'field-error' : ''}}" value="{{phone}}" type="number" maxlength="11" placeholder="请输入11位手机号" placeholder-class="field-placeholder" bindinput="onPhoneInput" />
+    <text wx:if="{{phoneError}}" class="field-error-copy" role="alert">{{phoneError}}</text>
+    <text class="field-helper">用于门店备货异常时与你联系</text>
+
+    <button class="button-primary pickup-save" loading="{{saving}}" disabled="{{saving}}" bindtap="onSave">{{saving ? '正在保存' : '保存取货信息'}}</button>
+  </view>
+</view>

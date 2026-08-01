@@ -1,6 +1,7 @@
 package com.luneng.smartstore.order;
 
 import jakarta.persistence.LockModeType;
+import java.util.Collection;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,19 +19,39 @@ public interface OrderRepository extends JpaRepository<CustomerOrder, Long> {
         String idempotencyKey
     );
 
-    Page<CustomerOrder> findAllByCustomerId(long customerId, Pageable pageable);
+    Page<CustomerOrder> findAllByCustomerIdAndCustomerHiddenFalse(
+        long customerId,
+        Pageable pageable
+    );
+
+    boolean existsByCustomerIdAndStatusIn(
+        long customerId,
+        Collection<OrderStatus> statuses
+    );
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select o from CustomerOrder o where o.orderNo = :orderNo")
     Optional<CustomerOrder> findLockedByOrderNo(@Param("orderNo") String orderNo);
 
     @EntityGraph(attributePaths = "items")
-    @Query("select o from CustomerOrder o where o.orderNo = :orderNo")
-    Optional<CustomerOrder> findDetailedByOrderNo(@Param("orderNo") String orderNo);
+    @Query("""
+        select o from CustomerOrder o
+        where o.orderNo = :orderNo
+          and o.customerHidden = false
+        """)
+    Optional<CustomerOrder> findCustomerDetailedByOrderNo(@Param("orderNo") String orderNo);
+
+    @EntityGraph(attributePaths = "items")
+    @Query("""
+        select o from CustomerOrder o
+        where o.orderNo = :orderNo
+        """)
+    Optional<CustomerOrder> findAdminDetailedByOrderNo(@Param("orderNo") String orderNo);
 
     @Query("""
         select o from CustomerOrder o
-        where (:status is null or o.status = :status)
+        where o.adminHidden = :archived
+          and (:status is null or o.status = :status)
           and (:paymentStatus is null or o.paymentStatus = :paymentStatus)
           and (
             :keyword = ''
@@ -43,6 +64,7 @@ public interface OrderRepository extends JpaRepository<CustomerOrder, Long> {
         @Param("status") OrderStatus status,
         @Param("paymentStatus") PaymentStatus paymentStatus,
         @Param("keyword") String keyword,
+        @Param("archived") boolean archived,
         Pageable pageable
     );
 }

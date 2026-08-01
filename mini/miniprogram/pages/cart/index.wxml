@@ -1,6 +1,8 @@
 <view class="page-shell cart-page">
+  <view class="cart-topbar">
+    <text class="cart-topbar-title">购物车</text>
+  </view>
   <view class="page-intro">
-    <text class="page-title">购物车</text>
     <text class="page-description">选好商品后，到店快速取货</text>
   </view>
   <checkbox-group bindchange="onToggle">

@@ -28,3 +28,12 @@ export const getApiBaseUrl = (): string => {
   const environment = currentEnvironment()
   return resolveApiBaseUrl(environment, environment !== 'develop')
 }
+
+export const resolveApiAssetUrl = (
+  value: string | null | undefined,
+): string => {
+  if (!value) return ''
+  if (/^https?:\/\//i.test(value)) return value
+  const baseUrl = getApiBaseUrl().replace(/\/$/, '')
+  return `${baseUrl}${value.startsWith('/') ? value : `/${value}`}`
+}

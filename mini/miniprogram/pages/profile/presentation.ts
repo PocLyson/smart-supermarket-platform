@@ -1,10 +1,34 @@
 import type { CustomerProfile } from '../../services/auth'
+import type { OrderStatus } from '../../types/order'
 
 export interface ProfileView {
   loggedIn: boolean
   displayName: string
   pickupSummary: string
 }
+
+export interface ActiveOrderCounts {
+  pendingConfirmation: number
+  preparing: number
+  readyForPickup: number
+}
+
+export const buildActiveOrderCounts = (
+  statuses: OrderStatus[],
+): ActiveOrderCounts =>
+  statuses.reduce<ActiveOrderCounts>(
+    (counts, status) => {
+      if (status === 'PENDING_CONFIRMATION') counts.pendingConfirmation += 1
+      if (status === 'PREPARING') counts.preparing += 1
+      if (status === 'READY_FOR_PICKUP') counts.readyForPickup += 1
+      return counts
+    },
+    {
+      pendingConfirmation: 0,
+      preparing: 0,
+      readyForPickup: 0,
+    },
+  )
 
 const maskPhone = (phone: string): string =>
   /^1\d{10}$/.test(phone)

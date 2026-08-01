@@ -90,7 +90,12 @@ class OrderLifecycleE2ETest extends IntegrationTestBase {
             cashier,
             "e2e-pay"
         );
-        adminOrders.complete(order.orderNo(), cashier, "e2e-complete");
+        adminOrders.complete(
+            order.orderNo(),
+            order.pickupCode(),
+            cashier,
+            "e2e-complete"
+        );
 
         CustomerOrder stored = orderRepository.findByOrderNo(order.orderNo()).orElseThrow();
         assertThat(stored.getStatus()).isEqualTo(OrderStatus.COMPLETED);

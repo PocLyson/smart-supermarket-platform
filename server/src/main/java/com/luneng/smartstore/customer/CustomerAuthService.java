@@ -48,6 +48,9 @@ public class CustomerAuthService {
             Long.toString(customer.getId()),
             JwtService.TOKEN_TTL
         );
+        String customerSessionsKey = "auth:customer-sessions:" + customer.getId();
+        redisTemplate.opsForSet().add(customerSessionsKey, sessionId);
+        redisTemplate.expire(customerSessionsKey, JwtService.TOKEN_TTL);
         String accessToken = jwtService.issue(new CurrentPrincipal(
             customer.getId(),
             ActorType.CUSTOMER,

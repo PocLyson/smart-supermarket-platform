@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { inject, onMounted, reactive, ref } from 'vue'
+import { routerKey } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import {
+  archiveOrder,
   listOrders,
+  restoreOrder,
   type AdminOrderQuery,
   type AdminOrderSummary,
   type OrderStatus,
@@ -13,25 +17,65 @@ import { orderStatusLabel, paymentStatusLabel } from './orderPresentation'
 import { formatDateTime } from '@/utils/date'
 import UiStatePanel from '@/components/UiStatePanel.vue'
 import AppIcon from '@/components/AppIcon.vue'
+import {
+  parseOrderListContext,
+  serializeOrderListContext,
+} from './orderListContext'
 
+const props = withDefaults(
+  defineProps<{ initialQuery?: Record<string, unknown> }>(),
+  {
+    initialQuery: () => ({}),
+  },
+)
+const initialContext = parseOrderListContext(props.initialQuery)
+const router = inject(routerKey, null)
 const items = ref<AdminOrderSummary[]>([])
 const loading = ref(false)
 const loadError = ref('')
 const total = ref(0)
-const page = ref(1)
+const page = ref(initialContext.page)
+const restoringOrderNo = ref('')
 const pageSize = 20
 const filters = reactive<{
   status: '' | OrderStatus
   paymentStatus: '' | PaymentStatus
   keyword: string
+  archived: boolean
 }>({
-  status: '',
-  paymentStatus: '',
-  keyword: '',
+  status: initialContext.status,
+  paymentStatus: initialContext.paymentStatus,
+  keyword: initialContext.keyword,
+  archived: initialContext.archived,
 })
 
 const statusText = (status: OrderStatus): string => orderStatusLabel[status]
 const paymentText = (status: PaymentStatus): string => paymentStatusLabel[status]
+const canArchive = (status: OrderStatus): boolean =>
+  status === 'COMPLETED' || status === 'CANCELLED'
+const detailTarget = (orderNo: string) => ({
+  path: `/orders/${orderNo}`,
+  query: serializeOrderListContext({
+    status: filters.status,
+    paymentStatus: filters.paymentStatus,
+    keyword: filters.keyword,
+    archived: filters.archived,
+    page: page.value,
+  }),
+})
+const syncRouteContext = async (): Promise<void> => {
+  if (!router) return
+  await router.replace({
+    name: 'orders',
+    query: serializeOrderListContext({
+      status: filters.status,
+      paymentStatus: filters.paymentStatus,
+      keyword: filters.keyword,
+      archived: filters.archived,
+      page: page.value,
+    }),
+  })
+}
 
 const load = async (): Promise<void> => {
   loading.value = true
@@ -41,6 +85,7 @@ const load = async (): Promise<void> => {
       status: filters.status || undefined,
       paymentStatus: filters.paymentStatus || undefined,
       keyword: filters.keyword.trim() || undefined,
+      archived: filters.archived,
       page: page.value - 1,
       size: pageSize,
     }
@@ -57,23 +102,68 @@ const load = async (): Promise<void> => {
 
 const search = async (): Promise<void> => {
   page.value = 1
+  await syncRouteContext()
   await load()
 }
 
 const reset = async (): Promise<void> => {
-  Object.assign(filters, { status: '', paymentStatus: '', keyword: '' })
+  Object.assign(filters, {
+    status: '',
+    paymentStatus: '',
+    keyword: '',
+    archived: false,
+  })
   page.value = 1
+  await syncRouteContext()
   await load()
 }
 
 const selectStatus = async (status: '' | OrderStatus): Promise<void> => {
   filters.status = status
+  filters.archived = false
+  await search()
+}
+
+const selectArchived = async (): Promise<void> => {
+  filters.status = ''
+  filters.archived = true
   await search()
 }
 
 const changePage = async (value: number): Promise<void> => {
   page.value = value
+  await syncRouteContext()
   await load()
+}
+
+const confirmArchive = async (order: AdminOrderSummary): Promise<void> => {
+  try {
+    await ElMessageBox.confirm(
+      `删除后该订单将从后台列表隐藏，但交易与审计记录仍会保留。确定删除订单 ${order.orderNo}？`,
+      '删除订单',
+      {
+        confirmButtonText: '确认删除',
+        cancelButtonText: '取消',
+        type: 'warning',
+      },
+    )
+  } catch {
+    return
+  }
+  await archiveOrder(order.orderNo)
+  ElMessage.success('订单已从后台列表删除')
+  await load()
+}
+
+const restoreArchivedOrder = async (order: AdminOrderSummary): Promise<void> => {
+  restoringOrderNo.value = order.orderNo
+  try {
+    await restoreOrder(order.orderNo)
+    ElMessage.success('订单已恢复到正常订单列表')
+    await load()
+  } finally {
+    restoringOrderNo.value = ''
+  }
 }
 
 onMounted(load)
@@ -102,11 +192,21 @@ onMounted(load)
         :key="option[0]"
         type="button"
         role="tab"
-        :aria-selected="filters.status === option[0]"
-        :class="{ active: filters.status === option[0] }"
+        :aria-selected="!filters.archived && filters.status === option[0]"
+        :class="{ active: !filters.archived && filters.status === option[0] }"
         @click="selectStatus(option[0] as '' | OrderStatus)"
       >
         {{ option[1] }}
+      </button>
+      <button
+        data-test="archived-orders-tab"
+        type="button"
+        role="tab"
+        :aria-selected="filters.archived"
+        :class="{ active: filters.archived }"
+        @click="selectArchived"
+      >
+        已归档
       </button>
     </div>
     <form class="surface-card filter-panel" @submit.prevent="search">
@@ -158,7 +258,8 @@ onMounted(load)
     </form>
     <div class="surface-card data-region">
       <div class="data-region__summary">
-        <span>共 {{ total }} 笔订单</span><span>按下单时间由新到旧</span>
+        <span>共 {{ total }} 笔{{ filters.archived ? '归档' : '' }}订单</span>
+        <span>按下单时间由新到旧</span>
       </div>
       <div v-if="loading" class="skeleton-stack" aria-label="订单加载中">
         <div v-for="index in 8" :key="index" class="skeleton-row" />
@@ -175,19 +276,25 @@ onMounted(load)
         v-else-if="!items.length"
         kind="empty"
         :title="
-          filters.status || filters.paymentStatus || filters.keyword
+          filters.archived || filters.status || filters.paymentStatus || filters.keyword
             ? '当前筛选没有结果'
             : '还没有订单'
         "
         :description="
-          filters.status || filters.paymentStatus || filters.keyword
+          filters.archived || filters.status || filters.paymentStatus || filters.keyword
             ? '请调整筛选条件后重试。'
             : '顾客提交订单后会显示在这里。'
         "
         :action-label="
-          filters.status || filters.paymentStatus || filters.keyword ? '清除筛选' : '刷新'
+          filters.archived || filters.status || filters.paymentStatus || filters.keyword
+            ? '清除筛选'
+            : '刷新'
         "
-        @action="filters.status || filters.paymentStatus || filters.keyword ? reset() : load()"
+        @action="
+          filters.archived || filters.status || filters.paymentStatus || filters.keyword
+            ? reset()
+            : load()
+        "
       />
       <div v-else class="responsive-table has-mobile-cards">
         <el-table :data="items">
@@ -216,9 +323,30 @@ onMounted(load)
               </span>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="80">
+          <el-table-column label="操作" width="150">
             <template #default="{ row }">
-              <RouterLink :to="`/orders/${row.orderNo}`">查看详情</RouterLink>
+              <div class="order-actions">
+                <RouterLink :to="detailTarget(row.orderNo)">查看详情</RouterLink>
+                <el-button
+                  v-if="filters.archived"
+                  :data-test="`restore-${row.orderNo}`"
+                  link
+                  type="primary"
+                  :loading="restoringOrderNo === row.orderNo"
+                  @click="restoreArchivedOrder(row)"
+                >
+                  恢复
+                </el-button>
+                <el-button
+                  v-else-if="canArchive(row.status)"
+                  :data-test="`archive-${row.orderNo}`"
+                  link
+                  type="danger"
+                  @click="confirmArchive(row)"
+                >
+                  删除
+                </el-button>
+              </div>
             </template>
           </el-table-column>
         </el-table>
@@ -242,7 +370,26 @@ onMounted(load)
           <span class="mobile-data-card__meta"> {{ order.phone }} · 鲁能超市李老家分店 </span>
           <div class="mobile-data-card__footer">
             <span class="mobile-data-card__meta">{{ formatDateTime(order.createdAt) }}</span>
-            <RouterLink :to="`/orders/${order.orderNo}`">查看详情</RouterLink>
+            <div class="order-actions">
+              <RouterLink :to="detailTarget(order.orderNo)">查看详情</RouterLink>
+              <el-button
+                v-if="filters.archived"
+                link
+                type="primary"
+                :loading="restoringOrderNo === order.orderNo"
+                @click="restoreArchivedOrder(order)"
+              >
+                恢复
+              </el-button>
+              <el-button
+                v-else-if="canArchive(order.status)"
+                link
+                type="danger"
+                @click="confirmArchive(order)"
+              >
+                删除
+              </el-button>
+            </div>
           </div>
         </article>
       </div>
@@ -263,6 +410,12 @@ onMounted(load)
 <style scoped>
 small {
   color: var(--color-text-secondary);
+}
+
+.order-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .status-tabs {

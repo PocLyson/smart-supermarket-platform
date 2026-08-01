@@ -94,6 +94,46 @@
   margin: 0 0 var(--space-3);
 }
 
+.consent-row {
+  display: flex;
+  margin: 0 0 var(--space-5);
+  color: var(--color-text-secondary);
+  font-size: 24rpx;
+  line-height: 36rpx;
+  text-align: left;
+  align-items: flex-start;
+}
+
+.consent-checkbox {
+  display: flex;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  width: 32rpx;
+  height: 32rpx;
+  margin: 2rpx var(--space-2) 0 0;
+  border: 2rpx solid var(--color-border-control);
+  border-radius: 8rpx;
+  color: #FFFFFF;
+  font-size: 22rpx;
+  line-height: 1;
+  align-items: center;
+  justify-content: center;
+}
+
+.consent-checkbox.is-checked {
+  border-color: var(--primary-600);
+  background: var(--primary-600);
+}
+
+.consent-copy {
+  flex: 1;
+}
+
+.legal-link {
+  color: var(--primary-600);
+  font-weight: var(--weight-medium);
+}
+
 .auth-error {
   display: block;
   margin: var(--space-2) 0;

@@ -3,6 +3,8 @@ import { resolveTabNavigation } from '../miniprogram/components/app-tab-bar/navi
 import { validateCheckoutFields } from '../miniprogram/pages/checkout/presentation'
 import {
   buildOrderStatusPresentation,
+  formatPickupCode,
+  presentOrderHistory,
   resolveOrderProductImage,
 } from '../miniprogram/pages/order-detail/presentation'
 import { formatMoney } from '../miniprogram/utils/money'
@@ -33,9 +35,46 @@ describe('mini-program UI presentation', () => {
     })
   })
 
+  it('turns backend status history into a customer-readable timeline', () => {
+    expect(
+      presentOrderHistory([
+        {
+          fromStatus: null,
+          toStatus: 'PENDING_CONFIRMATION',
+          actorType: 'CUSTOMER',
+          actorId: 1,
+          remark: null,
+          createdAt: '2026-07-29T09:26:39.803957Z',
+        },
+        {
+          fromStatus: 'PENDING_CONFIRMATION',
+          toStatus: 'PREPARING',
+          actorType: 'STAFF',
+          actorId: 2,
+          remark: '接单',
+          createdAt: '2026-07-29T09:30:00Z',
+        },
+      ]),
+    ).toEqual([
+      {
+        title: '订单已提交',
+        description: '订单已成功提交，等待门店确认',
+        displayTime: '2026-07-29 17:26',
+      },
+      {
+        title: '门店已接单',
+        description: '门店正在准备商品',
+        displayTime: '2026-07-29 17:30',
+      },
+    ])
+  })
+
   it('formats every customer-facing amount with two decimals', () => {
     expect(formatMoney(590)).toBe('¥5.90')
     expect(formatMoney(128000)).toBe('¥1,280.00')
+  })
+  it('formats the backend pickup code for in-store verification', () => {
+    expect(formatPickupCode('280001')).toBe('280 001')
   })
   it('uses product-appropriate photography in order snapshots', () => {
     expect(resolveOrderProductImage(101)).toBe('/assets/categories/dairy.jpg')

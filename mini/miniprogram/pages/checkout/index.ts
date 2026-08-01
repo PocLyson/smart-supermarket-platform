@@ -1,3 +1,4 @@
+import { profileService } from '../../services/auth'
 import { checkout } from '../../store/checkout'
 import { cart } from '../../store/cart'
 import { validateCheckoutFields } from './presentation'
@@ -16,10 +17,11 @@ Page({
     items: presentItems(),
     totalCent: cart.selectedTotalCent(),
     displayTotal: formatMoney(cart.selectedTotalCent()),
+    profileLoading: true,
+    pickupReady: false,
+    profileError: '',
     submitting: false,
     error: '',
-    pickupNameError: '',
-    phoneError: '',
     imageFailed: false,
     fallbackImage: '/assets/icons/image-placeholder.svg',
   },
@@ -30,24 +32,48 @@ Page({
       totalCent: cart.selectedTotalCent(),
       displayTotal: formatMoney(cart.selectedTotalCent()),
     })
+    void this.loadProfile()
   },
 
-  onPickupNameInput(event: WechatMiniprogram.Input) {
-    this.setData({ pickupName: event.detail.value, pickupNameError: '' })
-  },
-
-  onPhoneInput(event: WechatMiniprogram.Input) {
-    this.setData({ phone: event.detail.value, phoneError: '' })
+  async loadProfile() {
+    this.setData({ profileLoading: true, profileError: '' })
+    try {
+      const profile = await profileService.get()
+      const fieldErrors = validateCheckoutFields(
+        profile.pickupName,
+        profile.phone,
+      )
+      this.setData({
+        pickupName: profile.pickupName,
+        phone: profile.phone,
+        pickupReady:
+          !fieldErrors.pickupNameError && !fieldErrors.phoneError,
+      })
+    } catch (error) {
+      this.setData({
+        pickupName: '',
+        phone: '',
+        pickupReady: false,
+        profileError:
+          error instanceof Error ? error.message : '取货信息加载失败',
+      })
+    } finally {
+      this.setData({ profileLoading: false })
+    }
   },
 
   async onSubmit() {
     if (this.data.submitting) return
+    if (!this.data.pickupReady) {
+      this.onEditPickup()
+      return
+    }
     const fieldErrors = validateCheckoutFields(
       this.data.pickupName,
       this.data.phone,
     )
     if (fieldErrors.pickupNameError || fieldErrors.phoneError) {
-      this.setData(fieldErrors)
+      this.setData({ pickupReady: false })
       return
     }
     checkout.updateContact({
@@ -75,5 +101,13 @@ Page({
 
   onImageError() {
     this.setData({ imageFailed: true })
+  },
+
+  onEditPickup() {
+    wx.navigateTo({ url: '/pages/pickup-info/index' })
+  },
+
+  onRetryProfile() {
+    void this.loadProfile()
   },
 })
