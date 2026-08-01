@@ -2,9 +2,11 @@
 import { nextTick, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import {
+  archiveProduct,
   createProduct,
   listCategories,
   listProducts,
+  restoreProduct,
   setProductShelf,
   updateProduct,
   type Category,
@@ -33,6 +35,7 @@ const products = ref<Product[]>([])
 const categories = ref<Category[]>([])
 const dialogVisible = ref(false)
 const pending = ref(false)
+const actionPendingIds = ref<Set<number>>(new Set())
 const imageUploading = ref(false)
 const editingId = ref<number>()
 const errorMessage = ref('')
@@ -41,7 +44,12 @@ const loadError = ref('')
 const total = ref(0)
 const page = ref(1)
 const pageSize = 20
-const filters = reactive({ keyword: '', categoryId: '', shelf: '' })
+const filters = reactive({
+  keyword: '',
+  categoryId: '',
+  shelf: '',
+  archiveStatus: 'ACTIVE' as 'ACTIVE' | 'ARCHIVED' | 'ALL',
+})
 const productFormRef = ref<FormInstance>()
 const brokenImageIds = ref<Set<number>>(new Set())
 const form = reactive<ProductForm>({
@@ -95,6 +103,7 @@ const load = async (): Promise<void> => {
       listProducts({
         keyword: filters.keyword.trim() || undefined,
         categoryId: filters.categoryId ? Number(filters.categoryId) : undefined,
+        archiveStatus: filters.archiveStatus,
         page: page.value - 1,
         size: pageSize,
       }),
@@ -118,7 +127,7 @@ const search = async (): Promise<void> => {
   await load()
 }
 const reset = async (): Promise<void> => {
-  Object.assign(filters, { keyword: '', categoryId: '', shelf: '' })
+  Object.assign(filters, { keyword: '', categoryId: '', shelf: '', archiveStatus: 'ACTIVE' })
   page.value = 1
   await load()
 }
@@ -129,6 +138,15 @@ const changePage = async (value: number): Promise<void> => {
 
 const markImageBroken = (productId: number): void => {
   brokenImageIds.value = new Set(brokenImageIds.value).add(productId)
+}
+
+const isActionPending = (productId: number): boolean => actionPendingIds.value.has(productId)
+
+const setActionPending = (productId: number, value: boolean): void => {
+  const next = new Set(actionPendingIds.value)
+  if (value) next.add(productId)
+  else next.delete(productId)
+  actionPendingIds.value = next
 }
 
 const openEditor = (product?: Product): void => {
@@ -213,6 +231,8 @@ const submit = async (): Promise<void> => {
 }
 
 const toggleShelf = async (product: Product): Promise<void> => {
+  if (isActionPending(product.id)) return
+  setActionPending(product.id, true)
   try {
     await ElMessageBox.confirm(
       `确认${product.onShelf ? '下架' : '上架'}“${product.name}”？${product.onShelf ? '下架后顾客将无法购买。' : '上架后顾客可在小程序中购买。'}`,
@@ -228,6 +248,45 @@ const toggleShelf = async (product: Product): Promise<void> => {
     ElMessage.success(product.onShelf ? '商品已下架' : '商品已上架')
   } catch (error) {
     if (error !== 'cancel' && error !== 'close') reportUnexpectedError(error, '商品状态更新失败')
+  } finally {
+    setActionPending(product.id, false)
+  }
+}
+
+const archive = async (product: Product): Promise<void> => {
+  if (isActionPending(product.id)) return
+  setActionPending(product.id, true)
+  try {
+    await ElMessageBox.confirm(
+      '删除后商品将立即下架，顾客无法继续购买；历史订单不会受影响。',
+      '确认删除商品',
+      {
+        confirmButtonText: '确认删除',
+        cancelButtonText: '取消',
+        type: 'warning',
+      },
+    )
+    await archiveProduct(product.id)
+    await load()
+    ElMessage.success('商品已删除')
+  } catch (error) {
+    if (error !== 'cancel' && error !== 'close') reportUnexpectedError(error, '商品删除失败')
+  } finally {
+    setActionPending(product.id, false)
+  }
+}
+
+const restore = async (product: Product): Promise<void> => {
+  if (isActionPending(product.id)) return
+  setActionPending(product.id, true)
+  try {
+    await restoreProduct(product.id)
+    await load()
+    ElMessage.success('商品已恢复，请检查库存、价格和图片后手动上架')
+  } catch (error) {
+    reportUnexpectedError(error, '商品恢复失败')
+  } finally {
+    setActionPending(product.id, false)
   }
 }
 
@@ -278,9 +337,28 @@ onMounted(load)
           <option value="off">已下架</option>
         </select>
       </div>
+      <div class="filter-field">
+        <label for="product-archive-filter">归档状态</label>
+        <select
+          id="product-archive-filter"
+          v-model="filters.archiveStatus"
+          data-test="product-archive-filter"
+          class="text-control"
+        >
+          <option value="ACTIVE">正常商品</option>
+          <option value="ARCHIVED">已删除商品</option>
+          <option value="ALL">全部商品</option>
+        </select>
+      </div>
       <div class="filter-actions">
         <el-button native-type="button" @click="reset">重置</el-button>
-        <el-button native-type="submit" type="primary" :loading="loading">
+        <el-button
+          data-test="product-search"
+          native-type="button"
+          type="primary"
+          :loading="loading"
+          @click="search"
+        >
           <AppIcon name="search" />查询
         </el-button>
       </div>
@@ -304,13 +382,21 @@ onMounted(load)
         v-else-if="!products.length"
         kind="empty"
         :title="
-          filters.keyword || filters.categoryId || filters.shelf ? '当前筛选没有商品' : '还没有商品'
+          filters.keyword || filters.categoryId || filters.shelf || filters.archiveStatus !== 'ACTIVE'
+            ? '当前筛选没有商品'
+            : '还没有商品'
         "
         description="新增商品后可设置图片、分类、售价和上下架状态。"
         :action-label="
-          filters.keyword || filters.categoryId || filters.shelf ? '清除筛选' : '新增商品'
+          filters.keyword || filters.categoryId || filters.shelf || filters.archiveStatus !== 'ACTIVE'
+            ? '清除筛选'
+            : '新增商品'
         "
-        @action="filters.keyword || filters.categoryId || filters.shelf ? reset() : openEditor()"
+        @action="
+          filters.keyword || filters.categoryId || filters.shelf || filters.archiveStatus !== 'ACTIVE'
+            ? reset()
+            : openEditor()
+        "
       />
       <div v-else class="responsive-table has-mobile-cards">
         <el-table :data="products">
@@ -352,12 +438,37 @@ onMounted(load)
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="180">
+          <el-table-column label="操作" width="240">
             <template #default="{ row }">
-              <el-button link type="primary" @click="openEditor(row)">编辑</el-button>
-              <el-button link :type="row.onShelf ? 'danger' : 'success'" @click="toggleShelf(row)">
-                {{ row.onShelf ? '下架' : '上架' }}
-              </el-button>
+              <template v-if="row.archived">
+                <el-button
+                  :data-test="`restore-${row.id}`"
+                  link
+                  type="primary"
+                  :loading="isActionPending(row.id)"
+                  :disabled="isActionPending(row.id)"
+                  @click="restore(row)"
+                >恢复</el-button>
+              </template>
+              <template v-else>
+                <el-button :data-test="`edit-${row.id}`" link type="primary" @click="openEditor(row)">编辑</el-button>
+                <el-button
+                  :data-test="`shelf-${row.id}`"
+                  link
+                  :type="row.onShelf ? 'danger' : 'success'"
+                  :loading="isActionPending(row.id)"
+                  :disabled="isActionPending(row.id)"
+                  @click="toggleShelf(row)"
+                >{{ row.onShelf ? '下架' : '上架' }}</el-button>
+                <el-button
+                  :data-test="`archive-${row.id}`"
+                  link
+                  type="danger"
+                  :loading="isActionPending(row.id)"
+                  :disabled="isActionPending(row.id)"
+                  @click="archive(row)"
+                >删除</el-button>
+              </template>
             </template>
           </el-table-column>
         </el-table>
@@ -392,7 +503,34 @@ onMounted(load)
               </span>
               <div class="product-mobile-card__price">
                 <span class="price-text">¥{{ centToYuan(product.priceCent) }}</span>
-                <el-button link type="primary" @click="openEditor(product)">编辑</el-button>
+                <template v-if="product.archived">
+                  <el-button
+                    :data-test="`restore-mobile-${product.id}`"
+                    link
+                    type="primary"
+                    :loading="isActionPending(product.id)"
+                    :disabled="isActionPending(product.id)"
+                    @click="restore(product)"
+                  >恢复</el-button>
+                </template>
+                <template v-else>
+                  <el-button link type="primary" @click="openEditor(product)">编辑</el-button>
+                  <el-button
+                    link
+                    :type="product.onShelf ? 'danger' : 'success'"
+                    :loading="isActionPending(product.id)"
+                    :disabled="isActionPending(product.id)"
+                    @click="toggleShelf(product)"
+                  >{{ product.onShelf ? '下架' : '上架' }}</el-button>
+                  <el-button
+                    :data-test="`archive-mobile-${product.id}`"
+                    link
+                    type="danger"
+                    :loading="isActionPending(product.id)"
+                    :disabled="isActionPending(product.id)"
+                    @click="archive(product)"
+                  >删除</el-button>
+                </template>
               </div>
             </div>
           </div>

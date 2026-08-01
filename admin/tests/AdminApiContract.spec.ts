@@ -3,6 +3,7 @@ import { acceptOrder, markOrderPaid, rejectOrder } from '@/api/orders'
 import { createCashier, resetStaffPassword, setStaffEnabled } from '@/api/staff'
 import { listAuditLogs } from '@/api/audit'
 import { uploadProductImage } from '@/api/images'
+import { archiveProduct, listProducts, restoreProduct } from '@/api/catalog'
 
 const ok = (data: unknown) =>
   Promise.resolve(
@@ -106,5 +107,27 @@ describe('frozen admin API contract', () => {
     const headers = options?.headers as Headers
     expect(headers.get('Authorization')).toBe('Bearer owner-token')
     expect(headers.has('Content-Type')).toBe(false)
+  })
+
+  it('uses the product archive paths and archive-status query parameter', async () => {
+    await listProducts({ archiveStatus: 'ARCHIVED', page: 0, size: 20 })
+    await archiveProduct(10)
+    await restoreProduct(10)
+
+    expect(fetch).toHaveBeenNthCalledWith(
+      1,
+      '/api/admin/products?archiveStatus=ARCHIVED&page=0&size=20',
+      expect.objectContaining({ headers: expect.any(Headers) }),
+    )
+    expect(fetch).toHaveBeenNthCalledWith(
+      2,
+      '/api/admin/products/10',
+      expect.objectContaining({ method: 'DELETE' }),
+    )
+    expect(fetch).toHaveBeenNthCalledWith(
+      3,
+      '/api/admin/products/10/restore',
+      expect.objectContaining({ method: 'POST' }),
+    )
   })
 })

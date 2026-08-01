@@ -25,8 +25,13 @@ export interface Product {
   coverImageUrl: string
   description: string
   onShelf: boolean
+  archived: boolean
+  archivedAt: string | null
+  archivedBy: number | null
   updatedAt?: string
 }
+
+export type ProductArchiveStatus = 'ACTIVE' | 'ARCHIVED' | 'ALL'
 
 export interface ProductWriteRequest {
   name: string
@@ -42,6 +47,7 @@ export interface ProductWriteRequest {
 export interface ProductQuery {
   categoryId?: number
   keyword?: string
+  archiveStatus?: ProductArchiveStatus
   page?: number
   size?: number
 }
@@ -68,6 +74,7 @@ export const listProducts = (query: ProductQuery = {}): Promise<PageResult<Produ
     `/api/admin/products${queryString({
       categoryId: query.categoryId,
       keyword: query.keyword,
+      archiveStatus: query.archiveStatus,
       page: query.page,
       size: query.size,
     })}`,
@@ -84,3 +91,9 @@ export const setProductShelf = (id: number, onShelf: boolean): Promise<Product> 
     method: 'PATCH',
     ...jsonBody({ onShelf }),
   })
+
+export const archiveProduct = (id: number): Promise<Product> =>
+  request(`/api/admin/products/${id}`, { method: 'DELETE' })
+
+export const restoreProduct = (id: number): Promise<Product> =>
+  request(`/api/admin/products/${id}/restore`, { method: 'POST' })

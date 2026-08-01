@@ -1,5 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import ProductView from '@/views/catalog/ProductView.vue'
 import ProductImageUpload from '@/components/ProductImageUpload.vue'
 import { centToYuan, yuanToCent } from '@/utils/money'
@@ -19,9 +20,19 @@ vi.mock('@/api/catalog', () => ({
   createProduct: vi.fn(),
   updateProduct: vi.fn(),
   setProductShelf: vi.fn(),
+  archiveProduct: vi.fn(),
+  restoreProduct: vi.fn(),
 }))
 
 describe('product money and editor behavior', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(catalogApi.listCategories).mockResolvedValue([
+      { id: 1, name: '乳品', sortOrder: 1, enabled: true, updatedAt: '2026-07-28T10:00:00Z' },
+    ])
+    vi.mocked(catalogApi.listProducts).mockResolvedValue({ items: [], page: 0, size: 20, total: 0 })
+  })
+
   it('converts integer cents without floating point drift', () => {
     expect(centToYuan(590)).toBe('5.90')
     expect(yuanToCent('5.90')).toBe(590)
@@ -83,6 +94,9 @@ describe('product money and editor behavior', () => {
           coverImageUrl: '',
           description: '',
           onShelf: true,
+          archived: false,
+          archivedAt: null,
+          archivedBy: null,
         },
       ],
       page: 0,
@@ -92,9 +106,7 @@ describe('product money and editor behavior', () => {
     const wrapper = mount(ProductView)
     await flushPromises()
 
-    const editButton = wrapper.findAll('button').find((button) => button.text() === '编辑')
-    expect(editButton).toBeDefined()
-    await editButton!.trigger('click')
+    await wrapper.get('[data-test="edit-1"]').trigger('click')
 
     expect(wrapper.find('[data-test="product-initial-stock"]').exists()).toBe(false)
   })
@@ -159,6 +171,9 @@ describe('product money and editor behavior', () => {
           coverImageUrl: '/files/milk.webp',
           description: '',
           onShelf: true,
+          archived: false,
+          archivedAt: null,
+          archivedBy: null,
           updatedAt: '2026-07-28T10:00:00Z',
         },
       ],
@@ -172,5 +187,90 @@ describe('product money and editor behavior', () => {
     expect(wrapper.find('[data-test="product-mobile-list"]').exists()).toBe(true)
     await wrapper.get('[data-test="product-image-1"]').trigger('error')
     expect(wrapper.find('[data-test="product-image-fallback-1"]').exists()).toBe(true)
+  })
+
+  it('archives an active product only after confirming that historical orders are unaffected', async () => {
+    vi.mocked(catalogApi.listProducts).mockResolvedValueOnce({
+      items: [
+        {
+          id: 10,
+          name: '待删除商品',
+          categoryId: 1,
+          categoryName: '乳品',
+          priceCent: 590,
+          unit: '盒',
+          coverImageUrl: '',
+          description: '',
+          onShelf: true,
+          archived: false,
+          archivedAt: null,
+          archivedBy: null,
+        },
+      ],
+      page: 0,
+      size: 20,
+      total: 1,
+    })
+    vi.mocked(catalogApi.archiveProduct).mockResolvedValue({} as catalogApi.Product)
+    vi.spyOn(ElMessageBox, 'confirm').mockResolvedValue('confirm' as never)
+    const wrapper = mount(ProductView)
+    await flushPromises()
+
+    await wrapper.get('[data-test="archive-10"]').trigger('click')
+    await flushPromises()
+
+    expect(ElMessageBox.confirm).toHaveBeenCalledWith(
+      expect.stringContaining('历史订单不会受影响'),
+      expect.any(String),
+      expect.any(Object),
+    )
+    expect(catalogApi.archiveProduct).toHaveBeenCalledWith(10)
+  })
+
+  it('filters archived products and only offers restore for archived rows', async () => {
+    vi.mocked(catalogApi.listProducts)
+      .mockResolvedValueOnce({ items: [], page: 0, size: 20, total: 0 })
+      .mockResolvedValueOnce({
+        items: [
+          {
+            id: 10,
+            name: '已删除商品',
+            categoryId: 1,
+            categoryName: '乳品',
+            priceCent: 590,
+            unit: '盒',
+            coverImageUrl: '',
+            description: '',
+            onShelf: false,
+            archived: true,
+            archivedAt: '2026-08-01T10:00:00Z',
+            archivedBy: 1,
+          },
+        ],
+        page: 0,
+        size: 20,
+        total: 1,
+      })
+    vi.mocked(catalogApi.restoreProduct).mockResolvedValue({} as catalogApi.Product)
+    const messageSpy = vi.spyOn(ElMessage, 'success')
+    const wrapper = mount(ProductView)
+    await flushPromises()
+
+    await wrapper.get('[data-test="product-archive-filter"]').setValue('ARCHIVED')
+    await wrapper.get('[data-test="product-search"]').trigger('click')
+    await flushPromises()
+
+    expect(catalogApi.listProducts).toHaveBeenLastCalledWith(
+      expect.objectContaining({ archiveStatus: 'ARCHIVED' }),
+    )
+    expect(wrapper.find('[data-test="restore-10"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="edit-10"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="shelf-10"]').exists()).toBe(false)
+
+    await wrapper.get('[data-test="restore-10"]').trigger('click')
+    await flushPromises()
+
+    expect(catalogApi.restoreProduct).toHaveBeenCalledWith(10)
+    expect(messageSpy).toHaveBeenCalledWith('商品已恢复，请检查库存、价格和图片后手动上架')
   })
 })
