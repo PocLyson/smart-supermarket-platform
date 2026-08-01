@@ -77,6 +77,7 @@ const setup = () => {
 describe('checkout', () => {
   it('logs in, saves contact data, and submits selected cart items once', async () => {
     const { checkout, auth, profile, orders, cart } = setup()
+    checkout.updateCustomerNote('  饮料要常温  ')
 
     const result = await checkout.submit()
 
@@ -90,6 +91,7 @@ describe('checkout', () => {
       {
         pickupName: '李先生',
         phone: '13800138000',
+        customerNote: '饮料要常温',
         items: [{ productId: 1, quantity: 2 }],
       },
     )
@@ -107,6 +109,7 @@ describe('checkout', () => {
 
   it('retains the idempotency key across uncertain network retries', async () => {
     const { checkout, orders } = setup()
+    checkout.updateCustomerNote('饮料要常温')
     orders.create
       .mockRejectedValueOnce(new NetworkUncertainError())
       .mockResolvedValueOnce({
@@ -123,11 +126,16 @@ describe('checkout', () => {
     await expect(checkout.submit()).rejects.toThrow('订单结果尚未确认')
     expect(orders.list).toHaveBeenCalledTimes(1)
 
+    checkout.updateCustomerNote('改成冰的')
     await checkout.submit()
 
     expect(orders.create.mock.calls.map(([key]) => key)).toEqual([
       '123e4567-e89b-42d3-a456-426614174000',
       '123e4567-e89b-42d3-a456-426614174000',
+    ])
+    expect(orders.create.mock.calls.map(([, request]) => request.customerNote)).toEqual([
+      '饮料要常温',
+      '饮料要常温',
     ])
   })
 

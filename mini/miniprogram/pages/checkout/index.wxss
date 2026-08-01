@@ -121,6 +121,31 @@
   font-weight: var(--weight-medium);
 }
 
+.order-note-input {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 160rpx;
+  padding: var(--space-3);
+  border: var(--border-width-default) solid var(--color-divider);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-line);
+}
+
+.order-note-placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.order-note-count {
+  display: block;
+  margin-top: var(--space-2);
+  color: var(--color-text-tertiary);
+  font-size: var(--type-helper-size);
+  text-align: right;
+}
+
 .checkout-info-row {
   display: flex;
   min-height: 88rpx;

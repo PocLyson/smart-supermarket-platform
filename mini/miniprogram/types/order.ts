@@ -17,6 +17,7 @@ export interface CreateOrderItem {
 export interface CreateOrderRequest {
   pickupName: string
   phone: string
+  customerNote?: string
   items: CreateOrderItem[]
 }
 

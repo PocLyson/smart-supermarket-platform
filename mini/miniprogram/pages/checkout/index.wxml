@@ -37,6 +37,19 @@
     </view>
   </view>
 
+  <view class="card checkout-section order-note-card">
+    <view class="section-title">订单备注 <text class="muted">（选填）</text></view>
+    <textarea
+      class="order-note-input"
+      value="{{customerNote}}"
+      maxlength="100"
+      placeholder="如：饮料要常温、易碎品请轻放"
+      placeholder-class="order-note-placeholder"
+      bindinput="onCustomerNoteInput"
+    />
+    <text class="order-note-count">{{customerNoteCount}} / 100</text>
+  </view>
+
   <view class="card checkout-section">
     <view class="section-title">取货与付款</view>
     <view class="checkout-info-row"><text>取货方式</text><text>到店自取</text></view>

@@ -14,6 +14,8 @@ Page({
   data: {
     pickupName: '',
     phone: '',
+    customerNote: '',
+    customerNoteCount: 0,
     items: presentItems(),
     totalCent: cart.selectedTotalCent(),
     displayTotal: formatMoney(cart.selectedTotalCent()),
@@ -101,6 +103,12 @@ Page({
 
   onImageError() {
     this.setData({ imageFailed: true })
+  },
+
+  onCustomerNoteInput(event: WechatMiniprogram.Input) {
+    const customerNote = event.detail.value.slice(0, 100)
+    this.setData({ customerNote, customerNoteCount: customerNote.length })
+    checkout.updateCustomerNote(customerNote)
   },
 
   onEditPickup() {

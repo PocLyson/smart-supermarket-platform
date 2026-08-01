@@ -33,6 +33,7 @@ export interface CheckoutDependencies {
 
 export interface Checkout {
   updateContact(profile: CustomerProfile): void
+  updateCustomerNote(note: string): void
   submit(): Promise<CustomerOrder>
   isSubmitting(): boolean
 }
@@ -62,6 +63,9 @@ const isPendingCheckout = (value: unknown): value is PendingCheckout => {
     !!pending.request &&
     typeof pending.request.pickupName === 'string' &&
     typeof pending.request.phone === 'string' &&
+    (pending.request.customerNote === undefined ||
+      (typeof pending.request.customerNote === 'string' &&
+        pending.request.customerNote.length <= 100)) &&
     Array.isArray(pending.request.items) &&
     pending.request.items.every(
       (item) =>
@@ -107,11 +111,15 @@ export const createUuid = (): string => {
 
 export const createCheckout = (dependencies: CheckoutDependencies): Checkout => {
   let contact: CustomerProfile = { pickupName: '', phone: '' }
+  let customerNote = ''
   let submitting = false
 
   return {
     updateContact: (profile) => {
       contact = { ...profile }
+    },
+    updateCustomerNote: (note) => {
+      customerNote = note.slice(0, 100)
     },
     isSubmitting: () => submitting,
     submit: async () => {
@@ -136,10 +144,12 @@ export const createCheckout = (dependencies: CheckoutDependencies): Checkout => 
         await dependencies.auth.ensureSession()
         await dependencies.profile.save(validContact)
         if (!pending) {
+          const normalizedNote = customerNote.trim()
           pending = {
             idempotencyKey: dependencies.createIdempotencyKey(),
             request: {
               ...validContact,
+              ...(normalizedNote ? { customerNote: normalizedNote } : {}),
               items: toRequestItems(selected),
             },
             purchasedProductIds: selected.map((item) => item.productId),
