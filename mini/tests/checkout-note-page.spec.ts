@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const { submit, updateContact, updateCustomerNote } = vi.hoisted(() => ({
@@ -60,6 +62,19 @@ beforeEach(() => {
 })
 
 describe('checkout note page', () => {
+  it('renders the checkout error through a conditionally visible alert banner', () => {
+    const markup = readFileSync(
+      resolve(__dirname, '../miniprogram/pages/checkout/index.wxml'),
+      'utf8',
+    )
+    const banner = markup.match(
+      /<view(?=[^>]*wx:if="{{error}}")(?=[^>]*class="error-banner")(?=[^>]*role="alert")[^>]*>([\s\S]*?)<\/view>/,
+    )
+
+    expect(banner).not.toBeNull()
+    expect(banner?.[1]).toContain('{{error}}')
+  })
+
   it('starts every new page with a blank note draft', () => {
     const setData = vi.fn()
 

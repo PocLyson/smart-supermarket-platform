@@ -83,3 +83,73 @@ Result: 36 files / 135 tests passed; `tsc --noEmit` passed.
 - No functional concerns were found.
 - Server output retains existing non-blocking warnings: Flyway advises that MySQL 8.4 is newer than its tested support range, and Spring Data reports Redis repository-identification warnings. These were present before this task and did not affect the 76-test pass.
 - The codebase-memory index exposed only file/folder nodes for this worktree; after graph searches returned no symbols, discovery used the repository-approved targeted `rg`/file-read fallback.
+
+---
+
+## Fix Round 1: Strengthen customer-page and restore reload proof
+
+### Status
+
+Complete. Only regression tests and this report changed; mutation checks confirmed the two Important tests catch their intended production regressions. No production defect was found.
+
+### Review gaps closed
+
+- Replaced service-only confidence with a real category-page lifecycle test. It invokes the actual `loadProducts(true)` page handler twice: the first public response contains product 10, the second omits it, and the page data must clear the old product and enter its empty/end state.
+- Removed the restore test's last-call false positive. Immediately before clicking Restore, the test clears the `listProducts` call history; it then requires exactly one new request with `keyword: '乌龙茶'`, `archiveStatus: 'ARCHIVED'`, and zero-based `page: 2`.
+- Added a checkout WXML contract assertion that the `error-banner` is an alert guarded by `wx:if="{{error}}"` and renders `{{error}}` inside the guarded block.
+
+### Mutation evidence
+
+Category reset mutation:
+
+```powershell
+cd mini
+npm test -- product-catalog-visibility.spec.ts --run -t "removes a missing product"
+```
+
+Temporary mutation: changed category reset from replacement to unconditional append. Result: expected failure; the second reload retained product 10 and failed `expect(products).toEqual([])`. Production code was immediately restored.
+
+Restore reload mutation:
+
+```powershell
+cd admin
+npm test -- ProductView.spec.ts --run -t "keeps the archived filter"
+```
+
+Temporary mutation: removed `await load()` after `restoreProduct`. Result: expected failure, `listProducts` expected 1 call but received 0. Production code was immediately restored.
+
+Post-restore focused GREEN:
+
+- `mini`: 2 focused files / 9 tests passed.
+- `admin`: `ProductView.spec.ts` 14 tests passed.
+- `git diff` confirmed neither temporary production mutation remained.
+
+### Necessary three-surface regression
+
+```powershell
+cd server
+.\mvnw.cmd '-Dtest=OrderLifecycleE2ETest,AdminAuditControllerTest' test
+```
+
+Result: `BUILD SUCCESS`; 4 tests run, 0 failures, 0 errors, 0 skipped.
+
+```powershell
+cd admin
+npm test -- --run
+npm run build
+```
+
+Result: 14 files / 74 tests passed; `vue-tsc --noEmit` and Vite production build passed.
+
+```powershell
+cd mini
+npm test -- --run
+npm run typecheck
+```
+
+Result: 36 files / 137 tests passed; `tsc --noEmit` passed.
+
+### Fix Round 1 concerns
+
+- No functional concerns remain.
+- Server verification retains the existing non-blocking Flyway MySQL 8.4 and Spring Data Redis repository-identification warnings described above.

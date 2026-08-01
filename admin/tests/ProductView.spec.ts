@@ -323,11 +323,14 @@ describe('product money and editor behavior', () => {
     await flushPromises()
     wrapper.findComponent({ name: 'ElPagination' }).vm.$emit('current-change', 3)
     await flushPromises()
+    vi.mocked(catalogApi.listProducts).mockClear()
+
     await wrapper.get('[data-test="restore-10"]').trigger('click')
     await flushPromises()
 
     expect(catalogApi.restoreProduct).toHaveBeenCalledWith(10)
-    expect(catalogApi.listProducts).toHaveBeenLastCalledWith({
+    expect(catalogApi.listProducts).toHaveBeenCalledTimes(1)
+    expect(catalogApi.listProducts).toHaveBeenCalledWith({
       keyword: '乌龙茶',
       categoryId: undefined,
       archiveStatus: 'ARCHIVED',
