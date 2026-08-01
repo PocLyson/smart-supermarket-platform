@@ -46,9 +46,13 @@ public class SecurityConfig {
                     "/api/mini/auth/wechat",
                     "/api/mini/categories",
                     "/api/mini/products",
-                    "/api/mini/products/**"
+                    "/api/mini/products/**",
+                    "/api/mini/announcements",
+                    "/api/mini/announcements/**",
+                    "/api/mini/store/contact"
                 ).permitAll()
                 .requestMatchers(
+                    "/api/admin/announcements/**",
                     "/api/admin/staff/**",
                     "/api/admin/audit-logs/**",
                     "/api/admin/categories/**",

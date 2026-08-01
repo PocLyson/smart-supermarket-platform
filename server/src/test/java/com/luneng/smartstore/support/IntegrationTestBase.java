@@ -34,6 +34,8 @@ public abstract class IntegrationTestBase {
             () -> "test-only-secret-with-at-least-32-bytes");
         registry.add("smart-store.wechat.app-id", () -> "test-app-id");
         registry.add("smart-store.wechat.app-secret", () -> "test-app-secret");
+        registry.add("smart-store.store-contact.phone", () -> "18653045492");
+        registry.add("smart-store.store-contact.customer-service-enabled", () -> true);
         registry.add("smart-store.upload-dir",
             () -> System.getProperty("java.io.tmpdir") + "/smart-store-test-uploads");
     }

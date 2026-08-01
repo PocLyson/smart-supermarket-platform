@@ -40,6 +40,9 @@ smart-store:
     app-secret: ${WECHAT_APP_SECRET}
     local-mock-enabled: ${WECHAT_LOCAL_MOCK_ENABLED:false}
     local-mock-openid: ${WECHAT_LOCAL_MOCK_OPENID:local-dev-customer}
+  store-contact:
+    phone: ${STORE_PHONE:18653045492}
+    customer-service-enabled: ${WECHAT_CUSTOMER_SERVICE_ENABLED:true}
   upload-dir: ${UPLOAD_DIR}
   rate-limit:
     staff-login:
