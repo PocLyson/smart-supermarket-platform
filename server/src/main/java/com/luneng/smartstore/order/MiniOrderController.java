@@ -38,6 +38,7 @@ public class MiniOrderController {
             idempotencyKey,
             body.pickupName(),
             body.phone(),
+            body.customerNote(),
             body.items().stream()
                 .map(item -> new CreateOrderItem(item.productId(), item.quantity()))
                 .toList()

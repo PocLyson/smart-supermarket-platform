@@ -44,6 +44,9 @@ public class CustomerOrder {
     @Column(nullable = false, length = 20)
     private String phone;
 
+    @Column(name = "customer_note", length = 100)
+    private String customerNote;
+
     @Column(name = "total_cent", nullable = false)
     private long totalCent;
 
@@ -109,6 +112,7 @@ public class CustomerOrder {
         String idempotencyKey,
         String pickupName,
         String phone,
+        String customerNote,
         long totalCent
     ) {
         this.orderNo = orderNo;
@@ -116,6 +120,7 @@ public class CustomerOrder {
         this.idempotencyKey = idempotencyKey;
         this.pickupName = pickupName;
         this.phone = phone;
+        this.customerNote = normalizeCustomerNote(customerNote);
         this.totalCent = totalCent;
         this.status = OrderStatus.PENDING_CONFIRMATION;
         this.paymentStatus = PaymentStatus.UNPAID;
@@ -278,6 +283,10 @@ public class CustomerOrder {
         return phone;
     }
 
+    public String getCustomerNote() {
+        return customerNote;
+    }
+
     public long getTotalCent() {
         return totalCent;
     }
@@ -312,5 +321,20 @@ public class CustomerOrder {
 
     public List<OrderStatusHistory> getHistories() {
         return histories;
+    }
+
+    private static String normalizeCustomerNote(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        String normalized = value.trim();
+        if (normalized.length() > 100) {
+            throw new BusinessException(
+                "VALIDATION_ERROR",
+                "订单备注不能超过100个字符",
+                HttpStatus.BAD_REQUEST
+            );
+        }
+        return normalized;
     }
 }

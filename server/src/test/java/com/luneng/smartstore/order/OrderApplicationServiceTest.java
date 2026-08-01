@@ -58,6 +58,7 @@ class OrderApplicationServiceTest extends IntegrationTestBase {
             "req-001",
             "李先生",
             "13800138000",
+            null,
             List.of(new CreateOrderItem(10L, 2))
         );
     }

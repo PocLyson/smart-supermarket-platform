@@ -7,6 +7,7 @@ public record CreateOrderCommand(
     String idempotencyKey,
     String pickupName,
     String phone,
+    String customerNote,
     List<CreateOrderItem> items
 ) {
 }

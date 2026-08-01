@@ -62,6 +62,7 @@ class OrderConcurrencyTest extends IntegrationTestBase {
                         "race-" + id,
                         "顾客" + id,
                         "1380013800" + id,
+                        null,
                         List.of(new CreateOrderItem(10L, 1))
                     ));
                     successes.incrementAndGet();

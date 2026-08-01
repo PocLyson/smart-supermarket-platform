@@ -83,6 +83,7 @@ class AdminOrderWorkflowTest extends IntegrationTestBase {
             "admin-flow",
             "李先生",
             "13800138000",
+            null,
             List.of(new CreateOrderItem(10L, 2))
         )).orderNo();
         redisTemplate.opsForValue().set("auth:session:test-session", "9");

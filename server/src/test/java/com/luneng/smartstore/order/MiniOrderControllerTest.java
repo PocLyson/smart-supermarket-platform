@@ -8,10 +8,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.luneng.smartstore.auth.ActorType;
 import com.luneng.smartstore.auth.CurrentPrincipal;
 import com.luneng.smartstore.auth.JwtService;
 import com.luneng.smartstore.support.IntegrationTestBase;
+import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +36,9 @@ class MiniOrderControllerTest extends IntegrationTestBase {
 
     @Autowired
     private StringRedisTemplate redisTemplate;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     private String customerToken;
 
@@ -92,6 +98,64 @@ class MiniOrderControllerTest extends IntegrationTestBase {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.items[0].totalCent").value(1180))
             .andExpect(jsonPath("$.data.total").value(1));
+    }
+
+    @Test
+    void createOrderStoresAndReturnsTrimmedCustomerNote() throws Exception {
+        mockMvc.perform(post("/api/mini/orders")
+                .header("Authorization", "Bearer " + customerToken)
+                .header("Idempotency-Key", "note-001")
+                .contentType(APPLICATION_JSON)
+                .content("""
+                    {
+                      "pickupName": "李先生",
+                      "phone": "13800138000",
+                      "customerNote": "  饮料要常温，易碎品请轻放  ",
+                      "items": [{"productId": 10, "quantity": 1}]
+                    }
+                    """))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.customerNote")
+                .value("饮料要常温，易碎品请轻放"));
+
+        org.assertj.core.api.Assertions.assertThat(jdbcTemplate.queryForObject(
+            "select customer_note from customer_order where idempotency_key = ?",
+            String.class,
+            "note-001"
+        )).isEqualTo("饮料要常温，易碎品请轻放");
+    }
+
+    @Test
+    void createOrderRemainsCompatibleWhenCustomerNoteIsMissing() throws Exception {
+        mockMvc.perform(post("/api/mini/orders")
+                .header("Authorization", "Bearer " + customerToken)
+                .header("Idempotency-Key", "note-missing")
+                .contentType(APPLICATION_JSON)
+                .content("""
+                    {
+                      "pickupName": "李先生",
+                      "phone": "13800138000",
+                      "items": [{"productId": 10, "quantity": 1}]
+                    }
+                    """))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.customerNote").doesNotExist());
+    }
+
+    @Test
+    void createOrderRejectsCustomerNoteLongerThanOneHundredCharacters() throws Exception {
+        String note = "备".repeat(101);
+        mockMvc.perform(post("/api/mini/orders")
+                .header("Authorization", "Bearer " + customerToken)
+                .header("Idempotency-Key", "note-too-long")
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of(
+                    "pickupName", "李先生",
+                    "phone", "13800138000",
+                    "customerNote", note,
+                    "items", List.of(Map.of("productId", 10, "quantity", 1))
+                ))))
+            .andExpect(status().isBadRequest());
     }
 
     @Test

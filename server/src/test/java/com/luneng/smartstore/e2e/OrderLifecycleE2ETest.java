@@ -80,6 +80,7 @@ class OrderLifecycleE2ETest extends IntegrationTestBase {
             "life-001",
             "李先生",
             "13800138000",
+            null,
             List.of(new CreateOrderItem(10L, 2))
         ));
         adminOrders.accept(order.orderNo(), cashier, "e2e-accept");

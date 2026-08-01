@@ -90,6 +90,7 @@ public class OrderApplicationService {
             command.idempotencyKey(),
             command.pickupName().trim(),
             command.phone(),
+            command.customerNote(),
             totalCent
         );
         pricedItems.forEach(item -> order.addItem(new OrderItem(
@@ -210,6 +211,7 @@ public class OrderApplicationService {
             || command.pickupName().length() > 40
             || command.phone() == null
             || !command.phone().matches("^1\\d{10}$")
+            || (command.customerNote() != null && command.customerNote().trim().length() > 100)
             || command.items() == null
             || command.items().isEmpty()) {
             throw validation("订单参数不合法");
