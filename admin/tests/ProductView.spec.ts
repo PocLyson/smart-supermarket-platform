@@ -39,6 +39,19 @@ describe('product money and editor behavior', () => {
     expect(() => yuanToCent('5.999')).toThrow('金额格式错误')
   })
 
+  it('loads active products by default', async () => {
+    mount(ProductView)
+    await flushPromises()
+
+    expect(catalogApi.listProducts).toHaveBeenCalledWith({
+      keyword: undefined,
+      categoryId: undefined,
+      archiveStatus: 'ACTIVE',
+      page: 0,
+      size: 20,
+    })
+  })
+
   it('submits a product with integer priceCent', async () => {
     const wrapper = mount(ProductView)
     await flushPromises()
@@ -272,5 +285,109 @@ describe('product money and editor behavior', () => {
 
     expect(catalogApi.restoreProduct).toHaveBeenCalledWith(10)
     expect(messageSpy).toHaveBeenCalledWith('商品已恢复，请检查库存、价格和图片后手动上架')
+  })
+
+  it('keeps the archived filter and current page after restoring a product', async () => {
+    const archivedProduct: catalogApi.Product = {
+      id: 10,
+      name: '无糖乌龙茶 500ml',
+      categoryId: 1,
+      categoryName: '乳品',
+      priceCent: 500,
+      unit: '瓶',
+      coverImageUrl: '',
+      description: '',
+      onShelf: false,
+      archived: true,
+      archivedAt: '2026-08-01T10:00:00Z',
+      archivedBy: 1,
+    }
+    vi.mocked(catalogApi.listProducts).mockResolvedValue({
+      items: [archivedProduct],
+      page: 0,
+      size: 20,
+      total: 60,
+    })
+    vi.mocked(catalogApi.restoreProduct).mockResolvedValue({
+      ...archivedProduct,
+      archived: false,
+      archivedAt: null,
+      archivedBy: null,
+    })
+    const wrapper = mount(ProductView)
+    await flushPromises()
+
+    await wrapper.get('#product-keyword').setValue('乌龙茶')
+    await wrapper.get('[data-test="product-archive-filter"]').setValue('ARCHIVED')
+    await wrapper.get('[data-test="product-search"]').trigger('click')
+    await flushPromises()
+    wrapper.findComponent({ name: 'ElPagination' }).vm.$emit('current-change', 3)
+    await flushPromises()
+    await wrapper.get('[data-test="restore-10"]').trigger('click')
+    await flushPromises()
+
+    expect(catalogApi.restoreProduct).toHaveBeenCalledWith(10)
+    expect(catalogApi.listProducts).toHaveBeenLastCalledWith({
+      keyword: '乌龙茶',
+      categoryId: undefined,
+      archiveStatus: 'ARCHIVED',
+      page: 2,
+      size: 20,
+    })
+  })
+
+  it.each([
+    {
+      state: 'active',
+      product: {
+        id: 10,
+        name: '无糖乌龙茶 500ml',
+        categoryId: 1,
+        categoryName: '乳品',
+        priceCent: 500,
+        unit: '瓶',
+        coverImageUrl: '',
+        description: '',
+        onShelf: true,
+        archived: false,
+        archivedAt: null,
+        archivedBy: null,
+      } satisfies catalogApi.Product,
+      actions: ['编辑', '下架', '删除'],
+    },
+    {
+      state: 'archived',
+      product: {
+        id: 10,
+        name: '无糖乌龙茶 500ml',
+        categoryId: 1,
+        categoryName: '乳品',
+        priceCent: 500,
+        unit: '瓶',
+        coverImageUrl: '',
+        description: '',
+        onShelf: false,
+        archived: true,
+        archivedAt: '2026-08-01T10:00:00Z',
+        archivedBy: 1,
+      } satisfies catalogApi.Product,
+      actions: ['恢复'],
+    },
+  ])('shows only the $state product actions on mobile', async ({ product, actions }) => {
+    vi.mocked(catalogApi.listProducts).mockResolvedValueOnce({
+      items: [product],
+      page: 0,
+      size: 20,
+      total: 1,
+    })
+    const wrapper = mount(ProductView)
+    await flushPromises()
+
+    const mobileActions = wrapper
+      .get('.product-mobile-card__price')
+      .findAll('button')
+      .map((button) => button.text())
+
+    expect(mobileActions).toEqual(actions)
   })
 })

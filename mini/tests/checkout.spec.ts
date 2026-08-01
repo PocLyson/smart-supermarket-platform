@@ -230,6 +230,16 @@ describe('checkout', () => {
     ])
   })
 
+  it('keeps stale-cart items when checkout rejects an archived product', async () => {
+    const { checkout, orders, cart } = setup()
+    const message = '部分商品已下架，请移除后重试'
+    orders.create.mockRejectedValueOnce(new Error(message))
+
+    await expect(checkout.submit()).rejects.toThrow(message)
+
+    expect(cart.remove).not.toHaveBeenCalled()
+  })
+
   it('restores the original request and key after an app restart', async () => {
     const {
       checkout,

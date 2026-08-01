@@ -1,9 +1,11 @@
 package com.luneng.smartstore.e2e;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.luneng.smartstore.auth.ActorType;
 import com.luneng.smartstore.auth.CurrentPrincipal;
+import com.luneng.smartstore.catalog.CatalogService;
 import com.luneng.smartstore.inventory.InventoryRepository;
 import com.luneng.smartstore.inventory.InventoryService;
 import com.luneng.smartstore.order.AdminOrderService;
@@ -13,9 +15,11 @@ import com.luneng.smartstore.order.CustomerOrder;
 import com.luneng.smartstore.order.OrderApplicationService;
 import com.luneng.smartstore.order.OrderRepository;
 import com.luneng.smartstore.order.OrderStatus;
+import com.luneng.smartstore.order.OrderView;
 import com.luneng.smartstore.order.PaymentMethod;
 import com.luneng.smartstore.order.PaymentStatus;
 import com.luneng.smartstore.support.IntegrationTestBase;
+import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,10 +43,15 @@ class OrderLifecycleE2ETest extends IntegrationTestBase {
     private InventoryRepository inventoryRepository;
 
     @Autowired
+    private CatalogService catalogService;
+
+    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     private final CurrentPrincipal cashier =
         new CurrentPrincipal(8L, ActorType.STAFF, "CASHIER", "e2e-session");
+    private final CurrentPrincipal owner =
+        new CurrentPrincipal(9L, ActorType.STAFF, "OWNER", "archive-history-session");
 
     @BeforeEach
     void setUp() {
@@ -109,5 +118,80 @@ class OrderLifecycleE2ETest extends IntegrationTestBase {
             Integer.class,
             stored.getId()
         )).isEqualTo(4);
+    }
+
+    @Test
+    void archivedProductDisappearsFromCatalogWithoutChangingHistoricalOrder() {
+        jdbcTemplate.update(
+            "update product set name = ?, price_cent = ? where id = ?",
+            "无糖乌龙茶 500ml",
+            500,
+            10L
+        );
+        OrderView completed = createAndCompleteOrderForProduct(10L);
+        int ledgerRowsBeforeArchive = jdbcTemplate.queryForObject(
+            "select count(*) from inventory_ledger where product_id = 10",
+            Integer.class
+        );
+
+        catalogService.archive(10L, owner, "archive-history-product");
+
+        assertThatThrownBy(() -> catalogService.product(10L, true))
+            .isInstanceOf(EntityNotFoundException.class);
+
+        OrderView historical = customerOrders.detail(1L, completed.orderNo());
+        assertThat(historical.totalCent()).isEqualTo(500);
+        assertThat(historical.items()).singleElement().satisfies(item -> {
+            assertThat(item.productName()).isEqualTo("无糖乌龙茶 500ml");
+            assertThat(item.quantity()).isEqualTo(1);
+            assertThat(item.unitPriceCent()).isEqualTo(500);
+            assertThat(item.subtotalCent()).isEqualTo(500);
+        });
+        assertThat(historical.pickupCode()).matches("\\d{6}");
+        assertThat(historical.pickupCode()).isEqualTo(completed.pickupCode());
+        assertThat(jdbcTemplate.queryForObject(
+            "select count(*) from operation_log where action = 'PRODUCT_ARCHIVE' and object_id = '10'",
+            Integer.class
+        )).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject(
+            "select count(*) from product where id = 10",
+            Integer.class
+        )).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject(
+            "select count(*) from online_inventory where product_id = 10",
+            Integer.class
+        )).isEqualTo(1);
+        assertThat(inventoryService.current(10L)).isEqualTo(9);
+        assertThat(jdbcTemplate.queryForObject(
+            "select count(*) from inventory_ledger where product_id = 10",
+            Integer.class
+        )).isEqualTo(ledgerRowsBeforeArchive);
+        assertThat(inventoryRepository.sumForOrder(completed.orderNo())).isEqualTo(-1);
+    }
+
+    private OrderView createAndCompleteOrderForProduct(long productId) {
+        OrderView order = customerOrders.create(new CreateOrderCommand(
+            1L,
+            "archive-history-order-" + productId,
+            "李先生",
+            "13800138000",
+            null,
+            List.of(new CreateOrderItem(productId, 1))
+        ));
+        adminOrders.accept(order.orderNo(), cashier, "archive-history-accept");
+        adminOrders.markReady(order.orderNo(), cashier, "archive-history-ready");
+        adminOrders.markPaid(
+            order.orderNo(),
+            PaymentMethod.WECHAT_QR,
+            cashier,
+            "archive-history-pay"
+        );
+        adminOrders.complete(
+            order.orderNo(),
+            order.pickupCode(),
+            cashier,
+            "archive-history-complete"
+        );
+        return customerOrders.detail(1L, order.orderNo());
     }
 }

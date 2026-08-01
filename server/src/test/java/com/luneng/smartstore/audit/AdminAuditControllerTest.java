@@ -73,6 +73,30 @@ class AdminAuditControllerTest extends IntegrationTestBase {
             )));
     }
 
+    @Test
+    void ownerCanInspectTheSingleProductArchiveAuditEntry() throws Exception {
+        jdbcTemplate.update(
+            """
+            insert into operation_log(
+                actor_id, actor_type, action, object_type, object_id, result_summary, request_id
+            ) values (1, 'STAFF', 'PRODUCT_ARCHIVE', 'PRODUCT', '10',
+                '无糖乌龙茶 500ml', 'archive-history-product')
+            """
+        );
+        String token = login();
+
+        mockMvc.perform(get("/api/admin/audit-logs")
+                .param("action", "PRODUCT_ARCHIVE")
+                .param("objectType", "PRODUCT")
+                .header("Authorization", "Bearer " + token))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.total").value(1))
+            .andExpect(jsonPath("$.data.items[0].action").value("PRODUCT_ARCHIVE"))
+            .andExpect(jsonPath("$.data.items[0].objectType").value("PRODUCT"))
+            .andExpect(jsonPath("$.data.items[0].objectId").value("10"))
+            .andExpect(jsonPath("$.data.items[0].requestId").value("archive-history-product"));
+    }
+
     private String login() throws Exception {
         String response = mockMvc.perform(post("/api/admin/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)

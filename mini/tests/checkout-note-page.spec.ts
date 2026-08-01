@@ -1,6 +1,8 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { updateCustomerNote } = vi.hoisted(() => ({
+const { submit, updateContact, updateCustomerNote } = vi.hoisted(() => ({
+  submit: vi.fn(),
+  updateContact: vi.fn(),
   updateCustomerNote: vi.fn(),
 }))
 
@@ -9,9 +11,9 @@ vi.mock('../miniprogram/services/auth', () => ({
 }))
 vi.mock('../miniprogram/store/checkout', () => ({
   checkout: {
-    updateContact: vi.fn(),
+    updateContact,
     updateCustomerNote,
-    submit: vi.fn(),
+    submit,
   },
 }))
 vi.mock('../miniprogram/store/cart', () => ({
@@ -32,6 +34,7 @@ vi.mock('../miniprogram/utils/money', () => ({
 
 type CheckoutPage = {
   onLoad?: () => void
+  onSubmit(): Promise<void>
   onCustomerNoteInput(event: WechatMiniprogram.Input): void
 }
 
@@ -47,7 +50,13 @@ beforeAll(async () => {
 })
 
 beforeEach(() => {
+  submit.mockReset()
+  updateContact.mockClear()
   updateCustomerNote.mockClear()
+  vi.stubGlobal('wx', {
+    redirectTo: vi.fn(),
+    showToast: vi.fn(),
+  })
 })
 
 describe('checkout note page', () => {
@@ -98,5 +107,35 @@ describe('checkout note page', () => {
       customerNoteError: '订单备注不能超过 100 个字符',
     })
     expect(updateCustomerNote).toHaveBeenCalledWith(rawNote)
+  })
+
+  it('shows the stale-cart rejection unchanged in the banner and toast', async () => {
+    const message = '部分商品已下架，请移除后重试'
+    submit.mockRejectedValueOnce(new Error(message))
+    const context = {
+      data: {
+        pickupName: '李先生',
+        phone: '13800138000',
+        pickupReady: true,
+        submitting: false,
+        error: '',
+      },
+      setData(update: Record<string, unknown>) {
+        Object.assign(this.data, update)
+      },
+      onEditPickup: vi.fn(),
+    }
+    const setData = vi.spyOn(context, 'setData')
+
+    await checkoutPage.onSubmit.call(context)
+
+    expect(updateContact).toHaveBeenCalledWith({
+      pickupName: '李先生',
+      phone: '13800138000',
+    })
+    expect(setData).toHaveBeenCalledWith({ error: message })
+    expect(context.data.error).toBe(message)
+    expect(wx.showToast).toHaveBeenCalledWith({ title: message, icon: 'none' })
+    expect(wx.redirectTo).not.toHaveBeenCalled()
   })
 })

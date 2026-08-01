@@ -35,4 +35,35 @@ describe('newly uploaded product visibility', () => {
       'http://localhost:8080/files/product.jpg',
     )
   })
+
+  it('does not retain a product after the public catalog stops returning it', async () => {
+    const get = vi
+      .fn()
+      .mockResolvedValueOnce({
+        items: [
+          {
+            id: 10,
+            name: '无糖乌龙茶 500ml',
+            coverImageUrl: '/files/oolong-tea.webp',
+          },
+        ],
+        page: 0,
+        size: 10,
+        total: 1,
+      })
+      .mockResolvedValueOnce({
+        items: [],
+        page: 0,
+        size: 10,
+        total: 0,
+      })
+    const catalog = createCatalogService({ get })
+
+    const beforeArchive = await catalog.listProducts({ page: 0, size: 10 })
+    const afterArchive = await catalog.listProducts({ page: 0, size: 10 })
+
+    expect(beforeArchive.items).toHaveLength(1)
+    expect(afterArchive.items).toEqual([])
+    expect(afterArchive.total).toBe(0)
+  })
 })
