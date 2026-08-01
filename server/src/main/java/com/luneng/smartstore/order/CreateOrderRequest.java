@@ -12,7 +12,7 @@ import java.util.List;
 public record CreateOrderRequest(
     @NotBlank @Size(max = 40) String pickupName,
     @NotBlank @Pattern(regexp = "^1\\d{10}$") String phone,
-    @Size(max = 100) String customerNote,
+    String customerNote,
     @NotEmpty List<@Valid Item> items
 ) {
     public record Item(@NotNull Long productId, @Min(1) int quantity) {

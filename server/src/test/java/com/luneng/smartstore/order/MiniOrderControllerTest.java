@@ -159,6 +159,52 @@ class MiniOrderControllerTest extends IntegrationTestBase {
     }
 
     @Test
+    void createOrderAcceptsOneHundredCharacterCustomerNoteWithSurroundingWhitespace()
+        throws Exception {
+        String note = "备".repeat(100);
+        mockMvc.perform(post("/api/mini/orders")
+                .header("Authorization", "Bearer " + customerToken)
+                .header("Idempotency-Key", "note-trimmed-boundary")
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of(
+                    "pickupName", "李先生",
+                    "phone", "13800138000",
+                    "customerNote", "  " + note + "  ",
+                    "items", List.of(Map.of("productId", 10, "quantity", 1))
+                ))))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.customerNote").value(note));
+
+        org.assertj.core.api.Assertions.assertThat(jdbcTemplate.queryForObject(
+            "select customer_note from customer_order where idempotency_key = ?",
+            String.class,
+            "note-trimmed-boundary"
+        )).isEqualTo(note);
+    }
+
+    @Test
+    void createOrderAcceptsOverlongBlankCustomerNoteAsNull() throws Exception {
+        mockMvc.perform(post("/api/mini/orders")
+                .header("Authorization", "Bearer " + customerToken)
+                .header("Idempotency-Key", "note-blank")
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of(
+                    "pickupName", "李先生",
+                    "phone", "13800138000",
+                    "customerNote", " ".repeat(101),
+                    "items", List.of(Map.of("productId", 10, "quantity", 1))
+                ))))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.customerNote").doesNotExist());
+
+        org.assertj.core.api.Assertions.assertThat(jdbcTemplate.queryForObject(
+            "select customer_note from customer_order where idempotency_key = ?",
+            String.class,
+            "note-blank"
+        )).isNull();
+    }
+
+    @Test
     void customerCanHideTerminalOrderWithoutDeletingBusinessRecord() throws Exception {
         insertOrder("COMPLETED-1", "COMPLETED");
 
