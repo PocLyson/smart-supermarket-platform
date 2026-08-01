@@ -74,7 +74,7 @@ describe('announcement mini-program visual and resilience contract', () => {
     ).toEqual(expectedRetryable)
   })
 
-  it('places a conditional announcement bar after the hero and before categories', () => {
+  it('places a vertically rotating announcement bar after the hero and before categories', () => {
     const home = read('pages/home/index.wxml')
     const heroIndex = home.indexOf('class="home-hero"')
     const announcementIndex = home.indexOf('class="announcement-strip"')
@@ -82,9 +82,13 @@ describe('announcement mini-program visual and resilience contract', () => {
 
     expect(announcementIndex).toBeGreaterThan(heroIndex)
     expect(announcementIndex).toBeLessThan(categoryIndex)
+    expect(home).toContain('wx:if="{{announcements.length}}"')
     expect(home).toMatch(
-      /<view wx:if="\{\{latestAnnouncement\}\}" class="announcement-strip"[\s\S]*?bindtap="onOpenAnnouncement"/,
+      /<swiper[^>]*class="announcement-ticker"[^>]*vertical[^>]*circular[^>]*autoplay[^>]*interval="4000"[^>]*duration="300"[^>]*disable-touch/,
     )
+    expect(home).toContain('wx:for="{{announcements}}"')
+    expect(home).toContain('data-id="{{item.id}}"')
+    expect(home).toContain('bindtap="onOpenAnnouncement"')
     expect(home).toContain('catchtap="onOpenAnnouncements"')
   })
 
@@ -95,14 +99,14 @@ describe('announcement mini-program visual and resilience contract', () => {
     expect(appConfig.pages).toContain('pages/announcement-detail/index')
   })
 
-  it('loads announcements independently and hides the strip if that request fails', () => {
+  it('loads a small announcement ticker independently and hides it if that request fails', () => {
     const home = read('pages/home/index.ts')
     const onLoad = home.match(/onLoad\(\)\s*\{([\s\S]*?)\n  \},/)
 
-    expect(onLoad?.[1]).toContain('void this.loadLatestAnnouncement()')
+    expect(onLoad?.[1]).toContain('void this.loadAnnouncements()')
     expect(onLoad?.[1]).toContain('void this.loadInitial()')
     expect(home).toMatch(
-      /async loadLatestAnnouncement\(\)[\s\S]*?catch\s*\{\s*this\.setData\(\{ latestAnnouncement: undefined \}\)/,
+      /async loadAnnouncements\(\)[\s\S]*?announcementsService\.list\(0, 5\)[\s\S]*?catch\s*\{\s*this\.setData\(\{ announcements: \[\] \}\)/,
     )
   })
 

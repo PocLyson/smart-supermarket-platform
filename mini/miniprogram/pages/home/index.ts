@@ -31,21 +31,22 @@ Page({
     reachedEnd: false,
     imageFailed: false,
     fallbackImage: '/assets/icons/image-placeholder.svg',
-    latestAnnouncement: undefined as Announcement | undefined,
+    announcements: [] as Announcement[],
   },
 
   onLoad() {
-    void this.loadLatestAnnouncement()
+    void this.loadAnnouncements()
     void this.loadInitial()
   },
 
-  async loadLatestAnnouncement() {
+  async loadAnnouncements() {
     try {
+      const result = await announcementsService.list(0, 5)
       this.setData({
-        latestAnnouncement: (await announcementsService.latest()) || undefined,
+        announcements: result.items,
       })
     } catch {
-      this.setData({ latestAnnouncement: undefined })
+      this.setData({ announcements: [] })
     }
   },
 
