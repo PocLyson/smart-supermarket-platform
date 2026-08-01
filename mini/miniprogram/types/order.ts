@@ -48,6 +48,7 @@ export interface CustomerOrder {
   totalCent: number
   items: OrderItemSnapshot[]
   history?: OrderStatusHistory[]
+  customerNote?: string | null
   cancellationReason?: string
   createdAt?: string
 }

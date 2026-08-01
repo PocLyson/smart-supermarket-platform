@@ -14,4 +14,14 @@ describe('order note UI', () => {
     expect(markup).toContain('{{customerNoteCount}} / 100')
     expect(markup).toContain('bindinput="onCustomerNoteInput"')
   })
+
+  it('renders the note only in order detail', () => {
+    const markup = readFileSync(
+      resolve(__dirname, '../miniprogram/pages/order-detail/index.wxml'),
+      'utf8',
+    )
+
+    expect(markup).toContain('wx:if="{{order.customerNote}}"')
+    expect(markup).toContain('{{order.customerNote}}')
+  })
 })

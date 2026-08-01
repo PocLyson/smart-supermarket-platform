@@ -35,6 +35,11 @@
       <view wx:if="{{order.cancellationReason}}" class="cancellation-note">取消原因：{{order.cancellationReason}}</view>
     </view>
 
+    <view wx:if="{{order.customerNote}}" class="card customer-note-card">
+      <view class="section-title">顾客备注</view>
+      <text class="customer-note-text">{{order.customerNote}}</text>
+    </view>
+
     <view class="card">
       <view class="section-title">商品快照</view>
       <view wx:for="{{displayItems}}" wx:key="productId" class="row-between order-line detail-product">

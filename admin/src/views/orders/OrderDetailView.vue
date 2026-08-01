@@ -231,6 +231,10 @@ onMounted(load)
           <strong>¥{{ centToYuan(order.totalCent) }}</strong>
         </article>
       </div>
+      <section v-if="order.customerNote" class="surface-card customer-note-card">
+        <h2>顾客备注</h2>
+        <p class="customer-note-text">{{ order.customerNote }}</p>
+      </section>
       <div class="detail-grid">
         <div class="surface-card detail-main">
           <div class="section-heading">
@@ -418,6 +422,21 @@ onMounted(load)
 .summary-grid span {
   color: var(--color-text-secondary);
   font-size: 13px;
+}
+
+.customer-note-card {
+  margin-top: var(--space-4);
+}
+
+.customer-note-card h2 {
+  margin-bottom: var(--space-2);
+}
+
+.customer-note-text {
+  margin: 0;
+  color: var(--color-text-secondary);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .back-link {

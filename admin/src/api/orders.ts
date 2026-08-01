@@ -39,6 +39,7 @@ export interface OrderStatusHistoryItem {
 }
 
 export interface AdminOrderDetail extends AdminOrderSummary {
+  customerNote: string | null
   items: AdminOrderItem[]
   history: OrderStatusHistoryItem[]
 }

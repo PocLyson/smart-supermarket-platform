@@ -40,6 +40,7 @@ const pendingOrder: ordersApi.AdminOrderDetail = {
   status: 'PENDING_CONFIRMATION',
   paymentStatus: 'UNPAID',
   paymentMethod: null,
+  customerNote: null,
   cancelReason: null,
   createdAt: '2026-07-28T08:00:00Z',
   items: [
@@ -106,6 +107,18 @@ describe('admin order workflow', () => {
     expect(wrapper.find('[data-test="order-ready"]').exists()).toBe(false)
     expect(wrapper.find('[data-test="order-complete"]').exists()).toBe(false)
     expect(wrapper.text()).toContain('顾客')
+  })
+
+  it('renders a customer note in order detail', async () => {
+    vi.mocked(ordersApi.getOrder).mockResolvedValue({
+      ...pendingOrder,
+      customerNote: '饮料要常温',
+    })
+    const wrapper = mount(OrderDetailView, { props: { orderNo: pendingOrder.orderNo } })
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('顾客备注')
+    expect(wrapper.text()).toContain('饮料要常温')
   })
 
   it('requires a reason for rejection and applies the successful mutation response', async () => {

@@ -84,6 +84,16 @@
   font-size: var(--type-helper-size);
 }
 
+.customer-note-text {
+  display: block;
+  margin-top: var(--space-2);
+  color: var(--color-text-secondary);
+  font-size: var(--type-helper-size);
+  line-height: var(--type-helper-line);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .detail-product-copy {
   min-width: 0;
   flex: 1;
