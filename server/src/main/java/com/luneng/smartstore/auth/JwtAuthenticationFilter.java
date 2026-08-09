@@ -21,10 +21,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final StringRedisTemplate redisTemplate;
+    private final MerchantSessionStore merchantSessionStore;
 
-    public JwtAuthenticationFilter(JwtService jwtService, StringRedisTemplate redisTemplate) {
+    public JwtAuthenticationFilter(
+        JwtService jwtService,
+        StringRedisTemplate redisTemplate,
+        MerchantSessionStore merchantSessionStore
+    ) {
         this.jwtService = jwtService;
         this.redisTemplate = redisTemplate;
+        this.merchantSessionStore = merchantSessionStore;
     }
 
     @Override
@@ -43,9 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private void authenticate(String token) {
         try {
             CurrentPrincipal principal = jwtService.parse(token);
-            String session = redisTemplate.opsForValue()
-                .get("auth:session:" + principal.sessionId());
-            if (!Long.toString(principal.id()).equals(session)) {
+            if (!sessionIsValid(principal)) {
                 return;
             }
             List<SimpleGrantedAuthority> authorities = principal.actorType() == ActorType.STAFF
@@ -63,5 +67,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         } catch (JwtException | IllegalArgumentException ignored) {
             SecurityContextHolder.clearContext();
         }
+    }
+
+    private boolean sessionIsValid(CurrentPrincipal principal) {
+        if (principal.clientType() == ClientType.MERCHANT_MINI) {
+            return merchantSessionStore.isCurrent(principal.id(), principal.sessionId());
+        }
+        String session = redisTemplate.opsForValue()
+            .get("auth:session:" + principal.sessionId());
+        return Long.toString(principal.id()).equals(session);
     }
 }

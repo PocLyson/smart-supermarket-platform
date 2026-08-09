@@ -10,7 +10,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.Duration;
-import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -88,6 +87,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
         return switch (request.getRequestURI()) {
             case "/api/admin/auth/login" ->
                 new Rule("staff-login", request.getRemoteAddr(), staffLogin, true);
+            case "/api/merchant-mini/auth/password-login" ->
+                new Rule("merchant-password-login", request.getRemoteAddr(), staffLogin, true);
             case "/api/mini/auth/wechat" ->
                 new Rule("customer-login", request.getRemoteAddr(), customerLogin, true);
             case "/api/mini/orders" -> orderRule();
@@ -111,11 +112,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     private boolean allow(Rule rule) {
-        long bucket = Instant.now().getEpochSecond() / rule.limit().window().toSeconds();
-        String key = "rate-limit:%s:%s:%d".formatted(
+        String key = "rate-limit:%s:%s".formatted(
             rule.scope(),
-            rule.identity(),
-            bucket
+            rule.identity()
         );
         Long count = redisTemplate.opsForValue().increment(key);
         if (count != null && count == 1L) {

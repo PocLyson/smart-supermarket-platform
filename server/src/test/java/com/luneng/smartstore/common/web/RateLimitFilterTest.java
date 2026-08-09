@@ -3,6 +3,10 @@ package com.luneng.smartstore.common.web;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.luneng.smartstore.auth.ActorType;
 import com.luneng.smartstore.auth.CurrentPrincipal;
@@ -13,8 +17,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.mock.web.MockFilterChain;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
 
 @AutoConfigureMockMvc
@@ -35,6 +43,10 @@ class RateLimitFilterTest extends IntegrationTestBase {
 
     @BeforeEach
     void setUp() {
+        var rateLimitKeys = redisTemplate.keys("rate-limit:*");
+        if (!rateLimitKeys.isEmpty()) {
+            redisTemplate.delete(rateLimitKeys);
+        }
         jdbcTemplate.update("delete from idempotency_record");
         jdbcTemplate.update("delete from inventory_ledger");
         jdbcTemplate.update("delete from order_status_history");
@@ -67,6 +79,49 @@ class RateLimitFilterTest extends IntegrationTestBase {
     }
 
     @Test
+    void merchantPasswordLoginSharesFailClosedStaffLoginLimit() throws Exception {
+        for (int attempt = 0; attempt < 10; attempt++) {
+            performMerchantPasswordLogin()
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"));
+        }
+
+        performMerchantPasswordLogin()
+            .andExpect(status().isTooManyRequests())
+            .andExpect(jsonPath("$.code").value("RATE_LIMITED"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void merchantPasswordLoginFailsClosedWhenRateLimitBackendIsUnavailable() throws Exception {
+        StringRedisTemplate unavailableRedis = mock(StringRedisTemplate.class);
+        ValueOperations<String, String> values = mock(ValueOperations.class);
+        when(unavailableRedis.opsForValue()).thenReturn(values);
+        when(values.increment(anyString())).thenThrow(new IllegalStateException("redis unavailable"));
+        RateLimitFilter filter = new RateLimitFilter(
+            unavailableRedis,
+            new com.fasterxml.jackson.databind.ObjectMapper(),
+            10,
+            600,
+            30,
+            600,
+            10,
+            60
+        );
+        MockHttpServletRequest request = new MockHttpServletRequest(
+            "POST",
+            "/api/merchant-mini/auth/password-login"
+        );
+        request.setRemoteAddr("198.51.100.9");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, new MockFilterChain());
+
+        assertThat(response.getStatus()).isEqualTo(429);
+        assertThat(response.getContentAsString()).contains("\"code\":\"RATE_LIMITED\"");
+    }
+
+    @Test
     void orderRateLimitReturnsTooManyRequests() throws Exception {
         for (int i = 0; i < 10; i++) {
             performCreateOrder("key-" + i)
@@ -89,6 +144,23 @@ class RateLimitFilterTest extends IntegrationTestBase {
                   "pickupName":"顾客",
                   "phone":"13800138000",
                   "items":[{"productId":10,"quantity":1}]
+                }
+                """));
+    }
+
+    private org.springframework.test.web.servlet.ResultActions performMerchantPasswordLogin()
+        throws Exception {
+        return mockMvc.perform(post("/api/merchant-mini/auth/password-login")
+            .with(request -> {
+                request.setRemoteAddr("198.51.100.8");
+                return request;
+            })
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("""
+                {
+                  "username":"missing-staff",
+                  "password":"wrong-password",
+                  "code":"valid-wechat-code"
                 }
                 """));
     }

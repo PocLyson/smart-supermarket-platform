@@ -73,6 +73,17 @@ class ClientTypeSecurityTest extends IntegrationTestBase {
     }
 
     @Test
+    void merchantSessionIsRejectedAfterItsStaffIndexIsLost() throws Exception {
+        String merchantToken = tokenFor(ActorType.STAFF, "CASHIER", ClientType.MERCHANT_MINI);
+        redisTemplate.delete("auth:merchant-staff:42");
+
+        mockMvc.perform(get("/api/merchant-mini/account")
+                .header("Authorization", "Bearer " + merchantToken))
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
+    }
+
+    @Test
     void legacyTokensWithoutClientTypeKeepTheirOriginalClientScope() {
         CurrentPrincipal legacyAdmin = jwtService.parse(legacyToken(ActorType.STAFF, "OWNER"));
         CurrentPrincipal legacyCustomer = jwtService.parse(legacyToken(ActorType.CUSTOMER, "CUSTOMER"));
@@ -84,6 +95,9 @@ class ClientTypeSecurityTest extends IntegrationTestBase {
     private String tokenFor(ActorType actorType, String role, ClientType clientType) {
         String sessionId = UUID.randomUUID().toString();
         redisTemplate.opsForValue().set("auth:session:" + sessionId, "42");
+        if (clientType == ClientType.MERCHANT_MINI) {
+            redisTemplate.opsForValue().set("auth:merchant-staff:42", sessionId);
+        }
         return jwtService.issue(new CurrentPrincipal(42L, actorType, role, sessionId, clientType));
     }
 

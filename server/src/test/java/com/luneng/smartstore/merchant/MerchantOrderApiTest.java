@@ -255,6 +255,10 @@ class MerchantOrderApiTest extends IntegrationTestBase {
             "auth:session:" + principal.sessionId(),
             Long.toString(principal.id())
         );
+        redisTemplate.opsForValue().set(
+            "auth:merchant-staff:" + principal.id(),
+            principal.sessionId()
+        );
         return jwtService.issue(principal);
     }
 }

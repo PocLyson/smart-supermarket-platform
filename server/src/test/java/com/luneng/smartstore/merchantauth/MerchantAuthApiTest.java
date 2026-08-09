@@ -56,6 +56,10 @@ class MerchantAuthApiTest extends IntegrationTestBase {
         if (!redisKeys.isEmpty()) {
             redisTemplate.delete(redisKeys);
         }
+        Set<String> rateLimitKeys = redisTemplate.keys("rate-limit:*");
+        if (!rateLimitKeys.isEmpty()) {
+            redisTemplate.delete(rateLimitKeys);
+        }
         jdbcTemplate.update("delete from staff_wechat_binding");
         jdbcTemplate.update("delete from staff_account");
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();

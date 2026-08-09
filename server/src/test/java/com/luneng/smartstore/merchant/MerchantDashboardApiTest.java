@@ -78,6 +78,7 @@ class MerchantDashboardApiTest extends IntegrationTestBase {
             ClientType.MERCHANT_MINI
         );
         redisTemplate.opsForValue().set("auth:session:" + cashier.sessionId(), "9");
+        redisTemplate.opsForValue().set("auth:merchant-staff:9", cashier.sessionId());
         cashierToken = jwtService.issue(cashier);
     }
 

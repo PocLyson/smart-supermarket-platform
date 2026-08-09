@@ -2,13 +2,13 @@ package com.luneng.smartstore.staff;
 
 import com.luneng.smartstore.audit.AuditService;
 import com.luneng.smartstore.auth.CurrentPrincipal;
+import com.luneng.smartstore.auth.MerchantSessionStore;
 import com.luneng.smartstore.common.api.BusinessException;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,18 +17,18 @@ public class StaffManagementService {
     private final StaffAccountRepository repository;
     private final PasswordEncoder passwordEncoder;
     private final AuditService auditService;
-    private final StringRedisTemplate redisTemplate;
+    private final MerchantSessionStore sessionStore;
 
     public StaffManagementService(
         StaffAccountRepository repository,
         PasswordEncoder passwordEncoder,
         AuditService auditService,
-        StringRedisTemplate redisTemplate
+        MerchantSessionStore sessionStore
     ) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
         this.auditService = auditService;
-        this.redisTemplate = redisTemplate;
+        this.sessionStore = sessionStore;
     }
 
     @Transactional(readOnly = true)
@@ -113,7 +113,7 @@ public class StaffManagementService {
     }
 
     private StaffAccount cashier(long id) {
-        StaffAccount account = repository.findById(id)
+        StaffAccount account = repository.findByIdForUpdate(id)
             .orElseThrow(EntityNotFoundException::new);
         if (!"CASHIER".equals(account.getRole())) {
             throw new AccessDeniedException("不能管理老板账号");
@@ -146,12 +146,7 @@ public class StaffManagementService {
     }
 
     private void invalidateMerchantSession(long staffId) {
-        String staffSessionKey = "auth:merchant-staff:" + staffId;
-        String sessionId = redisTemplate.opsForValue().get(staffSessionKey);
-        if (sessionId != null) {
-            redisTemplate.delete("auth:session:" + sessionId);
-        }
-        redisTemplate.delete(staffSessionKey);
+        sessionStore.revokeCurrent(staffId);
     }
 
     public record CreateCashierRequest(String username, String password) {
