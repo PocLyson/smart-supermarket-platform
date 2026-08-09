@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { createOrdersService } from '../miniprogram/services/orders'
+import { createMerchantHttp } from '../miniprogram/services/http'
 import type { MerchantOrder } from '../miniprogram/types/order'
 
 const orderService = vi.hoisted(() => ({
@@ -37,6 +38,14 @@ const order = (overrides: Partial<MerchantOrder> = {}): MerchantOrder => ({
   history: [],
   ...overrides,
 })
+
+const deferred = <T>() => {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((promiseResolve) => {
+    resolve = promiseResolve
+  })
+  return { promise, resolve }
+}
 
 afterEach(() => {
   vi.unstubAllGlobals()
@@ -77,12 +86,47 @@ describe('pickup verification API boundary', () => {
     const post = vi.fn().mockResolvedValue(order({ status: 'COMPLETED', paymentStatus: 'PAID' }))
     const service = createOrdersService({ get: vi.fn(), post })
 
-    await service.verifyPickup('ORD/2026 1', '473898', 'CASH')
+    await service.verifyPickup('ORD/2026 1', '473898', 'CASH', 'pickup-request-1')
 
     expect(post).toHaveBeenCalledWith(
       '/api/merchant-mini/orders/ORD%2F2026%201/verify-pickup',
       { pickupCode: '473898', payAtStoreMethod: 'CASH' },
+      {
+        authorization: 'protected',
+        headers: { 'X-Request-Id': 'pickup-request-1' },
+      },
     )
+  })
+
+  test('merges the pickup request id with merchant authorization at transport', async () => {
+    const request = vi.fn().mockResolvedValue({ statusCode: 200, data: {
+      code: 'OK', message: 'ok', requestId: 'pickup-request-1', data: order(),
+    } })
+    const http = createMerchantHttp({
+      request,
+      session: {
+        current: () => ({
+          accessToken: 'merchant-token',
+          role: 'CASHIER',
+          staffId: 9,
+          username: 'cashier',
+          expiresAt: Date.now() + 60_000,
+        }),
+        save: vi.fn(),
+        clear: vi.fn(),
+        revision: () => 0,
+      },
+    })
+    const service = createOrdersService(http)
+
+    await service.verifyPickup('ORD-1', '473898', 'CASH', 'pickup-request-1')
+
+    expect(request).toHaveBeenCalledWith(expect.objectContaining({
+      header: {
+        Authorization: 'Bearer merchant-token',
+        'X-Request-Id': 'pickup-request-1',
+      },
+    }))
   })
 })
 
@@ -113,6 +157,31 @@ describe('pickup verification page flow', () => {
 
     expect(context.data.errorMessage).toBe('请输入6位取货码')
     expect(context.data.stage).toBe('INPUT')
+    expect(orderService.detail).not.toHaveBeenCalled()
+  })
+
+  test('treats scan cancellation as no change and makes no request', async () => {
+    vi.stubGlobal('wx', {
+      scanCode: ({ fail }: { fail(result: { errMsg: string }): void }) => fail({ errMsg: 'scanCode:fail cancel' }),
+    })
+    const definition = await loadPage()
+    const context = pageContext(definition)
+
+    await definition.scanPickup.call(context)
+
+    expect(context.data.stage).toBe('INPUT')
+    expect(context.data.errorMessage).toBe('')
+    expect(orderService.detail).not.toHaveBeenCalled()
+  })
+
+  test('rejects malformed keyboard input before fetching an order', async () => {
+    const definition = await loadPage()
+    const context = pageContext(definition)
+    Object.assign(context.data, { orderNo: 'ORD-1', pickupCode: '12' })
+
+    await definition.loadPreview.call(context)
+
+    expect(context.data.errorMessage).toBe('请输入6位取货码')
     expect(orderService.detail).not.toHaveBeenCalled()
   })
 
@@ -178,6 +247,119 @@ describe('pickup verification page flow', () => {
     expect(context.data.completedOrder).toBeNull()
     expect(context.data.errorMessage).toContain('请与顾客核对后重试')
     expect(context.data.isSubmitting).toBe(false)
+  })
+
+  test('locks before the confirmation modal so a fast double tap submits once', async () => {
+    const modal = deferred<{ confirm: boolean }>()
+    const showModal = vi.fn(({ success }: { success(result: { confirm: boolean }): void }) => {
+      void modal.promise.then(success)
+    })
+    const completed = order({ status: 'COMPLETED', paymentStatus: 'PAID', paymentMethod: 'CASH' })
+    orderService.verifyPickup.mockResolvedValue(completed)
+    vi.stubGlobal('wx', { showModal, showToast: vi.fn() })
+    const definition = await loadPage()
+    const context = pageContext(definition)
+    Object.assign(context.data, {
+      stage: 'CONFIRM',
+      preview: order(),
+      pickupCode: '473898',
+      selectedPaymentMethod: 'CASH',
+    })
+
+    const first = definition.confirmPickup.call(context) as Promise<void>
+    const second = definition.confirmPickup.call(context) as Promise<void>
+
+    expect(context.data.isSubmitting).toBe(true)
+    expect(showModal).toHaveBeenCalledOnce()
+    expect(orderService.verifyPickup).not.toHaveBeenCalled()
+
+    modal.resolve({ confirm: true })
+    await Promise.all([first, second])
+
+    expect(orderService.verifyPickup).toHaveBeenCalledOnce()
+    expect(context.data.stage).toBe('SUCCESS')
+    expect(context.data.completedOrder).toEqual(completed)
+  })
+
+  test('reuses a request id for a network retry and replaces it for a changed intent', async () => {
+    const completed = order({ status: 'COMPLETED', paymentStatus: 'PAID', paymentMethod: 'WECHAT_QR' })
+    orderService.verifyPickup
+      .mockRejectedValueOnce(new Error('网络连接失败，请检查网络后重试'))
+      .mockResolvedValueOnce(completed)
+    vi.stubGlobal('wx', {
+      showModal: ({ success }: { success(result: { confirm: boolean }): void }) => success({ confirm: true }),
+      showToast: vi.fn(),
+    })
+    const definition = await loadPage()
+    const context = pageContext(definition)
+    Object.assign(context.data, {
+      stage: 'CONFIRM',
+      preview: order(),
+      pickupCode: '473898',
+      selectedPaymentMethod: 'CASH',
+    })
+
+    await definition.confirmPickup.call(context)
+    const firstRequestId = orderService.verifyPickup.mock.calls[0][3]
+    expect(firstRequestId).toMatch(/^pickup-/)
+    expect(context.data.verificationRequestId).toBe(firstRequestId)
+
+    definition.onPaymentMethodChange.call(
+      context,
+      { detail: { value: 'WECHAT_QR' } } as never,
+    )
+    expect(context.data.verificationRequestId).toBe('')
+    await definition.confirmPickup.call(context)
+    const secondRequestId = orderService.verifyPickup.mock.calls[1][3]
+
+    expect(secondRequestId).toMatch(/^pickup-/)
+    expect(secondRequestId).not.toBe(firstRequestId)
+    expect(context.data.verificationRequestId).toBe('')
+    expect(context.data.stage).toBe('SUCCESS')
+  })
+
+  test('reuses the same request id when retrying an unchanged failed intent', async () => {
+    orderService.verifyPickup
+      .mockRejectedValueOnce(new Error('网络连接失败，请检查网络后重试'))
+      .mockRejectedValueOnce(new Error('网络连接失败，请检查网络后重试'))
+    vi.stubGlobal('wx', {
+      showModal: ({ success }: { success(result: { confirm: boolean }): void }) => success({ confirm: true }),
+    })
+    const definition = await loadPage()
+    const context = pageContext(definition)
+    Object.assign(context.data, {
+      stage: 'CONFIRM',
+      preview: order(),
+      pickupCode: '473898',
+      selectedPaymentMethod: 'CASH',
+    })
+
+    await definition.confirmPickup.call(context)
+    await definition.confirmPickup.call(context)
+
+    expect(orderService.verifyPickup.mock.calls[0][3]).toBeTruthy()
+    expect(orderService.verifyPickup.mock.calls[1][3]).toBe(
+      orderService.verifyPickup.mock.calls[0][3],
+    )
+  })
+
+  test('does not open confirmation or post when an unpaid method is missing', async () => {
+    const showModal = vi.fn()
+    vi.stubGlobal('wx', { showModal })
+    const definition = await loadPage()
+    const context = pageContext(definition)
+    Object.assign(context.data, {
+      stage: 'CONFIRM',
+      preview: order(),
+      pickupCode: '473898',
+      selectedPaymentMethod: '',
+    })
+
+    await definition.confirmPickup.call(context)
+
+    expect(context.data.errorMessage).toBe('请选择收款方式')
+    expect(showModal).not.toHaveBeenCalled()
+    expect(orderService.verifyPickup).not.toHaveBeenCalled()
   })
 
   test('starts continued verification with a clean history after entry from detail', async () => {

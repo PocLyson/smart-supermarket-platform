@@ -14,6 +14,19 @@ export { parsePickupScan } from './verification'
 
 type VerificationStage = 'INPUT' | 'CONFIRM' | 'SUCCESS'
 
+let pickupRequestSequence = 0
+
+const createPickupRequestId = (): string => {
+  pickupRequestSequence += 1
+  return `pickup-${Date.now().toString(36)}-${pickupRequestSequence.toString(36)}`
+}
+
+const pickupIntentKey = (
+  orderNo: string,
+  pickupCode: string,
+  method: PaymentMethod,
+): string => `${orderNo}\u0000${pickupCode}\u0000${method}`
+
 const askForConfirmation = (): Promise<boolean> => new Promise((resolve) => {
   wx.showModal({
     title: '确认核销取货',
@@ -37,6 +50,8 @@ Page({
     openedFromDetail: false,
     isPreviewLoading: false,
     isSubmitting: false,
+    verificationRequestId: '',
+    verificationIntentKey: '',
     errorMessage: '',
   },
 
@@ -67,28 +82,37 @@ Page({
   },
 
   onOrderNoInput(event: WechatMiniprogram.Input) {
+    if (this.data.isSubmitting) return
     this.setData({
       orderNo: event.detail.value.trim(),
       stage: 'INPUT',
       preview: null,
       completedOrder: null,
+      verificationRequestId: '',
+      verificationIntentKey: '',
       errorMessage: '',
     })
   },
 
   onPickupCodeInput(event: WechatMiniprogram.Input) {
+    if (this.data.isSubmitting) return
     this.setData({
       pickupCode: event.detail.value,
       stage: 'INPUT',
       preview: null,
       completedOrder: null,
+      verificationRequestId: '',
+      verificationIntentKey: '',
       errorMessage: '',
     })
   },
 
   onPaymentMethodChange(event: WechatMiniprogram.RadioGroupChange) {
+    if (this.data.isSubmitting) return
     this.setData({
       selectedPaymentMethod: event.detail.value as PaymentMethod,
+      verificationRequestId: '',
+      verificationIntentKey: '',
       errorMessage: '',
     })
   },
@@ -106,6 +130,8 @@ Page({
               stage: 'INPUT',
               preview: null,
               completedOrder: null,
+              verificationRequestId: '',
+              verificationIntentKey: '',
               errorMessage: '',
             })
             if (this.data.orderNo) await this.loadPreview()
@@ -114,6 +140,8 @@ Page({
               stage: 'INPUT',
               preview: null,
               completedOrder: null,
+              verificationRequestId: '',
+              verificationIntentKey: '',
               errorMessage: readablePickupError(error),
             })
           } finally {
@@ -165,12 +193,16 @@ Page({
         selectedPaymentMethod: '',
         stage: 'CONFIRM',
         completedOrder: null,
+        verificationRequestId: '',
+        verificationIntentKey: '',
       })
     } catch (error) {
       this.setData({
         preview: null,
         completedOrder: null,
         stage: 'INPUT',
+        verificationRequestId: '',
+        verificationIntentKey: '',
         errorMessage: readablePickupError(error),
       })
     } finally {
@@ -194,35 +226,102 @@ Page({
       this.setData({ errorMessage: readablePickupError(error) })
       return
     }
-    if (!await askForConfirmation()) return
+    const previewSnapshot = this.data.preview
+    const pickupCodeSnapshot = this.data.pickupCode
+    const intentKey = pickupIntentKey(
+      previewSnapshot.orderNo,
+      pickupCodeSnapshot,
+      method,
+    )
     this.setData({ isSubmitting: true, errorMessage: '' })
+    const confirmed = await askForConfirmation()
+    let currentMethod: PaymentMethod | undefined
+    try {
+      if (this.data.preview) {
+        currentMethod = resolvePayAtStoreMethod(
+          this.data.preview,
+          this.data.selectedPaymentMethod,
+        )
+      }
+    } catch {
+      currentMethod = undefined
+    }
+    const stillOwnsConfirmation = Boolean(
+      this.data.isSubmitting
+      && this.data.stage === 'CONFIRM'
+      && this.data.preview
+      && this.data.preview.orderNo === previewSnapshot.orderNo
+      && this.data.pickupCode === pickupCodeSnapshot
+      && currentMethod === method,
+    )
+    if (!stillOwnsConfirmation) return
+    if (!confirmed) {
+      this.setData({ isSubmitting: false })
+      return
+    }
+    const requestId = this.data.verificationIntentKey === intentKey
+      && this.data.verificationRequestId
+      ? this.data.verificationRequestId
+      : createPickupRequestId()
+    this.setData({
+      verificationRequestId: requestId,
+      verificationIntentKey: intentKey,
+    })
     try {
       const completedOrder = await merchantOrdersService.verifyPickup(
-        this.data.preview.orderNo,
-        this.data.pickupCode,
+        previewSnapshot.orderNo,
+        pickupCodeSnapshot,
         method,
+        requestId,
       )
+      if (
+        !this.data.isSubmitting
+        || this.data.stage !== 'CONFIRM'
+        || this.data.verificationRequestId !== requestId
+        || this.data.verificationIntentKey !== intentKey
+      ) return
       this.setData({
         stage: 'SUCCESS',
         preview: presentPickupPreview(completedOrder),
         completedOrder,
+        verificationRequestId: '',
+        verificationIntentKey: '',
       })
       this.getOpenerEventChannel().emit('pickupVerified', completedOrder)
       wx.showToast({ title: '核销成功', icon: 'success' })
     } catch (error) {
-      this.setData({
-        stage: 'CONFIRM',
-        completedOrder: null,
-        errorMessage: readablePickupError(error),
-      })
+      if (
+        this.data.stage === 'CONFIRM'
+        && this.data.verificationRequestId === requestId
+        && this.data.verificationIntentKey === intentKey
+      ) {
+        this.setData({
+          completedOrder: null,
+          errorMessage: readablePickupError(error),
+        })
+      }
     } finally {
-      this.setData({ isSubmitting: false })
+      if (
+        (this.data.stage as VerificationStage) === 'SUCCESS'
+        || (
+          this.data.verificationRequestId === requestId
+          && this.data.verificationIntentKey === intentKey
+        )
+      ) {
+        this.setData({ isSubmitting: false })
+      }
     }
   },
 
   editInformation() {
     if (this.data.isSubmitting) return
-    this.setData({ stage: 'INPUT', preview: null, errorMessage: '' })
+    this.setData({
+      stage: 'INPUT',
+      preview: null,
+      verificationRequestId: '',
+      verificationIntentKey: '',
+      errorMessage: '',
+    })
   },
 
   continueVerification() {
@@ -240,6 +339,8 @@ Page({
       paymentOptions: [],
       selectedPaymentMethod: '',
       openedFromDetail: false,
+      verificationRequestId: '',
+      verificationIntentKey: '',
       errorMessage: '',
     })
   },

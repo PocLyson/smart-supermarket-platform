@@ -32,6 +32,7 @@ export interface MerchantHttp {
 
 export interface MerchantRequestPolicy {
   authorization: 'public' | 'protected'
+  headers?: Record<string, string>
 }
 
 interface MerchantHttpDependencies {
@@ -89,13 +90,15 @@ export const createMerchantHttp = ({
     const current = protectedRequest ? session.current() : undefined
     const requestToken = current?.accessToken
     const requestRevision = session.revision()
+    const header = {
+      ...policy.headers,
+      ...(current ? { Authorization: `Bearer ${current.accessToken}` } : {}),
+    }
     const response = await request({
       url: `${apiBaseUrl()}${path}`,
       method,
       data,
-      header: current
-        ? { Authorization: `Bearer ${current.accessToken}` }
-        : undefined,
+      header: Object.keys(header).length > 0 ? header : undefined,
     })
 
     if (!isTransportResponse(response)) return response as T

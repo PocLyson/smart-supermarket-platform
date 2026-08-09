@@ -4,6 +4,35 @@
 
 DONE with an unrelated server verification failure recorded below.
 
+## Fix Round 1
+
+Independent review found two important concurrency/idempotency issues and one
+low-cost coverage gap. They were corrected in a separate strict TDD round:
+
+- The page now acquires `isSubmitting` before opening the confirmation modal.
+  A deferred-modal double tap produces one modal and one POST only. After the
+  modal resolves, the page validates the lock, stage, order preview, pickup
+  code, and payment-method snapshot before posting. A stale failure cannot
+  roll a successful state back to confirmation.
+- Every confirmed pickup intent now has a stable `pickup-*` request ID. The
+  orders service sends it as `X-Request-Id`, and the HTTP boundary merges it
+  with the merchant bearer token. Recoverable retries of an unchanged intent
+  reuse the ID; changing order number, pickup code, or payment method resets
+  it; success clears it.
+- Added explicit coverage that scan cancellation, malformed keyboard input,
+  and an unpaid order without a payment method make no server mutation.
+
+Fix-round RED evidence:
+
+```text
+npm test -- --run tests/pickup-verification.spec.ts
+Test Files  1 failed (1)
+Tests       5 failed | 10 passed (15)
+```
+
+The five expected failures demonstrated the missing header/request ID, the
+pre-modal race, and missing retry identity.
+
 ## Implemented
 
 - Added the native merchant pickup-verification page and registered it in the mini-program.
@@ -31,7 +60,7 @@ Expected RED causes were the missing verification module/page and missing `servi
 
 Additional RED/GREEN cycles covered masked pickup identity plus disabled unpaid confirmation, and clean history for “继续核销” after entering from order detail.
 
-Final focused behavior is included in the full merchant suite below (8 pickup-verification tests).
+Final focused behavior is included in the full merchant suite below (15 pickup-verification tests).
 
 ## Verification
 
@@ -40,7 +69,7 @@ Final focused behavior is included in the full merchant suite below (8 pickup-ve
 ```text
 merchant-mini: npm test -- --run
 Test Files  7 passed (7)
-Tests       82 passed (82)
+Tests       89 passed (89)
 
 merchant-mini: npm run typecheck
 exit 0
