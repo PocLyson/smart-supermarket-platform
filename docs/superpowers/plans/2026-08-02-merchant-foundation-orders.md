@@ -322,7 +322,7 @@ git commit -m "feat: add merchant workbench and orders"
 
 **Interfaces:**
 - Consumes: `POST /api/merchant-mini/orders/{orderNo}/verify-pickup`.
-- Produces: `parsePickupScan(raw: string): { pickupCode: string }` accepting a plain six-digit code or the project’s signed QR payload format.
+- Produces: `parsePickupScan(raw: string): { pickupCode: string }` accepting only a plain six-digit pickup code in Phase 1. Signed QR payloads are a later security enhancement and are not accepted implicitly.
 
 - [ ] **Step 1: Write failing scan, validation, and state tests**
 
@@ -331,7 +331,7 @@ expect(parsePickupScan('473898')).toEqual({ pickupCode: '473898' })
 expect(() => parsePickupScan('12')).toThrow('请输入6位取货码')
 ```
 
-Test online-paid orders omit payment controls, unpaid orders require `CASH` or `WECHAT_QR`, invalid codes never display success, and a successful result offers “继续核销” and “查看订单”.
+Test scanned non-six-digit payloads are rejected, online-paid orders omit payment controls, unpaid orders require `CASH` or `WECHAT_QR`, invalid codes never display success, and a successful result offers “继续核销” and “查看订单”.
 
 - [ ] **Step 2: Run focused test and verify failure**
 
