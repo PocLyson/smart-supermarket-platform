@@ -8,9 +8,11 @@ import com.luneng.smartstore.common.api.BusinessException;
 import com.luneng.smartstore.staff.StaffAccount;
 import com.luneng.smartstore.staff.StaffAccountRepository;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class MerchantAuthService {
     private static final String STAFF_SESSION_PREFIX = "auth:merchant-staff:";
     private static final String SESSION_PREFIX = "auth:session:";
+    private static final DefaultRedisScript<String> REPLACE_SESSION_SCRIPT = new DefaultRedisScript<>(
+        "local previous = redis.call('GET', KEYS[1]); "
+            + "if previous then redis.call('DEL', ARGV[1] .. previous); end; "
+            + "redis.call('SET', ARGV[1] .. ARGV[2], ARGV[3], 'PX', ARGV[4]); "
+            + "redis.call('SET', KEYS[1], ARGV[2], 'PX', ARGV[4]); "
+            + "return previous;",
+        String.class
+    );
 
     private final StaffAccountRepository staffRepository;
     private final StaffWechatBindingRepository bindingRepository;
@@ -132,27 +142,21 @@ public class MerchantAuthService {
             );
         }
         if (staffBinding != null) {
-            throw new BusinessException(
-                "STAFF_WECHAT_ALREADY_BOUND",
-                "该员工账号已绑定其他微信，请先解绑",
-                HttpStatus.CONFLICT
-            );
+            staffBinding.rebind(appId, openid, now);
+        } else {
+            bindingRepository.save(new StaffWechatBinding(staff, appId, openid, now));
         }
-        bindingRepository.save(new StaffWechatBinding(staff, appId, openid, now));
     }
 
     private MerchantSessionView createSession(StaffAccount staff) {
         String sessionId = UUID.randomUUID().toString();
-        invalidateMerchantSession(staff.getId());
-        redisTemplate.opsForValue().set(
-            SESSION_PREFIX + sessionId,
-            Long.toString(staff.getId()),
-            JwtService.TOKEN_TTL
-        );
-        redisTemplate.opsForValue().set(
-            STAFF_SESSION_PREFIX + staff.getId(),
+        redisTemplate.execute(
+            REPLACE_SESSION_SCRIPT,
+            List.of(STAFF_SESSION_PREFIX + staff.getId()),
+            SESSION_PREFIX,
             sessionId,
-            JwtService.TOKEN_TTL
+            Long.toString(staff.getId()),
+            Long.toString(JwtService.TOKEN_TTL.toMillis())
         );
         String accessToken = jwtService.issue(new CurrentPrincipal(
             staff.getId(), ActorType.STAFF, staff.getRole(), sessionId, ClientType.MERCHANT_MINI

@@ -13,6 +13,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.luneng.smartstore.support.IntegrationTestBase;
 import java.time.Instant;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,11 +44,18 @@ class MerchantAuthApiTest extends IntegrationTestBase {
     @Autowired
     private StringRedisTemplate redisTemplate;
 
+    @Autowired
+    private MerchantAuthService authService;
+
     @MockitoBean
     private MerchantWechatSessionClient merchantWechatSessionClient;
 
     @BeforeEach
     void setUpAccounts() {
+        Set<String> redisKeys = redisTemplate.keys("auth:*");
+        if (!redisKeys.isEmpty()) {
+            redisTemplate.delete(redisKeys);
+        }
         jdbcTemplate.update("delete from staff_wechat_binding");
         jdbcTemplate.update("delete from staff_account");
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
@@ -106,6 +119,9 @@ class MerchantAuthApiTest extends IntegrationTestBase {
         when(merchantWechatSessionClient.exchange("first-code"))
             .thenReturn(new MerchantWechatSessionClient.WechatSession("openid-1"));
         passwordLogin("owner", "correct-password", "first-code").andExpect(status().isOk());
+        long ownerId = jdbcTemplate.queryForObject(
+            "select id from staff_account where username = 'owner'", Long.class
+        );
 
         passwordLogin("cashier", "cashier-password", "first-code")
             .andExpect(status().isConflict())
@@ -185,6 +201,63 @@ class MerchantAuthApiTest extends IntegrationTestBase {
         mockMvc.perform(get("/api/merchant-mini/account")
                 .header("Authorization", "Bearer " + token))
             .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void unboundStaffCanBindAnotherWechatAndReleaseOldWechatForAnotherStaff() throws Exception {
+        when(merchantWechatSessionClient.exchange("first-code"))
+            .thenReturn(new MerchantWechatSessionClient.WechatSession("openid-1"));
+        when(merchantWechatSessionClient.exchange("second-code"))
+            .thenReturn(new MerchantWechatSessionClient.WechatSession("openid-2"));
+        String token = accessToken(passwordLogin("owner", "correct-password", "first-code"));
+
+        mockMvc.perform(delete("/api/merchant-mini/account/wechat-binding")
+                .header("Authorization", "Bearer " + token))
+            .andExpect(status().isOk());
+        passwordLogin("owner", "correct-password", "second-code")
+            .andExpect(status().isOk());
+        passwordLogin("cashier", "cashier-password", "first-code")
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    void concurrentMerchantLoginsLeaveOnlyTheIndexedSessionValid() throws Exception {
+        when(merchantWechatSessionClient.exchange("first-code"))
+            .thenReturn(new MerchantWechatSessionClient.WechatSession("openid-1"));
+        passwordLogin("owner", "correct-password", "first-code").andExpect(status().isOk());
+        long ownerId = jdbcTemplate.queryForObject(
+            "select id from staff_account where username = 'owner'", Long.class
+        );
+        Set<String> initialSessions = redisTemplate.keys("auth:*");
+        if (!initialSessions.isEmpty()) {
+            redisTemplate.delete(initialSessions);
+        }
+
+        int loginCount = 8;
+        CountDownLatch ready = new CountDownLatch(loginCount);
+        CountDownLatch start = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(loginCount);
+        try {
+            List<Future<MerchantAuthService.MerchantSessionView>> sessions =
+                java.util.stream.IntStream.range(0, loginCount)
+                    .mapToObj(ignored -> executor.submit(() -> {
+                        ready.countDown();
+                        start.await();
+                        return authService.passwordLogin("owner", "correct-password", "first-code");
+                    }))
+                    .toList();
+            ready.await();
+            start.countDown();
+            for (Future<MerchantAuthService.MerchantSessionView> session : sessions) {
+                session.get();
+            }
+        } finally {
+            executor.shutdownNow();
+        }
+
+        String indexedSession = redisTemplate.opsForValue().get("auth:merchant-staff:" + ownerId);
+        assertThat(indexedSession).isNotBlank();
+        assertThat(redisTemplate.keys("auth:session:*")).containsExactly("auth:session:" + indexedSession);
     }
 
     private org.springframework.test.web.servlet.ResultActions passwordLogin(

@@ -57,12 +57,17 @@ public class JwtService {
 
     public CurrentPrincipal parse(String token) {
         Jwt jwt = decoder.decode(token);
+        ActorType actorType = ActorType.valueOf(jwt.getClaimAsString("actorType"));
+        String clientTypeClaim = jwt.getClaimAsString("clientType");
+        ClientType clientType = clientTypeClaim == null
+            ? (actorType == ActorType.CUSTOMER ? ClientType.CUSTOMER_MINI : ClientType.ADMIN_WEB)
+            : ClientType.valueOf(clientTypeClaim);
         return new CurrentPrincipal(
             Long.parseLong(jwt.getSubject()),
-            ActorType.valueOf(jwt.getClaimAsString("actorType")),
+            actorType,
             jwt.getClaimAsString("role"),
             jwt.getClaimAsString("sessionId"),
-            ClientType.valueOf(jwt.getClaimAsString("clientType"))
+            clientType
         );
     }
 }

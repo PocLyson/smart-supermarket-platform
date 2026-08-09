@@ -73,6 +73,15 @@ public class StaffWechatBinding {
         this.lastLoginAt = now;
     }
 
+    public void rebind(String appId, String openid, Instant now) {
+        this.appId = appId;
+        this.openid = openid;
+        this.enabled = true;
+        this.boundAt = now;
+        this.lastLoginAt = now;
+        this.unboundAt = null;
+    }
+
     public void unbind(Instant now) {
         this.enabled = false;
         this.unboundAt = now;

@@ -7,6 +7,7 @@ import com.luneng.smartstore.common.web.RequestIdFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,6 +18,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -63,21 +65,20 @@ public class SecurityConfig {
                     "/api/admin/inventory/**",
                     "/api/admin/files/**",
                     "/api/admin/security-test/owner-only"
-                ).hasRole("OWNER")
-                .requestMatchers("/api/admin/**").hasAnyRole("OWNER", "CASHIER")
+                ).access((authentication, context) -> hasClientAndAnyRole(
+                    authentication.get(), "CLIENT_ADMIN_WEB", "ROLE_OWNER"
+                ))
+                .requestMatchers("/api/admin/**").access((authentication, context) -> hasClientAndAnyRole(
+                    authentication.get(), "CLIENT_ADMIN_WEB", "ROLE_OWNER", "ROLE_CASHIER"
+                ))
                 .requestMatchers(
                     "/api/mini/account",
                     "/api/mini/profile",
                     "/api/mini/orders/**"
                 ).hasRole("CUSTOMER")
-                .requestMatchers("/api/merchant-mini/**").access((authentication, context) -> {
-                    boolean merchantClient = authentication.get().getAuthorities().stream()
-                        .anyMatch(authority -> "CLIENT_MERCHANT_MINI".equals(authority.getAuthority()));
-                    boolean merchantRole = authentication.get().getAuthorities().stream()
-                        .anyMatch(authority -> "ROLE_OWNER".equals(authority.getAuthority())
-                            || "ROLE_CASHIER".equals(authority.getAuthority()));
-                    return new AuthorizationDecision(merchantClient && merchantRole);
-                })
+                .requestMatchers("/api/merchant-mini/**").access((authentication, context) -> hasClientAndAnyRole(
+                    authentication.get(), "CLIENT_MERCHANT_MINI", "ROLE_OWNER", "ROLE_CASHIER"
+                ))
                 .anyRequest().authenticated()
             )
             .exceptionHandling(exceptions -> exceptions
@@ -138,6 +139,20 @@ public class SecurityConfig {
         objectMapper.writeValue(
             response.getOutputStream(),
             ApiResponse.error(code, message, RequestIdFilter.requestId(request))
+        );
+    }
+
+    private static AuthorizationDecision hasClientAndAnyRole(
+        Authentication authentication,
+        String clientAuthority,
+        String... roleAuthorities
+    ) {
+        List<String> grantedAuthorities = authentication.getAuthorities().stream()
+            .map(authority -> authority.getAuthority())
+            .toList();
+        return new AuthorizationDecision(
+            grantedAuthorities.contains(clientAuthority)
+                && Arrays.stream(roleAuthorities).anyMatch(grantedAuthorities::contains)
         );
     }
 }
