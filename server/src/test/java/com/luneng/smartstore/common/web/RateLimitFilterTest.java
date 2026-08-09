@@ -4,6 +4,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -12,17 +14,32 @@ import com.luneng.smartstore.auth.ActorType;
 import com.luneng.smartstore.auth.CurrentPrincipal;
 import com.luneng.smartstore.auth.JwtService;
 import com.luneng.smartstore.support.IntegrationTestBase;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.data.redis.connection.DataType;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 
 @AutoConfigureMockMvc
@@ -93,11 +110,21 @@ class RateLimitFilterTest extends IntegrationTestBase {
 
     @Test
     @SuppressWarnings("unchecked")
-    void merchantPasswordLoginFailsClosedWhenRateLimitBackendIsUnavailable() throws Exception {
+    void atomicOperationFailureFailsClosedWithoutLeavingPermanentCounterForEveryLimitedRoute()
+        throws Exception {
         StringRedisTemplate unavailableRedis = mock(StringRedisTemplate.class);
         ValueOperations<String, String> values = mock(ValueOperations.class);
         when(unavailableRedis.opsForValue()).thenReturn(values);
-        when(values.increment(anyString())).thenThrow(new IllegalStateException("redis unavailable"));
+        when(values.increment(anyString())).thenAnswer(invocation ->
+            redisTemplate.opsForValue().increment(invocation.getArgument(0, String.class))
+        );
+        when(unavailableRedis.expire(anyString(), any(Duration.class)))
+            .thenThrow(new IllegalStateException("expire unavailable"));
+        when(unavailableRedis.execute(
+            any(RedisScript.class),
+            anyList(),
+            any(Object[].class)
+        )).thenThrow(new IllegalStateException("redis script unavailable"));
         RateLimitFilter filter = new RateLimitFilter(
             unavailableRedis,
             new com.fasterxml.jackson.databind.ObjectMapper(),
@@ -108,17 +135,125 @@ class RateLimitFilterTest extends IntegrationTestBase {
             10,
             60
         );
-        MockHttpServletRequest request = new MockHttpServletRequest(
-            "POST",
-            "/api/merchant-mini/auth/password-login"
+        List<LimitedRoute> routes = List.of(
+            new LimitedRoute("/api/admin/auth/login", "198.51.100.6", null),
+            new LimitedRoute("/api/merchant-mini/auth/password-login", "198.51.100.9", null),
+            new LimitedRoute("/api/mini/auth/wechat", "198.51.100.10", null),
+            new LimitedRoute("/api/mini/orders", "198.51.100.11", 4343L)
         );
-        request.setRemoteAddr("198.51.100.9");
-        MockHttpServletResponse response = new MockHttpServletResponse();
 
-        filter.doFilter(request, response, new MockFilterChain());
+        for (LimitedRoute route : routes) {
+            clearRateLimitKeys();
+            authenticateCustomer(route.customerId());
+            try {
+                MockHttpServletRequest request = new MockHttpServletRequest("POST", route.uri());
+                request.setRemoteAddr(route.remoteAddress());
+                MockHttpServletResponse response = new MockHttpServletResponse();
+                filter.doFilter(request, response, new MockFilterChain());
 
-        assertThat(response.getStatus()).isEqualTo(429);
-        assertThat(response.getContentAsString()).contains("\"code\":\"RATE_LIMITED\"");
+                assertThat(response.getStatus()).as(route.uri()).isEqualTo(429);
+                assertThat(response.getContentAsString())
+                    .as(route.uri())
+                    .contains("\"code\":\"RATE_LIMITED\"");
+                assertThat(redisTemplate.keys("rate-limit:*")).as(route.uri()).isEmpty();
+            } finally {
+                SecurityContextHolder.clearContext();
+            }
+        }
+    }
+
+    @Test
+    void slidingWindowPreventsNearDoubleBurstAcrossEveryLimitedRoute() throws Exception {
+        RateLimitFilter filter = oneSecondFilter(redisTemplate);
+        List<LimitedRoute> routes = List.of(
+            new LimitedRoute("/api/admin/auth/login", "198.51.100.21", null),
+            new LimitedRoute("/api/merchant-mini/auth/password-login", "198.51.100.22", null),
+            new LimitedRoute("/api/mini/auth/wechat", "198.51.100.23", null),
+            new LimitedRoute("/api/mini/orders", "198.51.100.24", 4242L)
+        );
+
+        for (LimitedRoute route : routes) {
+            clearRateLimitKeys();
+            authenticateCustomer(route.customerId());
+            try {
+                assertThat(directStatus(filter, route)).as(route.uri()).isEqualTo(200);
+                String key = onlyRateLimitKey();
+                Long initialTtlMillis = redisTemplate.getExpire(key, TimeUnit.MILLISECONDS);
+                assertThat(initialTtlMillis).as(route.uri()).isNotNull().isPositive();
+                long observedAt = System.nanoTime();
+                long originalExpiry = observedAt
+                    + TimeUnit.MILLISECONDS.toNanos(initialTtlMillis);
+
+                waitUntil(originalExpiry - TimeUnit.MILLISECONDS.toNanos(350));
+                for (int attempt = 1; attempt < 10; attempt++) {
+                    assertThat(directStatus(filter, route)).as(route.uri()).isEqualTo(200);
+                }
+
+                waitUntil(originalExpiry + TimeUnit.MILLISECONDS.toNanos(100));
+                int allowedAfterOriginalExpiry = 0;
+                for (int attempt = 0; attempt < 10; attempt++) {
+                    if (directStatus(filter, route) == 200) {
+                        allowedAfterOriginalExpiry++;
+                    }
+                }
+                assertThat(allowedAfterOriginalExpiry)
+                    .as("accepted burst after original window boundary for %s", route.uri())
+                    .isEqualTo(1);
+            } finally {
+                SecurityContextHolder.clearContext();
+            }
+        }
+    }
+
+    @Test
+    void concurrentRequestsPersistOneExpiringZsetEntryPerAcceptedRequest() throws Exception {
+        RateLimitFilter filter = new RateLimitFilter(
+            redisTemplate,
+            new com.fasterxml.jackson.databind.ObjectMapper(),
+            10,
+            60,
+            10,
+            60,
+            10,
+            60,
+            Clock.fixed(Instant.ofEpochMilli(1_900_000_000_000L), ZoneOffset.UTC)
+        );
+        LimitedRoute route = new LimitedRoute(
+            "/api/admin/auth/login",
+            "198.51.100.25",
+            null
+        );
+        int requestCount = 32;
+        CountDownLatch ready = new CountDownLatch(requestCount);
+        CountDownLatch start = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(requestCount);
+        try {
+            List<Future<Integer>> results = java.util.stream.IntStream.range(0, requestCount)
+                .mapToObj(ignored -> executor.submit(() -> {
+                    ready.countDown();
+                    start.await();
+                    return directStatus(filter, route);
+                }))
+                .toList();
+            assertThat(ready.await(5, TimeUnit.SECONDS)).isTrue();
+            start.countDown();
+
+            int allowed = 0;
+            for (Future<Integer> result : results) {
+                if (result.get(5, TimeUnit.SECONDS) == 200) {
+                    allowed++;
+                }
+            }
+
+            assertThat(allowed).isEqualTo(10);
+            String key = onlyRateLimitKey();
+            assertThat(redisTemplate.type(key)).isEqualTo(DataType.ZSET);
+            assertThat(redisTemplate.opsForZSet().zCard(key)).isEqualTo(10L);
+            assertThat(redisTemplate.getExpire(key, TimeUnit.MILLISECONDS)).isPositive();
+        } finally {
+            start.countDown();
+            executor.shutdownNow();
+        }
     }
 
     @Test
@@ -163,5 +298,68 @@ class RateLimitFilterTest extends IntegrationTestBase {
                   "code":"valid-wechat-code"
                 }
                 """));
+    }
+
+    private RateLimitFilter oneSecondFilter(StringRedisTemplate template) {
+        return new RateLimitFilter(
+            template,
+            new com.fasterxml.jackson.databind.ObjectMapper(),
+            10,
+            1,
+            10,
+            1,
+            10,
+            1
+        );
+    }
+
+    private int directStatus(RateLimitFilter filter, LimitedRoute route) throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", route.uri());
+        request.setRemoteAddr(route.remoteAddress());
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        filter.doFilter(request, response, new MockFilterChain());
+        return response.getStatus();
+    }
+
+    private void authenticateCustomer(Long customerId) {
+        SecurityContextHolder.clearContext();
+        if (customerId == null) {
+            return;
+        }
+        CurrentPrincipal principal = new CurrentPrincipal(
+            customerId,
+            ActorType.CUSTOMER,
+            "CUSTOMER",
+            "rate-limit-boundary-session"
+        );
+        SecurityContextHolder.getContext().setAuthentication(
+            new UsernamePasswordAuthenticationToken(principal, null, List.of())
+        );
+    }
+
+    private String onlyRateLimitKey() {
+        var keys = redisTemplate.keys("rate-limit:*");
+        assertThat(keys).hasSize(1);
+        return keys.iterator().next();
+    }
+
+    private void clearRateLimitKeys() {
+        var keys = redisTemplate.keys("rate-limit:*");
+        if (!keys.isEmpty()) {
+            redisTemplate.delete(keys);
+        }
+    }
+
+    private void waitUntil(long targetNanos) {
+        while (true) {
+            long remaining = targetNanos - System.nanoTime();
+            if (remaining <= 0) {
+                return;
+            }
+            LockSupport.parkNanos(Math.min(remaining, TimeUnit.MILLISECONDS.toNanos(10)));
+        }
+    }
+
+    private record LimitedRoute(String uri, String remoteAddress, Long customerId) {
     }
 }

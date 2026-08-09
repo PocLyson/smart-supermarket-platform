@@ -9,11 +9,16 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.Clock;
 import java.time.Duration;
+import java.util.List;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,13 +28,32 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Component
 public class RateLimitFilter extends OncePerRequestFilter {
     private static final Logger LOGGER = LoggerFactory.getLogger(RateLimitFilter.class);
+    private static final DefaultRedisScript<Long> SLIDING_WINDOW_SCRIPT =
+        new DefaultRedisScript<>(
+            """
+            local now = tonumber(ARGV[1])
+            local window = tonumber(ARGV[2])
+            local limit = tonumber(ARGV[3])
+            redis.call('ZREMRANGEBYSCORE', KEYS[1], '-inf', now - window)
+            local count = redis.call('ZCARD', KEYS[1])
+            if count >= limit then
+                return 0
+            end
+            redis.call('ZADD', KEYS[1], now, ARGV[4])
+            redis.call('PEXPIRE', KEYS[1], window)
+            return 1
+            """,
+            Long.class
+        );
 
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
     private final Limit staffLogin;
     private final Limit customerLogin;
     private final Limit orderCreate;
+    private final Clock clock;
 
+    @Autowired
     public RateLimitFilter(
         StringRedisTemplate redisTemplate,
         ObjectMapper objectMapper,
@@ -43,11 +67,36 @@ public class RateLimitFilter extends OncePerRequestFilter {
         @Value("${smart-store.rate-limit.order-create.window-seconds:60}")
         long orderCreateWindow
     ) {
+        this(
+            redisTemplate,
+            objectMapper,
+            staffLoginLimit,
+            staffLoginWindow,
+            customerLoginLimit,
+            customerLoginWindow,
+            orderCreateLimit,
+            orderCreateWindow,
+            Clock.systemUTC()
+        );
+    }
+
+    RateLimitFilter(
+        StringRedisTemplate redisTemplate,
+        ObjectMapper objectMapper,
+        int staffLoginLimit,
+        long staffLoginWindow,
+        int customerLoginLimit,
+        long customerLoginWindow,
+        int orderCreateLimit,
+        long orderCreateWindow,
+        Clock clock
+    ) {
         this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
         this.staffLogin = new Limit(staffLoginLimit, Duration.ofSeconds(staffLoginWindow));
         this.customerLogin = new Limit(customerLoginLimit, Duration.ofSeconds(customerLoginWindow));
         this.orderCreate = new Limit(orderCreateLimit, Duration.ofSeconds(orderCreateWindow));
+        this.clock = clock;
     }
 
     @Override
@@ -107,20 +156,25 @@ public class RateLimitFilter extends OncePerRequestFilter {
             "order-create",
             Long.toString(principal.id()),
             orderCreate,
-            false
+            true
         );
     }
 
     private boolean allow(Rule rule) {
-        String key = "rate-limit:%s:%s".formatted(
+        String key = "rate-limit:v2:%s:%s".formatted(
             rule.scope(),
             rule.identity()
         );
-        Long count = redisTemplate.opsForValue().increment(key);
-        if (count != null && count == 1L) {
-            redisTemplate.expire(key, rule.limit().window().plusSeconds(1));
-        }
-        return count != null && count <= rule.limit().requests();
+        long nowMillis = clock.millis();
+        Long allowed = redisTemplate.execute(
+            SLIDING_WINDOW_SCRIPT,
+            List.of(key),
+            Long.toString(nowMillis),
+            Long.toString(rule.limit().window().toMillis()),
+            Integer.toString(rule.limit().requests()),
+            nowMillis + ":" + UUID.randomUUID()
+        );
+        return Long.valueOf(1L).equals(allowed);
     }
 
     private void reject(
