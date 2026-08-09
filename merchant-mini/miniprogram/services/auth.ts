@@ -53,7 +53,10 @@ export const createMerchantAuthService = ({
   const loginWithWechat = async (): Promise<MerchantSession> => {
     const { code } = await login()
     const response = await client.post<ApiMerchantSession>(
-      '/api/merchant-mini/auth/wechat-login', { code })
+      '/api/merchant-mini/auth/wechat-login',
+      { code },
+      { authorization: 'public' },
+    )
     const result = normalizeSession(response)
     session.save(result)
     return result
@@ -78,6 +81,7 @@ export const createMerchantAuthService = ({
       const response = await client.post<ApiMerchantSession>(
         '/api/merchant-mini/auth/password-login',
         { username, password, code },
+        { authorization: 'public' },
       )
       const result = normalizeSession(response)
       session.save(result)

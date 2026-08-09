@@ -24,10 +24,14 @@ interface MerchantTransportResponse {
 }
 
 export interface MerchantHttp {
-  get<T>(path: string, data?: unknown): Promise<T>
-  post<T>(path: string, data?: unknown): Promise<T>
-  put<T>(path: string, data?: unknown): Promise<T>
-  delete<T>(path: string, data?: unknown): Promise<T>
+  get<T>(path: string, data?: unknown, policy?: MerchantRequestPolicy): Promise<T>
+  post<T>(path: string, data?: unknown, policy?: MerchantRequestPolicy): Promise<T>
+  put<T>(path: string, data?: unknown, policy?: MerchantRequestPolicy): Promise<T>
+  delete<T>(path: string, data?: unknown, policy?: MerchantRequestPolicy): Promise<T>
+}
+
+export interface MerchantRequestPolicy {
+  authorization: 'public' | 'protected'
 }
 
 interface MerchantHttpDependencies {
@@ -77,8 +81,10 @@ export const createMerchantHttp = ({
     method: MerchantRequestOptions['method'],
     path: string,
     data?: unknown,
+    policy: MerchantRequestPolicy = { authorization: 'protected' },
   ): Promise<T> => {
-    const current = session.current()
+    const protectedRequest = policy.authorization === 'protected'
+    const current = protectedRequest ? session.current() : undefined
     const response = await request({
       url: `${apiBaseUrl()}${path}`,
       method,
@@ -90,9 +96,9 @@ export const createMerchantHttp = ({
 
     if (!isTransportResponse(response)) return response as T
     const { statusCode, data: body } = response
-    if (statusCode === 401) {
+    if (statusCode === 401 && protectedRequest) {
       session.clear()
-      if (current) onUnauthorized()
+      onUnauthorized()
     }
     if (!isApiResponse(body)) {
       throw new Error('服务响应异常，请重试')
@@ -109,10 +115,14 @@ export const createMerchantHttp = ({
   }
 
   return {
-    get: <T>(path: string, data?: unknown) => send<T>('GET', path, data),
-    post: <T>(path: string, data?: unknown) => send<T>('POST', path, data),
-    put: <T>(path: string, data?: unknown) => send<T>('PUT', path, data),
-    delete: <T>(path: string, data?: unknown) => send<T>('DELETE', path, data),
+    get: <T>(path: string, data?: unknown, policy?: MerchantRequestPolicy) =>
+      send<T>('GET', path, data, policy),
+    post: <T>(path: string, data?: unknown, policy?: MerchantRequestPolicy) =>
+      send<T>('POST', path, data, policy),
+    put: <T>(path: string, data?: unknown, policy?: MerchantRequestPolicy) =>
+      send<T>('PUT', path, data, policy),
+    delete: <T>(path: string, data?: unknown, policy?: MerchantRequestPolicy) =>
+      send<T>('DELETE', path, data, policy),
   }
 }
 

@@ -29,24 +29,23 @@
       <text class="binding-help">验证成功后，当前微信将用于后续快速登录。</text>
 
       <view class="form-field">
-        <text class="field-label">员工账号</text>
         <t-input
+          label="员工账号"
+          layout="vertical"
           value="{{username}}"
           placeholder="请输入员工账号"
           clearable
-          aria-label="员工账号"
           bindchange="onUsernameChange"
         />
       </view>
 
       <view class="form-field">
-        <text class="field-label">密码</text>
         <t-input
+          label="密码"
+          layout="vertical"
           value="{{password}}"
           type="password"
-          password
           placeholder="请输入密码"
-          aria-label="密码"
           bindchange="onPasswordChange"
         />
       </view>

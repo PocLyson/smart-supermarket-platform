@@ -10,11 +10,11 @@ export interface NavigationItem {
 }
 
 export const NAV_ITEMS: readonly NavigationItem[] = [
-  { id: 'workbench', label: '工作台', icon: 'dashboard', url: '/pages/messages-unavailable/index?feature=workbench' },
-  { id: 'orders', label: '订单', icon: 'file-1', url: '/pages/messages-unavailable/index?feature=orders' },
-  { id: 'verification', label: '核销', icon: 'scan', url: '/pages/messages-unavailable/index?feature=verification' },
-  { id: 'messages', label: '消息', icon: 'notification', url: '/pages/messages-unavailable/index?feature=messages' },
-  { id: 'profile', label: '我的', icon: 'user', url: '/pages/profile/index' },
+  { id: 'workbench', label: '工作台', icon: '/assets/icons/workbench.svg', url: '/pages/messages-unavailable/index?feature=workbench' },
+  { id: 'orders', label: '订单', icon: '/assets/icons/orders.svg', url: '/pages/messages-unavailable/index?feature=orders' },
+  { id: 'verification', label: '核销', icon: '/assets/icons/verification.svg', url: '/pages/messages-unavailable/index?feature=verification' },
+  { id: 'messages', label: '消息', icon: '/assets/icons/messages.svg', url: '/pages/messages-unavailable/index?feature=messages' },
+  { id: 'profile', label: '我的', icon: '/assets/icons/profile.svg', url: '/pages/profile/index' },
 ]
 
 export interface MerchantShortcut {

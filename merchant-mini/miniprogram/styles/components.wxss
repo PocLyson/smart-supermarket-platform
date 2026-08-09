@@ -32,15 +32,6 @@
   margin-top: var(--space-5);
 }
 
-.field-label {
-  display: block;
-  margin-bottom: var(--space-2);
-  color: var(--color-text-primary);
-  font-size: var(--type-label-size);
-  font-weight: var(--weight-semibold);
-  line-height: var(--type-label-line);
-}
-
 .feedback-error {
   margin: var(--space-4) 0;
   padding: var(--space-3) var(--space-4);

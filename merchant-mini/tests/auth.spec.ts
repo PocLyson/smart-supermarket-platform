@@ -94,6 +94,47 @@ describe('merchant HTTP boundary', () => {
     await expect(client.get('/api/merchant-mini/account')).rejects.toBeInstanceOf(HttpResponseError)
     expect(onUnauthorized).toHaveBeenCalledOnce()
   })
+
+  test('an expired protected request still leaves the employee screen on 401', async () => {
+    const onUnauthorized = vi.fn()
+    const expiredStore = createMerchantSessionStore({
+      read: () => validSession({ expiresAt: Date.now() - 1 }),
+      write: vi.fn(),
+      clear: vi.fn(),
+    })
+    const client = createMerchantHttp({
+      request: vi.fn().mockResolvedValue({
+        statusCode: 401,
+        data: { code: 'UNAUTHORIZED', message: '登录已失效', requestId: 'req-4', data: null },
+      }),
+      session: expiredStore,
+      onUnauthorized,
+    })
+
+    await expect(client.get('/api/merchant-mini/account')).rejects.toBeInstanceOf(HttpResponseError)
+    expect(onUnauthorized).toHaveBeenCalledOnce()
+  })
+
+  test('a public authentication 401 stays on the form even if stale storage exists', async () => {
+    const onUnauthorized = vi.fn()
+    const client = createMerchantHttp({
+      request: vi.fn().mockResolvedValue({
+        statusCode: 401,
+        data: { code: 'INVALID_CREDENTIALS', message: '账号或密码错误', requestId: 'req-5', data: null },
+      }),
+      session: { current: () => validSession(), save: vi.fn(), clear: vi.fn() },
+      onUnauthorized,
+    })
+
+    await expect(
+      client.post(
+        '/api/merchant-mini/auth/password-login',
+        { username: 'owner' },
+        { authorization: 'public' },
+      ),
+    ).rejects.toMatchObject({ code: 'INVALID_CREDENTIALS' })
+    expect(onUnauthorized).not.toHaveBeenCalled()
+  })
 })
 
 describe('merchant login flow', () => {
@@ -171,7 +212,7 @@ describe('merchant login flow', () => {
       username: 'owner',
       password: 'secret',
       code: 'fresh-code',
-    })
+    }, { authorization: 'public' })
     expect(save).toHaveBeenCalledWith(session)
   })
 

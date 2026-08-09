@@ -15,15 +15,20 @@
 
 .tab-item {
   display: flex;
-  min-width: 88rpx;
-  min-height: 88rpx;
+  min-width: 44px;
+  min-height: 44px;
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-md);
-  color: var(--color-text-tertiary);
+  color: var(--color-text-secondary);
   flex-direction: column;
   gap: 4rpx;
   transition: background-color var(--duration-fast) var(--easing-standard), color var(--duration-fast) var(--easing-standard);
+}
+
+.tab-icon {
+  width: 24px;
+  height: 24px;
 }
 
 .tab-item--pressed {

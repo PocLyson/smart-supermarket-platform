@@ -10,7 +10,7 @@
     bindtap="onTabTap"
     hover-class="tab-item--pressed"
   >
-    <t-icon name="{{item.icon}}" size="44rpx" aria-hidden="true" />
+    <image class="tab-icon" src="{{item.icon}}" mode="aspectFit" aria-hidden="true" />
     <text class="tab-label">{{item.label}}</text>
   </view>
 </view>
