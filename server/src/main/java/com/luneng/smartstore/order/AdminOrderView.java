@@ -18,7 +18,7 @@ public record AdminOrderView(
     List<OrderView.ItemView> items,
     List<OrderView.HistoryView> history
 ) {
-    static AdminOrderView from(CustomerOrder order) {
+    public static AdminOrderView from(CustomerOrder order) {
         OrderView view = OrderView.from(order);
         return new AdminOrderView(
             view.orderNo(),

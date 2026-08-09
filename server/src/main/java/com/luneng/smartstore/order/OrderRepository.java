@@ -29,6 +29,8 @@ public interface OrderRepository extends JpaRepository<CustomerOrder, Long> {
         Collection<OrderStatus> statuses
     );
 
+    long countByStatusAndAdminHiddenFalse(OrderStatus status);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select o from CustomerOrder o where o.orderNo = :orderNo")
     Optional<CustomerOrder> findLockedByOrderNo(@Param("orderNo") String orderNo);

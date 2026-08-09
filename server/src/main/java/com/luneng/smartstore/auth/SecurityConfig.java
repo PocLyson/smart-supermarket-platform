@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.http.MediaType;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.authorization.AuthorizationDecision;
@@ -76,6 +77,12 @@ public class SecurityConfig {
                     "/api/mini/profile",
                     "/api/mini/orders/**"
                 ).hasRole("CUSTOMER")
+                .requestMatchers(
+                    HttpMethod.POST,
+                    "/api/merchant-mini/orders/*/cancel"
+                ).access((authentication, context) -> hasClientAndAnyRole(
+                    authentication.get(), "CLIENT_MERCHANT_MINI", "ROLE_OWNER"
+                ))
                 .requestMatchers("/api/merchant-mini/**").access((authentication, context) -> hasClientAndAnyRole(
                     authentication.get(), "CLIENT_MERCHANT_MINI", "ROLE_OWNER", "ROLE_CASHIER"
                 ))

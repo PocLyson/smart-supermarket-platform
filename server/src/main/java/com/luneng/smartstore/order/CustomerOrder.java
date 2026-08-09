@@ -181,9 +181,13 @@ public class CustomerOrder {
 
     public void complete(long actorId, String pickupCode) {
         requireStatus(OrderStatus.READY_FOR_PICKUP, "当前状态不允许完成订单");
-        if (paymentStatus != PaymentStatus.PAID) {
-            throw new BusinessException("ORDER_STATE_CONFLICT", "订单未付款，不能完成");
-        }
+        requirePaid();
+        verifyPickupCode(pickupCode);
+        completeAfterVerified(actorId);
+    }
+
+    public void verifyPickupCode(String pickupCode) {
+        requireStatus(OrderStatus.READY_FOR_PICKUP, "当前状态不允许完成订单");
         if (pickupCode == null || !pickupCode.matches("\\d{6}")) {
             throw new BusinessException(
                 "VALIDATION_ERROR",
@@ -197,8 +201,19 @@ public class CustomerOrder {
                 "取货码不正确，请与顾客核对后重试"
             );
         }
+    }
+
+    public void completeAfterVerified(long actorId) {
+        requireStatus(OrderStatus.READY_FOR_PICKUP, "当前状态不允许完成订单");
+        requirePaid();
         transition(OrderStatus.COMPLETED, actorId, "订单完成");
         completedAt = Instant.now();
+    }
+
+    private void requirePaid() {
+        if (paymentStatus != PaymentStatus.PAID) {
+            throw new BusinessException("ORDER_STATE_CONFLICT", "订单未付款，不能完成");
+        }
     }
 
     public void cancelByStaff(long actorId, String reason) {

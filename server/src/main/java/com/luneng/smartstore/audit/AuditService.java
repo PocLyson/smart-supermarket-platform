@@ -37,6 +37,18 @@ public class AuditService {
         ));
     }
 
+    public boolean wasRecorded(
+        CurrentPrincipal actor,
+        String action,
+        String objectType,
+        String objectId,
+        String requestId
+    ) {
+        return repository.existsByActorIdAndActionAndObjectTypeAndObjectIdAndRequestId(
+            actor.id(), action, objectType, objectId, requestId
+        );
+    }
+
     @Transactional(readOnly = true)
     public AuditPage list(
         Long actorId,
