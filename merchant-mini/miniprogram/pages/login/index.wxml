@@ -1,0 +1,80 @@
+<view class="login-page">
+  <view class="login-hero">
+    <view class="merchant-symbol" aria-hidden="true">
+      <view class="merchant-symbol__roof"></view>
+      <view class="merchant-symbol__counter"></view>
+    </view>
+    <text class="page-title">智慧超市商家端</text>
+    <text class="page-description">使用员工微信安全登录</text>
+  </view>
+
+  <view class="card login-card">
+    <view wx:if="{{errorMessage}}" class="feedback-error" role="alert" aria-live="polite">
+      <text>{{errorMessage}}</text>
+    </view>
+
+    <view wx:if="{{!showBinding}}" class="action-stack">
+      <t-button
+        theme="primary"
+        block
+        loading="{{isLoading}}"
+        disabled="{{isLoading}}"
+        aria-label="使用微信登录"
+        bindtap="loginWithWechat"
+      >{{isLoading ? '正在登录' : '使用微信登录'}}</t-button>
+    </view>
+
+    <view wx:if="{{showBinding}}" class="binding-form">
+      <text class="binding-title">绑定员工账号</text>
+      <text class="binding-help">验证成功后，当前微信将用于后续快速登录。</text>
+
+      <view class="form-field">
+        <text class="field-label">员工账号</text>
+        <t-input
+          value="{{username}}"
+          placeholder="请输入员工账号"
+          clearable
+          aria-label="员工账号"
+          bindchange="onUsernameChange"
+        />
+      </view>
+
+      <view class="form-field">
+        <text class="field-label">密码</text>
+        <t-input
+          value="{{password}}"
+          type="password"
+          password
+          placeholder="请输入密码"
+          aria-label="密码"
+          bindchange="onPasswordChange"
+        />
+      </view>
+
+      <checkbox-group class="confirmation" bindchange="onConfirmationChange">
+        <label class="confirmation__label">
+          <checkbox value="confirmed" checked="{{confirmed}}" color="#082F6B" />
+          <text>我确认将当前微信绑定到此员工账号</text>
+        </label>
+      </checkbox-group>
+
+      <view class="action-stack">
+        <t-button
+          theme="primary"
+          block
+          loading="{{isLoading}}"
+          disabled="{{isLoading || !username || !password || !confirmed}}"
+          aria-label="确认绑定并登录"
+          bindtap="loginWithPassword"
+        >{{isLoading ? '正在绑定' : '确认绑定并登录'}}</t-button>
+        <t-button
+          theme="default"
+          variant="outline"
+          block
+          disabled="{{isLoading}}"
+          bindtap="loginWithWechat"
+        >重试微信登录</t-button>
+      </view>
+    </view>
+  </view>
+</view>

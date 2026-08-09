@@ -1,0 +1,12 @@
+@import "./styles/theme.wxss";
+@import "./styles/components.wxss";
+
+page {
+  min-height: 100%;
+  background: var(--color-bg-page);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-base);
+  font-size: var(--type-body-size);
+  font-weight: var(--weight-regular);
+  line-height: var(--type-body-line);
+}

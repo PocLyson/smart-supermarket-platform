@@ -1,0 +1,21 @@
+{
+  "appid": "touristappid",
+  "projectname": "smart-supermarket-merchant-mini",
+  "miniprogramRoot": "miniprogram/",
+  "compileType": "miniprogram",
+  "setting": {
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": true,
+    "useCompilerPlugins": ["typescript"],
+    "packNpmManually": true,
+    "packNpmRelationList": [
+      {
+        "packageJsonPath": "./package.json",
+        "miniprogramNpmDistDir": "./miniprogram/"
+      }
+    ]
+  },
+  "libVersion": "3.17.0"
+}

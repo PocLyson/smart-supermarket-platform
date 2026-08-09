@@ -1,0 +1,16 @@
+<view class="app-tab-bar" role="navigation" aria-label="商家端主导航">
+  <view
+    wx:for="{{items}}"
+    wx:key="id"
+    class="tab-item {{value === item.id ? 'is-active' : ''}}"
+    role="button"
+    aria-label="{{item.label}}"
+    aria-current="{{value === item.id ? 'page' : 'false'}}"
+    data-value="{{item.id}}"
+    bindtap="onTabTap"
+    hover-class="tab-item--pressed"
+  >
+    <t-icon name="{{item.icon}}" size="44rpx" aria-hidden="true" />
+    <text class="tab-label">{{item.label}}</text>
+  </view>
+</view>

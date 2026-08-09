@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "功能建设中",
+  "usingComponents": {
+    "app-tab-bar": "/components/app-tab-bar/index"
+  }
+}

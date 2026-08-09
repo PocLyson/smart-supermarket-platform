@@ -1,0 +1,19 @@
+{
+  "name": "smart-supermarket-merchant-mini",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "scripts": {
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "tdesign-miniprogram": "1.15.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "@types/wechat-miniprogram": "^3.4.8",
+    "typescript": "^5.9.2",
+    "vitest": "^4.1.6"
+  }
+}

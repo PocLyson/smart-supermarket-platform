@@ -1,0 +1,41 @@
+<view class="page-shell profile-page" wx:if="{{session}}">
+  <view class="card">
+    <employee-header username="{{session.username}}" role="{{session.role}}" />
+  </view>
+
+  <view class="section">
+    <text class="section-title">账号功能</text>
+    <view class="shortcut-list">
+      <view
+        wx:for="{{shortcuts}}"
+        wx:key="id"
+        class="shortcut-item"
+        role="button"
+        aria-label="{{item.label}}"
+        data-id="{{item.id}}"
+        bindtap="onShortcutTap"
+        hover-class="shortcut-item--pressed"
+      >
+        <text>{{item.label}}</text>
+        <view class="shortcut-chevron" aria-hidden="true"></view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{errorMessage}}" class="feedback-error" role="alert" aria-live="polite">
+    <text>{{errorMessage}}</text>
+  </view>
+
+  <view class="logout-action">
+    <t-button
+      theme="danger"
+      variant="outline"
+      block
+      loading="{{isLoading}}"
+      disabled="{{isLoading}}"
+      bindtap="logout"
+    >退出登录</t-button>
+  </view>
+</view>
+
+<app-tab-bar value="profile" />

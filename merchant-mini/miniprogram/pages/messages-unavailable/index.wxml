@@ -1,0 +1,10 @@
+<view class="page-shell unavailable-page">
+  <view class="state-icon" aria-hidden="true">
+    <view class="state-icon__line"></view>
+    <view class="state-icon__dot"></view>
+  </view>
+  <text class="page-title">{{title}}</text>
+  <text class="page-description">{{description}}</text>
+</view>
+
+<app-tab-bar value="{{tab}}" />

@@ -1,0 +1,37 @@
+.unavailable-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  flex-direction: column;
+}
+
+.state-icon {
+  position: relative;
+  width: 112rpx;
+  height: 112rpx;
+  margin-bottom: var(--space-5);
+  border: 4rpx solid var(--primary-600);
+  border-radius: var(--radius-round);
+  background: var(--primary-100);
+}
+
+.state-icon__line {
+  position: absolute;
+  top: 25rpx;
+  left: 51rpx;
+  width: 8rpx;
+  height: 42rpx;
+  border-radius: var(--radius-round);
+  background: var(--primary-600);
+}
+
+.state-icon__dot {
+  position: absolute;
+  bottom: 23rpx;
+  left: 49rpx;
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: var(--radius-round);
+  background: var(--primary-600);
+}

@@ -1,0 +1,10 @@
+<view class="employee-header" aria-label="当前员工 {{username}}">
+  <view class="employee-mark" aria-hidden="true">
+    <view class="employee-mark__head"></view>
+    <view class="employee-mark__body"></view>
+  </view>
+  <view class="employee-copy">
+    <text class="employee-name">{{username}}</text>
+    <text class="employee-role">{{role === 'OWNER' ? '商家主' : '收银员'}} · 员工端</text>
+  </view>
+</view>
