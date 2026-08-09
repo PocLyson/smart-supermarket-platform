@@ -20,6 +20,7 @@ export interface MerchantSessionStore {
   current(): MerchantSession | undefined
   save(session: MerchantSession): void
   clear(): void
+  revision(): number
 }
 
 const isMerchantSession = (value: unknown): value is MerchantSession => {
@@ -40,18 +41,31 @@ const isMerchantSession = (value: unknown): value is MerchantSession => {
 
 export const createMerchantSessionStore = (
   storage: MerchantSessionStorage,
-): MerchantSessionStore => ({
-  current: () => {
-    const value = storage.read()
-    if (!isMerchantSession(value)) {
-      if (value !== undefined && value !== null) storage.clear()
-      return undefined
-    }
-    return { ...value }
-  },
-  save: (session) => storage.write({ ...session }),
-  clear: () => storage.clear(),
-})
+): MerchantSessionStore => {
+  let revision = 0
+
+  const clear = (): void => {
+    storage.clear()
+    revision += 1
+  }
+
+  return {
+    current: () => {
+      const value = storage.read()
+      if (!isMerchantSession(value)) {
+        if (value !== undefined && value !== null) clear()
+        return undefined
+      }
+      return { ...value }
+    },
+    save: (session) => {
+      storage.write({ ...session })
+      revision += 1
+    },
+    clear,
+    revision: () => revision,
+  }
+}
 
 const wxMerchantStorage: MerchantSessionStorage = {
   read: () =>

@@ -19,7 +19,7 @@ export interface WechatLogin {
 
 interface MerchantAuthDependencies {
   client: Pick<MerchantHttp, 'post'>
-  session: MerchantSessionStore
+  session: Pick<MerchantSessionStore, 'current' | 'save' | 'clear'>
   login: WechatLogin
   reminderLifecycle?: Pick<
     MerchantOrderReminderLifecycle,

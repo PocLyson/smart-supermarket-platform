@@ -61,7 +61,7 @@ describe('merchant HTTP boundary', () => {
     const request = vi.fn().mockResolvedValue({ ok: true })
     const client = createMerchantHttp({
       request,
-      session: { current: () => validSession(), save: vi.fn(), clear: vi.fn() },
+      session: { current: () => validSession(), save: vi.fn(), clear: vi.fn(), revision: () => 0 },
     })
 
     await client.get('/api/merchant-mini/account')
@@ -103,7 +103,7 @@ describe('merchant HTTP boundary', () => {
         statusCode: 401,
         data: { code: 'UNAUTHORIZED', message: '登录已失效', requestId: 'req-3', data: null },
       }),
-      session: { current: () => validSession(), save: vi.fn(), clear: vi.fn() },
+      session: { current: () => validSession(), save: vi.fn(), clear: vi.fn(), revision: () => 0 },
       onUnauthorized,
     })
 
@@ -225,6 +225,53 @@ describe('merchant HTTP boundary', () => {
     expect(onUnauthorized).toHaveBeenCalledTimes(2)
   })
 
+  test('a late 401 cannot clear a newer session that reuses the same token value', async () => {
+    let stored: MerchantSession | undefined = validSession({
+      accessToken: 'reused-token',
+      staffId: 1,
+    })
+    const session = createMerchantSessionStore({
+      read: () => stored,
+      write: (value) => { stored = value },
+      clear: () => { stored = undefined },
+    })
+    const firstOldResponse = deferred<unknown>()
+    const secondOldResponse = deferred<unknown>()
+    const newResponse = deferred<unknown>()
+    const onUnauthorized = vi.fn()
+    const client = createMerchantHttp({
+      request: vi.fn()
+        .mockReturnValueOnce(firstOldResponse.promise)
+        .mockReturnValueOnce(secondOldResponse.promise)
+        .mockReturnValueOnce(newResponse.promise),
+      session,
+      onUnauthorized,
+    })
+    const unauthorized = (requestId: string) => ({
+      statusCode: 401,
+      data: { code: 'UNAUTHORIZED', message: '登录已失效', requestId, data: null },
+    })
+
+    const firstOldPending = client.get('/api/merchant-mini/account')
+    const secondOldPending = client.get('/api/merchant-mini/dashboard/summary')
+    firstOldResponse.resolve(unauthorized('req-old-first'))
+    await expect(firstOldPending).rejects.toBeInstanceOf(HttpResponseError)
+    expect(onUnauthorized).toHaveBeenCalledOnce()
+
+    session.save(validSession({ accessToken: 'reused-token', staffId: 2 }))
+    const newPending = client.get('/api/merchant-mini/account')
+    secondOldResponse.resolve(unauthorized('req-old-late'))
+    await expect(secondOldPending).rejects.toBeInstanceOf(HttpResponseError)
+
+    expect(session.current()?.staffId).toBe(2)
+    expect(onUnauthorized).toHaveBeenCalledOnce()
+
+    newResponse.resolve(unauthorized('req-new-session'))
+    await expect(newPending).rejects.toBeInstanceOf(HttpResponseError)
+    expect(session.current()).toBeUndefined()
+    expect(onUnauthorized).toHaveBeenCalledTimes(2)
+  })
+
   test('a late 401 from an old token cannot clear or redirect a newly authenticated session', async () => {
     let stored: MerchantSession | undefined = validSession({ accessToken: 'old-token' })
     const session = createMerchantSessionStore({
@@ -286,7 +333,7 @@ describe('merchant HTTP boundary', () => {
         statusCode: 401,
         data: { code: 'INVALID_CREDENTIALS', message: '账号或密码错误', requestId: 'req-5', data: null },
       }),
-      session: { current: () => validSession(), save: vi.fn(), clear: vi.fn() },
+      session: { current: () => validSession(), save: vi.fn(), clear: vi.fn(), revision: () => 0 },
       onUnauthorized,
     })
 

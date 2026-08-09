@@ -77,7 +77,7 @@ export const createMerchantHttp = ({
   apiBaseUrl = () => '',
   onUnauthorized = () => undefined,
 }: MerchantHttpDependencies): MerchantHttp => {
-  let handledUnauthorizedToken: string | null | undefined
+  let handledUnauthorizedRevision: number | undefined
 
   const send = async <T>(
     method: MerchantRequestOptions['method'],
@@ -88,9 +88,7 @@ export const createMerchantHttp = ({
     const protectedRequest = policy.authorization === 'protected'
     const current = protectedRequest ? session.current() : undefined
     const requestToken = current?.accessToken
-    if (current && handledUnauthorizedToken !== undefined) {
-      handledUnauthorizedToken = undefined
-    }
+    const requestRevision = session.revision()
     const response = await request({
       url: `${apiBaseUrl()}${path}`,
       method,
@@ -103,11 +101,23 @@ export const createMerchantHttp = ({
     if (!isTransportResponse(response)) return response as T
     const { statusCode, data: body } = response
     if (statusCode === 401 && protectedRequest) {
-      const currentToken = session.current()?.accessToken
-      const requestStillOwnsSession = currentToken === undefined || requestToken === currentToken
-      const unauthorizedToken = requestToken ?? null
-      if (requestStillOwnsSession && handledUnauthorizedToken !== unauthorizedToken) {
-        handledUnauthorizedToken = unauthorizedToken
+      const currentSession = session.current()
+      const currentRevision = session.revision()
+      const sameRevision = currentRevision === requestRevision
+      const sameSession = Boolean(
+        currentSession &&
+          currentSession.accessToken === requestToken &&
+          sameRevision,
+      )
+      const sameClearedSession = !currentSession && (
+        sameRevision || currentRevision === requestRevision + 1
+      )
+      const requestStillOwnsSession = sameSession || sameClearedSession
+      if (
+        requestStillOwnsSession &&
+        handledUnauthorizedRevision !== requestRevision
+      ) {
+        handledUnauthorizedRevision = requestRevision
         session.clear()
         onUnauthorized()
       }
