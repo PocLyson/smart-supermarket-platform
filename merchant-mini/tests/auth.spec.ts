@@ -131,6 +131,100 @@ describe('merchant HTTP boundary', () => {
     expect(onUnauthorized).toHaveBeenCalledOnce()
   })
 
+  test('a protected request that expires while awaiting its 401 still leaves the employee screen', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-09T06:00:00Z'))
+    let stored: MerchantSession | undefined = validSession({
+      accessToken: 'expiring-token',
+      expiresAt: Date.now() + 1_000,
+    })
+    const session = createMerchantSessionStore({
+      read: () => stored,
+      write: (value) => { stored = value },
+      clear: () => { stored = undefined },
+    })
+    const response = deferred<unknown>()
+    const onUnauthorized = vi.fn()
+    const client = createMerchantHttp({
+      request: vi.fn().mockReturnValue(response.promise),
+      session,
+      onUnauthorized,
+    })
+
+    const pending = client.get('/api/merchant-mini/account')
+    vi.advanceTimersByTime(1_001)
+    response.resolve({
+      statusCode: 401,
+      data: { code: 'UNAUTHORIZED', message: '登录已失效', requestId: 'req-expired-in-flight', data: null },
+    })
+
+    await expect(pending).rejects.toBeInstanceOf(HttpResponseError)
+    expect(session.current()).toBeUndefined()
+    expect(onUnauthorized).toHaveBeenCalledOnce()
+  })
+
+  test('concurrent 401 responses for the same expired token trigger one redirect', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-09T06:00:00Z'))
+    let stored: MerchantSession | undefined = validSession({
+      accessToken: 'shared-expiring-token',
+      expiresAt: Date.now() + 1_000,
+    })
+    const session = createMerchantSessionStore({
+      read: () => stored,
+      write: (value) => { stored = value },
+      clear: () => { stored = undefined },
+    })
+    const firstResponse = deferred<unknown>()
+    const secondResponse = deferred<unknown>()
+    const onUnauthorized = vi.fn()
+    const client = createMerchantHttp({
+      request: vi.fn()
+        .mockReturnValueOnce(firstResponse.promise)
+        .mockReturnValueOnce(secondResponse.promise),
+      session,
+      onUnauthorized,
+    })
+
+    const firstPending = client.get('/api/merchant-mini/account')
+    const secondPending = client.get('/api/merchant-mini/dashboard/summary')
+    vi.advanceTimersByTime(1_001)
+    const unauthorized = {
+      statusCode: 401,
+      data: { code: 'UNAUTHORIZED', message: '登录已失效', requestId: 'req-concurrent', data: null },
+    }
+    firstResponse.resolve(unauthorized)
+    secondResponse.resolve(unauthorized)
+
+    await expect(firstPending).rejects.toBeInstanceOf(HttpResponseError)
+    await expect(secondPending).rejects.toBeInstanceOf(HttpResponseError)
+    expect(onUnauthorized).toHaveBeenCalledOnce()
+  })
+
+  test('a handled 401 does not block unauthorized handling for a later session token', async () => {
+    let stored: MerchantSession | undefined = validSession({ accessToken: 'first-token' })
+    const session = createMerchantSessionStore({
+      read: () => stored,
+      write: (value) => { stored = value },
+      clear: () => { stored = undefined },
+    })
+    const onUnauthorized = vi.fn()
+    const client = createMerchantHttp({
+      request: vi.fn().mockResolvedValue({
+        statusCode: 401,
+        data: { code: 'UNAUTHORIZED', message: '登录已失效', requestId: 'req-session', data: null },
+      }),
+      session,
+      onUnauthorized,
+    })
+
+    await expect(client.get('/api/merchant-mini/account')).rejects.toBeInstanceOf(HttpResponseError)
+    session.save(validSession({ accessToken: 'second-token' }))
+    await expect(client.get('/api/merchant-mini/account')).rejects.toBeInstanceOf(HttpResponseError)
+
+    expect(onUnauthorized).toHaveBeenCalledTimes(2)
+  })
+
   test('a late 401 from an old token cannot clear or redirect a newly authenticated session', async () => {
     let stored: MerchantSession | undefined = validSession({ accessToken: 'old-token' })
     const session = createMerchantSessionStore({

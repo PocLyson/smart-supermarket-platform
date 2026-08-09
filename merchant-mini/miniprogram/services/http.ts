@@ -77,6 +77,8 @@ export const createMerchantHttp = ({
   apiBaseUrl = () => '',
   onUnauthorized = () => undefined,
 }: MerchantHttpDependencies): MerchantHttp => {
+  let handledUnauthorizedToken: string | null | undefined
+
   const send = async <T>(
     method: MerchantRequestOptions['method'],
     path: string,
@@ -86,6 +88,9 @@ export const createMerchantHttp = ({
     const protectedRequest = policy.authorization === 'protected'
     const current = protectedRequest ? session.current() : undefined
     const requestToken = current?.accessToken
+    if (current && handledUnauthorizedToken !== undefined) {
+      handledUnauthorizedToken = undefined
+    }
     const response = await request({
       url: `${apiBaseUrl()}${path}`,
       method,
@@ -99,8 +104,10 @@ export const createMerchantHttp = ({
     const { statusCode, data: body } = response
     if (statusCode === 401 && protectedRequest) {
       const currentToken = session.current()?.accessToken
-      const requestStillOwnsSession = requestToken === currentToken
-      if (requestStillOwnsSession) {
+      const requestStillOwnsSession = currentToken === undefined || requestToken === currentToken
+      const unauthorizedToken = requestToken ?? null
+      if (requestStillOwnsSession && handledUnauthorizedToken !== unauthorizedToken) {
+        handledUnauthorizedToken = unauthorizedToken
         session.clear()
         onUnauthorized()
       }
