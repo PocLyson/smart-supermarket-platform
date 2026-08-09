@@ -1,0 +1,146 @@
+<view class="page-shell verification-page">
+  <view class="verification-heading">
+    <text class="page-title">取货核销</text>
+    <text class="page-description">录入订单号和顾客提供的六位取货码，核对订单后再确认核销</text>
+  </view>
+
+  <view wx:if="{{stage === 'INPUT'}}" class="card input-card">
+    <label class="field-group">
+      <text class="field-label">订单号</text>
+      <input
+        class="field-input"
+        value="{{orderNo}}"
+        maxlength="64"
+        placeholder="请输入订单号"
+        aria-label="订单号"
+        disabled="{{isPreviewLoading}}"
+        bindinput="onOrderNoInput"
+      />
+    </label>
+
+    <label class="field-group">
+      <text class="field-label">六位取货码</text>
+      <input
+        class="field-input pickup-code-input"
+        type="number"
+        value="{{pickupCode}}"
+        maxlength="6"
+        placeholder="请输入6位取货码"
+        aria-label="六位取货码"
+        disabled="{{isPreviewLoading}}"
+        bindinput="onPickupCodeInput"
+        bindconfirm="loadPreview"
+      />
+      <text class="field-help">仅接受普通六位数字，不接受链接或其他二维码内容</text>
+    </label>
+
+    <view wx:if="{{errorMessage}}" class="feedback-error" role="alert" aria-live="polite">
+      <text>{{errorMessage}}</text>
+    </view>
+
+    <view class="action-stack">
+      <view class="touch-control">
+        <t-button
+          block
+          loading="{{isPreviewLoading}}"
+          disabled="{{isPreviewLoading || !orderNo || !pickupCode}}"
+          bindtap="loadPreview"
+        >核对订单</t-button>
+      </view>
+      <view class="touch-control">
+        <t-button
+          block
+          theme="default"
+          variant="outline"
+          disabled="{{isPreviewLoading}}"
+          bindtap="scanPickup"
+        >扫码录入取货码</t-button>
+      </view>
+    </view>
+  </view>
+
+  <block wx:elif="{{stage === 'CONFIRM' && preview}}">
+    <view class="notice-card" role="status">
+      <text class="notice-title">请员工再次核对</text>
+      <text class="notice-description">以下信息确认无误后，点击“确认核销”并在弹窗中再次确认。</text>
+    </view>
+
+    <view class="card preview-card">
+      <view class="preview-row preview-row--top">
+        <text class="preview-label">订单号</text>
+        <text class="preview-order-no">{{preview.orderNo}}</text>
+      </view>
+      <view class="preview-row">
+        <text class="preview-label">取货人</text>
+        <text>{{preview.maskedPickupName}} · {{preview.maskedPhone}}</text>
+      </view>
+      <view class="preview-row">
+        <text class="preview-label">付款状态</text>
+        <text class="payment-badge payment-badge--{{preview.paymentStatus}}">{{preview.paymentLabel}}</text>
+      </view>
+      <view class="preview-row">
+        <text class="preview-label">商品摘要</text>
+        <text class="preview-value">{{preview.itemSummary}}</text>
+      </view>
+      <view class="preview-row preview-row--amount">
+        <text class="preview-label">订单金额</text>
+        <text class="preview-amount">{{preview.amountText}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{preview.paymentStatus === 'UNPAID'}}" class="card payment-card">
+      <text class="section-title">选择本次收款方式</text>
+      <text class="section-help">未付款订单必须确认收款后才能完成核销</text>
+      <radio-group aria-label="收款方式" bindchange="onPaymentMethodChange">
+        <label class="payment-option">
+          <radio value="CASH" checked="{{selectedPaymentMethod === 'CASH'}}" color="#082F6B" />
+          <text>现金</text>
+        </label>
+        <label class="payment-option">
+          <radio value="WECHAT_QR" checked="{{selectedPaymentMethod === 'WECHAT_QR'}}" color="#082F6B" />
+          <text>微信收款码</text>
+        </label>
+      </radio-group>
+    </view>
+
+    <view wx:if="{{errorMessage}}" class="feedback-error" role="alert" aria-live="polite">
+      <text>{{errorMessage}}</text>
+    </view>
+
+    <view class="action-stack confirm-actions">
+      <view class="touch-control">
+        <t-button
+          block
+          loading="{{isSubmitting}}"
+          disabled="{{isSubmitting || (preview.paymentStatus === 'UNPAID' && !selectedPaymentMethod)}}"
+          bindtap="confirmPickup"
+        >{{isSubmitting ? '正在核销…' : '确认核销'}}</t-button>
+      </view>
+      <view class="touch-control">
+        <t-button
+          block
+          theme="default"
+          variant="outline"
+          disabled="{{isSubmitting}}"
+          bindtap="editInformation"
+        >返回修改</t-button>
+      </view>
+    </view>
+  </block>
+
+  <view wx:else class="card success-card" role="status" aria-live="polite">
+    <view class="success-mark" aria-hidden="true">✓</view>
+    <text class="success-title">核销成功</text>
+    <text class="success-description">订单 {{completedOrder.orderNo}} 已完成，列表和工作台将在返回后自动刷新。</text>
+    <view class="action-stack success-actions">
+      <view class="touch-control">
+        <t-button block bindtap="continueVerification">继续核销</t-button>
+      </view>
+      <view class="touch-control">
+        <t-button block theme="default" variant="outline" bindtap="viewOrder">查看订单</t-button>
+      </view>
+    </view>
+  </view>
+</view>
+
+<app-tab-bar value="verification" />

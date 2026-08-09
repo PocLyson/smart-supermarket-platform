@@ -44,6 +44,15 @@ export const createOrdersService = (
       `/api/merchant-mini/orders/${encodeURIComponent(orderNo)}/pay`,
       { method },
     ),
+  verifyPickup: (
+    orderNo: string,
+    pickupCode: string,
+    payAtStoreMethod: PaymentMethod,
+  ): Promise<MerchantOrder> =>
+    client.post<MerchantOrder>(
+      `/api/merchant-mini/orders/${encodeURIComponent(orderNo)}/verify-pickup`,
+      { pickupCode, payAtStoreMethod },
+    ),
   cancel: (orderNo: string, reason: string): Promise<MerchantOrder> =>
     client.post<MerchantOrder>(
       `/api/merchant-mini/orders/${encodeURIComponent(orderNo)}/cancel`,

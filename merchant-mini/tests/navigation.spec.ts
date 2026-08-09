@@ -18,11 +18,11 @@ describe('merchant primary navigation', () => {
     expect(NAV_ITEMS).toHaveLength(5)
   })
 
-  test('routes implemented order destinations to their native pages', () => {
+  test('routes implemented order and pickup destinations to their native pages', () => {
     expect(NAV_ITEMS.map((item) => item.url)).toEqual([
       '/pages/workbench/index',
       '/pages/orders/index',
-      '/pages/messages-unavailable/index?feature=verification',
+      '/pages/verify-pickup/index',
       '/pages/messages-unavailable/index?feature=messages',
       '/pages/profile/index',
     ])

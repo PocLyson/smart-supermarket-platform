@@ -199,6 +199,19 @@ Page({
     )
   },
 
+  goVerifyPickup() {
+    if (!this.data.order || this.data.order.status !== 'READY_FOR_PICKUP') return
+    wx.navigateTo({
+      url: `/pages/verify-pickup/index?orderNo=${encodeURIComponent(this.data.orderNo)}&from=detail`,
+      success: ({ eventChannel }) => {
+        eventChannel.on('pickupVerified', (order: MerchantOrder) => {
+          this.applyOrder(order)
+          this.getOpenerEventChannel().emit('orderUpdated', order)
+        })
+      },
+    })
+  },
+
   goBack() {
     wx.navigateBack()
   },

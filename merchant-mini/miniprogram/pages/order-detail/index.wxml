@@ -39,7 +39,14 @@
       <text class="inline-retry" role="button" bindtap="retry">重新加载详情</text>
     </view>
 
-    <view wx:if="{{primaryAction || (role === 'OWNER' && canCancel)}}" class="action-card">
+    <view wx:if="{{order.status === 'READY_FOR_PICKUP' || primaryAction || (role === 'OWNER' && canCancel)}}" class="action-card">
+      <view wx:if="{{order.status === 'READY_FOR_PICKUP'}}" class="detail-action">
+        <t-button
+          block
+          disabled="{{isMutating}}"
+          bindtap="goVerifyPickup"
+        >核销取货</t-button>
+      </view>
       <view wx:if="{{primaryAction}}" class="detail-action">
         <t-button
           block

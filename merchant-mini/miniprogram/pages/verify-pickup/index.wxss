@@ -1,0 +1,181 @@
+.verification-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.verification-heading,
+.field-label,
+.field-help,
+.notice-title,
+.notice-description,
+.section-title,
+.section-help,
+.success-title,
+.success-description {
+  display: block;
+}
+
+.input-card,
+.payment-card,
+.preview-card {
+  padding: var(--space-4);
+}
+
+.field-group {
+  display: block;
+  margin-bottom: var(--space-5);
+}
+
+.field-label,
+.section-title {
+  margin-bottom: var(--space-2);
+  color: var(--color-text-primary);
+  font-size: var(--type-label-size);
+  font-weight: var(--weight-semibold);
+  line-height: var(--type-label-line);
+}
+
+.field-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: var(--size-touch-min);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width-default) solid var(--color-border-control);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+}
+
+.pickup-code-input {
+  font-size: var(--type-data-size);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--weight-semibold);
+  letter-spacing: 12rpx;
+}
+
+.field-help,
+.section-help,
+.notice-description,
+.success-description {
+  margin-top: var(--space-2);
+  color: var(--color-text-secondary);
+  font-size: var(--type-helper-size);
+  line-height: var(--type-helper-line);
+}
+
+.notice-card {
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width-default) solid var(--color-info-border);
+  border-radius: var(--radius-md);
+  background: var(--color-info-bg);
+}
+
+.notice-title {
+  color: var(--color-info-text);
+  font-weight: var(--weight-semibold);
+}
+
+.preview-row {
+  display: flex;
+  min-height: var(--size-touch-min);
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: var(--border-width-default) solid var(--color-divider);
+  gap: var(--space-3);
+}
+
+.preview-row:last-child {
+  border-bottom: 0;
+}
+
+.preview-label {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+
+.preview-order-no,
+.preview-value {
+  min-width: 0;
+  color: var(--color-text-primary);
+  text-align: right;
+  word-break: break-all;
+}
+
+.preview-order-no {
+  font-weight: var(--weight-semibold);
+}
+
+.preview-amount {
+  color: var(--color-price);
+  font-size: var(--type-money-size);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--weight-bold);
+}
+
+.payment-option {
+  display: flex;
+  min-height: var(--size-touch-min);
+  align-items: center;
+  border-bottom: var(--border-width-default) solid var(--color-divider);
+  gap: var(--space-3);
+}
+
+.payment-option:last-child {
+  border-bottom: 0;
+}
+
+.touch-control {
+  min-height: var(--size-touch-min);
+}
+
+.confirm-actions {
+  padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom));
+}
+
+.success-card {
+  padding: var(--space-8) var(--space-5) calc(var(--space-6) + env(safe-area-inset-bottom));
+  text-align: center;
+}
+
+.success-mark {
+  display: flex;
+  width: 112rpx;
+  height: 112rpx;
+  margin: 0 auto var(--space-4);
+  align-items: center;
+  justify-content: center;
+  border: var(--border-width-default) solid var(--color-success-border);
+  border-radius: var(--radius-round);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+  font-size: 64rpx;
+  font-weight: var(--weight-bold);
+}
+
+.success-title {
+  color: var(--color-text-primary);
+  font-size: var(--type-section-title-size);
+  font-weight: var(--weight-bold);
+  line-height: var(--type-section-title-line);
+}
+
+.success-actions {
+  margin-top: var(--space-6);
+}
+
+.payment-badge {
+  padding: var(--space-1) var(--space-2);
+  border: var(--border-width-default) solid var(--payment-unpaid-border);
+  border-radius: var(--radius-round);
+  background: var(--payment-unpaid-bg);
+  color: var(--payment-unpaid-text);
+  font-size: var(--type-caption-size);
+  white-space: nowrap;
+}
+
+.payment-badge--PAID {
+  border-color: var(--payment-paid-border);
+  background: var(--payment-paid-bg);
+  color: var(--payment-paid-text);
+}

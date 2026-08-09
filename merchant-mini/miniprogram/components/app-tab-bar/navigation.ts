@@ -12,7 +12,7 @@ export interface NavigationItem {
 export const NAV_ITEMS: readonly NavigationItem[] = [
   { id: 'workbench', label: '工作台', icon: '/assets/icons/workbench.svg', url: '/pages/workbench/index' },
   { id: 'orders', label: '订单', icon: '/assets/icons/orders.svg', url: '/pages/orders/index' },
-  { id: 'verification', label: '核销', icon: '/assets/icons/verification.svg', url: '/pages/messages-unavailable/index?feature=verification' },
+  { id: 'verification', label: '核销', icon: '/assets/icons/verification.svg', url: '/pages/verify-pickup/index' },
   { id: 'messages', label: '消息', icon: '/assets/icons/messages.svg', url: '/pages/messages-unavailable/index?feature=messages' },
   { id: 'profile', label: '我的', icon: '/assets/icons/profile.svg', url: '/pages/profile/index' },
 ]

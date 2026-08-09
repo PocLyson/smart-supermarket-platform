@@ -4,6 +4,7 @@
     "pages/workbench/index",
     "pages/orders/index",
     "pages/order-detail/index",
+    "pages/verify-pickup/index",
     "pages/profile/index",
     "pages/messages-unavailable/index"
   ],

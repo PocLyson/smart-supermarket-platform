@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "取货核销",
+  "usingComponents": {
+    "app-tab-bar": "/components/app-tab-bar/index",
+    "t-button": "tdesign-miniprogram/button/button"
+  }
+}
