@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 class StaffManagementTest extends IntegrationTestBase {
     @Autowired
@@ -22,6 +23,9 @@ class StaffManagementTest extends IntegrationTestBase {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private StringRedisTemplate redisTemplate;
 
     private final CurrentPrincipal owner =
         new CurrentPrincipal(1L, ActorType.STAFF, "OWNER", "owner-session");
@@ -62,5 +66,34 @@ class StaffManagementTest extends IntegrationTestBase {
             cashier,
             "req-forbidden"
         )).isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    void disableAndPasswordResetInvalidateMerchantSession() {
+        StaffManagementService.StaffView created = service.createCashier(
+            new StaffManagementService.CreateCashierRequest("cashier-c", "secure-password"),
+            owner,
+            "req-create"
+        );
+        String staffKey = "auth:merchant-staff:" + created.id();
+        redisTemplate.opsForValue().set(staffKey, "merchant-session");
+        redisTemplate.opsForValue().set("auth:session:merchant-session", Long.toString(created.id()));
+
+        service.setEnabled(created.id(), false, owner, "req-disable");
+
+        assertThat(redisTemplate.hasKey(staffKey)).isFalse();
+        assertThat(redisTemplate.hasKey("auth:session:merchant-session")).isFalse();
+
+        redisTemplate.opsForValue().set(staffKey, "merchant-session-2");
+        redisTemplate.opsForValue().set("auth:session:merchant-session-2", Long.toString(created.id()));
+        service.resetPassword(
+            created.id(),
+            new StaffManagementService.ResetPasswordRequest("another-secure-password"),
+            owner,
+            "req-reset"
+        );
+
+        assertThat(redisTemplate.hasKey(staffKey)).isFalse();
+        assertThat(redisTemplate.hasKey("auth:session:merchant-session-2")).isFalse();
     }
 }

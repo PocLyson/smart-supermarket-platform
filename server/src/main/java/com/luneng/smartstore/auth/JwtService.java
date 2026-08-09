@@ -49,6 +49,7 @@ public class JwtService {
             .claim("actorType", principal.actorType().name())
             .claim("role", principal.role())
             .claim("sessionId", principal.sessionId())
+            .claim("clientType", principal.clientType().name())
             .build();
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
         return encoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
@@ -60,7 +61,8 @@ public class JwtService {
             Long.parseLong(jwt.getSubject()),
             ActorType.valueOf(jwt.getClaimAsString("actorType")),
             jwt.getClaimAsString("role"),
-            jwt.getClaimAsString("sessionId")
+            jwt.getClaimAsString("sessionId"),
+            ClientType.valueOf(jwt.getClaimAsString("clientType"))
         );
     }
 }

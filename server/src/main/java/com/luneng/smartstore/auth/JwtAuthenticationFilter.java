@@ -49,8 +49,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
             List<SimpleGrantedAuthority> authorities = principal.actorType() == ActorType.STAFF
-                ? List.of(new SimpleGrantedAuthority("ROLE_" + principal.role()))
-                : List.of(new SimpleGrantedAuthority("ROLE_CUSTOMER"));
+                ? List.of(
+                    new SimpleGrantedAuthority("ROLE_" + principal.role()),
+                    new SimpleGrantedAuthority("CLIENT_" + principal.clientType().name())
+                )
+                : List.of(
+                    new SimpleGrantedAuthority("ROLE_CUSTOMER"),
+                    new SimpleGrantedAuthority("CLIENT_" + principal.clientType().name())
+                );
             SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(principal, token, authorities)
             );

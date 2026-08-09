@@ -14,6 +14,7 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -44,6 +45,8 @@ public class SecurityConfig {
                     "/files/**",
                     "/api/admin/auth/login",
                     "/api/mini/auth/wechat",
+                    "/api/merchant-mini/auth/password-login",
+                    "/api/merchant-mini/auth/wechat-login",
                     "/api/mini/categories",
                     "/api/mini/products",
                     "/api/mini/products/**",
@@ -67,6 +70,14 @@ public class SecurityConfig {
                     "/api/mini/profile",
                     "/api/mini/orders/**"
                 ).hasRole("CUSTOMER")
+                .requestMatchers("/api/merchant-mini/**").access((authentication, context) -> {
+                    boolean merchantClient = authentication.get().getAuthorities().stream()
+                        .anyMatch(authority -> "CLIENT_MERCHANT_MINI".equals(authority.getAuthority()));
+                    boolean merchantRole = authentication.get().getAuthorities().stream()
+                        .anyMatch(authority -> "ROLE_OWNER".equals(authority.getAuthority())
+                            || "ROLE_CASHIER".equals(authority.getAuthority()));
+                    return new AuthorizationDecision(merchantClient && merchantRole);
+                })
                 .anyRequest().authenticated()
             )
             .exceptionHandling(exceptions -> exceptions

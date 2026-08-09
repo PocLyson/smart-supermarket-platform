@@ -8,6 +8,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,15 +17,18 @@ public class StaffManagementService {
     private final StaffAccountRepository repository;
     private final PasswordEncoder passwordEncoder;
     private final AuditService auditService;
+    private final StringRedisTemplate redisTemplate;
 
     public StaffManagementService(
         StaffAccountRepository repository,
         PasswordEncoder passwordEncoder,
-        AuditService auditService
+        AuditService auditService,
+        StringRedisTemplate redisTemplate
     ) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
         this.auditService = auditService;
+        this.redisTemplate = redisTemplate;
     }
 
     @Transactional(readOnly = true)
@@ -71,6 +75,9 @@ public class StaffManagementService {
         requireOwner(actor);
         StaffAccount account = cashier(id);
         account.setEnabled(enabled);
+        if (!enabled) {
+            invalidateMerchantSession(id);
+        }
         auditService.record(
             actor,
             "STAFF_SET_ENABLED",
@@ -93,6 +100,7 @@ public class StaffManagementService {
         validatePassword(request.password());
         StaffAccount account = cashier(id);
         account.resetPassword(passwordEncoder.encode(request.password()));
+        invalidateMerchantSession(id);
         auditService.record(
             actor,
             "STAFF_RESET_PASSWORD",
@@ -135,6 +143,15 @@ public class StaffManagementService {
 
     private BusinessException validation(String message) {
         return new BusinessException("VALIDATION_ERROR", message, HttpStatus.BAD_REQUEST);
+    }
+
+    private void invalidateMerchantSession(long staffId) {
+        String staffSessionKey = "auth:merchant-staff:" + staffId;
+        String sessionId = redisTemplate.opsForValue().get(staffSessionKey);
+        if (sessionId != null) {
+            redisTemplate.delete("auth:session:" + sessionId);
+        }
+        redisTemplate.delete(staffSessionKey);
     }
 
     public record CreateCashierRequest(String username, String password) {

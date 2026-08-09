@@ -40,6 +40,11 @@ smart-store:
     app-secret: ${WECHAT_APP_SECRET}
     local-mock-enabled: ${WECHAT_LOCAL_MOCK_ENABLED:false}
     local-mock-openid: ${WECHAT_LOCAL_MOCK_OPENID:local-dev-customer}
+  merchant-wechat:
+    app-id: ${MERCHANT_WECHAT_APP_ID:touristappid}
+    app-secret: ${MERCHANT_WECHAT_APP_SECRET:local-dev-only}
+    local-mock-enabled: ${MERCHANT_WECHAT_LOCAL_MOCK_ENABLED:false}
+    local-mock-openid: ${MERCHANT_WECHAT_LOCAL_MOCK_OPENID:local-dev-staff}
   store-contact:
     phone: ${STORE_PHONE:18653045492}
     customer-service-enabled: ${WECHAT_CUSTOMER_SERVICE_ENABLED:true}
