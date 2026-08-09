@@ -8,6 +8,10 @@ import {
   merchantHttp,
   type MerchantHttp,
 } from './http'
+import {
+  merchantOrderReminderLifecycle,
+  type MerchantOrderReminderLifecycle,
+} from '../utils/order-reminder'
 
 export interface WechatLogin {
   (): Promise<{ code: string }>
@@ -17,6 +21,10 @@ interface MerchantAuthDependencies {
   client: Pick<MerchantHttp, 'post'>
   session: MerchantSessionStore
   login: WechatLogin
+  reminderLifecycle?: Pick<
+    MerchantOrderReminderLifecycle,
+    'authenticated' | 'signedOut'
+  >
 }
 
 type ApiMerchantSession = Omit<MerchantSession, 'expiresAt'> & {
@@ -49,7 +57,15 @@ export const createMerchantAuthService = ({
   client,
   session,
   login,
+  reminderLifecycle = {
+    authenticated: async () => undefined,
+    signedOut: () => undefined,
+  },
 }: MerchantAuthDependencies) => {
+  const activateReminder = (): void => {
+    void reminderLifecycle.authenticated().catch(() => undefined)
+  }
+
   const loginWithWechat = async (): Promise<MerchantSession> => {
     const { code } = await login()
     const response = await client.post<ApiMerchantSession>(
@@ -59,6 +75,7 @@ export const createMerchantAuthService = ({
     )
     const result = normalizeSession(response)
     session.save(result)
+    activateReminder()
     return result
   }
 
@@ -85,6 +102,7 @@ export const createMerchantAuthService = ({
       )
       const result = normalizeSession(response)
       session.save(result)
+      activateReminder()
       return result
     },
 
@@ -93,6 +111,7 @@ export const createMerchantAuthService = ({
         await client.post('/api/merchant-mini/auth/logout')
       } finally {
         session.clear()
+        reminderLifecycle.signedOut()
       }
     },
   }
@@ -102,4 +121,5 @@ export const merchantAuthService = createMerchantAuthService({
   client: merchantHttp,
   session: merchantSessionStore,
   login: loginWithWx,
+  reminderLifecycle: merchantOrderReminderLifecycle,
 })

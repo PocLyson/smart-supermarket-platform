@@ -100,7 +100,7 @@
 }
 
 .metric-unit {
-  color: var(--color-text-tertiary);
+  color: var(--color-text-secondary);
   font-size: var(--type-caption-size);
 }
 

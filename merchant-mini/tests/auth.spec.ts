@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from 'vitest'
+import { afterEach, describe, expect, test, vi } from 'vitest'
 import { HttpResponseError, createMerchantHttp } from '../miniprogram/services/http'
 import { createMerchantAuthService } from '../miniprogram/services/auth'
 import {
@@ -6,6 +6,14 @@ import {
   createMerchantSessionStore,
   type MerchantSession,
 } from '../miniprogram/store/session'
+import {
+  createMerchantOrderReminderLifecycle,
+  createOrderReminder,
+} from '../miniprogram/utils/order-reminder'
+
+afterEach(() => {
+  vi.useRealTimers()
+})
 
 const validSession = (overrides: Partial<MerchantSession> = {}): MerchantSession => ({
   accessToken: 'merchant-token',
@@ -226,5 +234,66 @@ describe('merchant login flow', () => {
 
     await expect(service.logout()).rejects.toThrow('网络中断')
     expect(clear).toHaveBeenCalledOnce()
+  })
+
+  test('successful login starts the protected reminder and logout stops it', async () => {
+    vi.useFakeTimers()
+    let stored: MerchantSession | undefined
+    const session = createMerchantSessionStore({
+      read: () => stored,
+      write: (value) => { stored = value },
+      clear: () => { stored = undefined },
+    })
+    const fetchSummary = vi.fn().mockResolvedValue([])
+    const reminder = createOrderReminder({
+      pollMs: 15_000,
+      hasValidSession: () => Boolean(session.current()),
+      fetchSummary,
+      onNewOrder: vi.fn(),
+    })
+    const reminderLifecycle = createMerchantOrderReminderLifecycle(session, reminder)
+    const post = vi.fn()
+      .mockResolvedValueOnce(validSession())
+      .mockResolvedValueOnce(undefined)
+    const service = createMerchantAuthService({
+      client: { post },
+      session,
+      login: vi.fn().mockResolvedValue({ code: 'wx-code' }),
+      reminderLifecycle,
+    })
+
+    await service.loginWithWechat()
+    expect(fetchSummary).toHaveBeenCalledOnce()
+
+    await service.logout()
+    await vi.advanceTimersByTimeAsync(30_000)
+    expect(fetchSummary).toHaveBeenCalledOnce()
+  })
+
+  test('confirmed password login also starts the protected reminder', async () => {
+    let stored: MerchantSession | undefined
+    const session = createMerchantSessionStore({
+      read: () => stored,
+      write: (value) => { stored = value },
+      clear: () => { stored = undefined },
+    })
+    const fetchSummary = vi.fn().mockResolvedValue([])
+    const reminder = createOrderReminder({
+      hasValidSession: () => Boolean(session.current()),
+      fetchSummary,
+      onNewOrder: vi.fn(),
+    })
+    const reminderLifecycle = createMerchantOrderReminderLifecycle(session, reminder)
+    const service = createMerchantAuthService({
+      client: { post: vi.fn().mockResolvedValue(validSession()) },
+      session,
+      login: vi.fn().mockResolvedValue({ code: 'wx-code' }),
+      reminderLifecycle,
+    })
+
+    await service.loginWithPassword('owner', 'secret', true)
+
+    expect(fetchSummary).toHaveBeenCalledOnce()
+    reminderLifecycle.signedOut()
   })
 })

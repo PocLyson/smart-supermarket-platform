@@ -48,4 +48,27 @@ describe('merchant workbench presentation', () => {
     expect(markup).toContain('暂时没有最近订单')
     expect(markup).toContain('<app-tab-bar value="workbench" />')
   })
+
+  test('uses the accessible secondary token for the small metric unit text', () => {
+    const styles = readFileSync(
+      resolve('miniprogram/pages/workbench/index.wxss'),
+      'utf8',
+    )
+    const theme = readFileSync(resolve('miniprogram/styles/theme.wxss'), 'utf8')
+    const token = styles.match(/\.metric-unit\s*\{[^}]*color:\s*var\((--[\w-]+)\);/s)?.[1]
+    const hex = token
+      ? theme.match(new RegExp(`${token}:\\s*(#[0-9A-F]{6});`, 'i'))?.[1]
+      : undefined
+    if (!token || !hex) throw new Error('Metric unit must resolve to a theme color')
+    const luminance = (value: string): number => {
+      const channels = [1, 3, 5].map((start) => Number.parseInt(value.slice(start, start + 2), 16) / 255)
+      const linear = channels.map((channel) =>
+        channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4)
+      return linear[0] * 0.2126 + linear[1] * 0.7152 + linear[2] * 0.0722
+    }
+    const contrast = (luminance('#FFFFFF') + 0.05) / (luminance(hex) + 0.05)
+
+    expect(token).toBe('--color-text-secondary')
+    expect(contrast).toBeGreaterThanOrEqual(4.5)
+  })
 })
