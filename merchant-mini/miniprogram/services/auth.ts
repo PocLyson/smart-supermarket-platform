@@ -18,7 +18,7 @@ export interface WechatLogin {
 }
 
 interface MerchantAuthDependencies {
-  client: Pick<MerchantHttp, 'post'>
+  client: Pick<MerchantHttp, 'delete' | 'post'>
   session: Pick<MerchantSessionStore, 'current' | 'save' | 'clear'>
   login: WechatLogin
   reminderLifecycle?: Pick<
@@ -113,6 +113,12 @@ export const createMerchantAuthService = ({
         session.clear()
         reminderLifecycle.signedOut()
       }
+    },
+
+    unbindWechat: async (): Promise<void> => {
+      await client.delete('/api/merchant-mini/account/wechat-binding')
+      session.clear()
+      reminderLifecycle.signedOut()
     },
   }
 }

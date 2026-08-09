@@ -354,7 +354,7 @@ describe('merchant login flow', () => {
     const login = vi.fn()
     const existing = validSession()
     const service = createMerchantAuthService({
-      client: { post },
+      client: { post, delete: vi.fn() },
       session: { current: () => existing, save: vi.fn(), clear: vi.fn() },
       login,
     })
@@ -368,7 +368,7 @@ describe('merchant login flow', () => {
     const expiresAt = '2026-08-09T12:00:00Z'
     const save = vi.fn()
     const service = createMerchantAuthService({
-      client: { post: vi.fn().mockResolvedValue({ ...validSession(), expiresAt }) },
+      client: { post: vi.fn().mockResolvedValue({ ...validSession(), expiresAt }), delete: vi.fn() },
       session: { current: vi.fn(), save, clear: vi.fn() },
       login: vi.fn().mockResolvedValue({ code: 'wx-code' }),
     })
@@ -382,7 +382,7 @@ describe('merchant login flow', () => {
   test('reveals the binding flow only for MERCHANT_NOT_BOUND', async () => {
     const error = new HttpResponseError('该微信尚未绑定员工账号', 404, 'MERCHANT_NOT_BOUND', 'req-2')
     const service = createMerchantAuthService({
-      client: { post: vi.fn().mockRejectedValue(error) },
+      client: { post: vi.fn().mockRejectedValue(error), delete: vi.fn() },
       session: { current: vi.fn(), save: vi.fn(), clear: vi.fn() },
       login: vi.fn().mockResolvedValue({ code: 'wx-code' }),
     })
@@ -398,7 +398,7 @@ describe('merchant login flow', () => {
     const post = vi.fn()
     const login = vi.fn()
     const service = createMerchantAuthService({
-      client: { post },
+      client: { post, delete: vi.fn() },
       session: { current: vi.fn(), save: vi.fn(), clear: vi.fn() },
       login,
     })
@@ -412,7 +412,7 @@ describe('merchant login flow', () => {
     const save = vi.fn()
     const post = vi.fn().mockResolvedValue(validSession())
     const service = createMerchantAuthService({
-      client: { post },
+      client: { post, delete: vi.fn() },
       session: { current: vi.fn(), save, clear: vi.fn() },
       login: vi.fn().mockResolvedValue({ code: 'fresh-code' }),
     })
@@ -430,13 +430,64 @@ describe('merchant login flow', () => {
   test('logout clears the local merchant session even when the network request fails', async () => {
     const clear = vi.fn()
     const service = createMerchantAuthService({
-      client: { post: vi.fn().mockRejectedValue(new Error('网络中断')) },
+      client: { post: vi.fn().mockRejectedValue(new Error('网络中断')), delete: vi.fn() },
       session: { current: vi.fn(), save: vi.fn(), clear },
       login: vi.fn(),
     })
 
     await expect(service.logout()).rejects.toThrow('网络中断')
     expect(clear).toHaveBeenCalledOnce()
+  })
+
+  test.each(['OWNER', 'CASHIER'] as const)(
+    'unbinds the current %s WeChat through the real endpoint and clears only merchant session state after success',
+    async (role) => {
+      const storage = new Map<string, unknown>([
+        [MERCHANT_SESSION_STORAGE_KEY, validSession({ role })],
+        ['smart-store-session-v1', { accessToken: 'customer-token' }],
+      ])
+      const session = createMerchantSessionStore({
+        read: () => storage.get(MERCHANT_SESSION_STORAGE_KEY),
+        write: (value) => storage.set(MERCHANT_SESSION_STORAGE_KEY, value),
+        clear: () => storage.delete(MERCHANT_SESSION_STORAGE_KEY),
+      })
+      const deleteRequest = vi.fn().mockResolvedValue(undefined)
+      const signedOut = vi.fn()
+      const service = createMerchantAuthService({
+        client: { post: vi.fn(), delete: deleteRequest },
+        session,
+        login: vi.fn(),
+        reminderLifecycle: { authenticated: vi.fn(), signedOut },
+      })
+      await service.unbindWechat()
+
+      expect(deleteRequest).toHaveBeenCalledWith(
+        '/api/merchant-mini/account/wechat-binding',
+      )
+      expect(storage.has(MERCHANT_SESSION_STORAGE_KEY)).toBe(false)
+      expect(storage.get('smart-store-session-v1')).toEqual({
+        accessToken: 'customer-token',
+      })
+      expect(signedOut).toHaveBeenCalledOnce()
+    },
+  )
+
+  test('keeps the merchant session when the unbind endpoint fails', async () => {
+    const clear = vi.fn()
+    const signedOut = vi.fn()
+    const service = createMerchantAuthService({
+      client: {
+        post: vi.fn(),
+        delete: vi.fn().mockRejectedValue(new Error('网络中断')),
+      },
+      session: { current: vi.fn(), save: vi.fn(), clear },
+      login: vi.fn(),
+      reminderLifecycle: { authenticated: vi.fn(), signedOut },
+    })
+    await expect(service.unbindWechat()).rejects.toThrow('网络中断')
+
+    expect(clear).not.toHaveBeenCalled()
+    expect(signedOut).not.toHaveBeenCalled()
   })
 
   test('successful login starts the protected reminder and logout stops it', async () => {
@@ -459,7 +510,7 @@ describe('merchant login flow', () => {
       .mockResolvedValueOnce(validSession())
       .mockResolvedValueOnce(undefined)
     const service = createMerchantAuthService({
-      client: { post },
+      client: { post, delete: vi.fn() },
       session,
       login: vi.fn().mockResolvedValue({ code: 'wx-code' }),
       reminderLifecycle,
@@ -489,7 +540,7 @@ describe('merchant login flow', () => {
     })
     const reminderLifecycle = createMerchantOrderReminderLifecycle(session, reminder)
     const service = createMerchantAuthService({
-      client: { post: vi.fn().mockResolvedValue(validSession()) },
+      client: { post: vi.fn().mockResolvedValue(validSession()), delete: vi.fn() },
       session,
       login: vi.fn().mockResolvedValue({ code: 'wx-code' }),
       reminderLifecycle,
@@ -520,7 +571,7 @@ describe('merchant login flow', () => {
     const reminderLifecycle = createMerchantOrderReminderLifecycle(session, reminder)
     const loginResponse = deferred<MerchantSession>()
     const service = createMerchantAuthService({
-      client: { post: vi.fn().mockReturnValue(loginResponse.promise) },
+      client: { post: vi.fn().mockReturnValue(loginResponse.promise), delete: vi.fn() },
       session,
       login: vi.fn().mockResolvedValue({ code: 'wx-code' }),
       reminderLifecycle,

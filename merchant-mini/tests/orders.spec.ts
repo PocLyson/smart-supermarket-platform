@@ -19,6 +19,7 @@ import {
 
 afterEach(() => {
   vi.unstubAllGlobals()
+  vi.doUnmock('../miniprogram/services/orders')
 })
 
 const merchantOrder = (overrides: Partial<MerchantOrder> = {}): MerchantOrder => ({
@@ -36,6 +37,14 @@ const merchantOrder = (overrides: Partial<MerchantOrder> = {}): MerchantOrder =>
   history: [],
   ...overrides,
 })
+
+const deferred = <T>() => {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((promiseResolve) => {
+    resolve = promiseResolve
+  })
+  return { promise, resolve }
+}
 
 describe('merchant order presentation', () => {
   test('presents every supported status as a clear Chinese filter', () => {
@@ -171,6 +180,136 @@ describe('merchant order API boundary', () => {
 })
 
 describe('merchant order page interaction contracts', () => {
+  test('locks before a deferred payment prompt so a double tap opens one prompt and submits once', async () => {
+    vi.resetModules()
+    const registerPage = vi.fn()
+    const paymentResult = deferred<MerchantOrder>()
+    const markPaid = vi.fn().mockReturnValue(paymentResult.promise)
+    let actionSheet:
+      | { success(result: { tapIndex: number }): void }
+      | undefined
+    const showActionSheet = vi.fn((options) => {
+      actionSheet = options
+    })
+    vi.doMock('../miniprogram/services/orders', () => ({
+      merchantOrdersService: {
+        accept: vi.fn(),
+        cancel: vi.fn(),
+        detail: vi.fn(),
+        markPaid,
+        markReady: vi.fn(),
+      },
+    }))
+    vi.stubGlobal('Page', registerPage)
+    vi.stubGlobal('wx', {
+      getStorageSync: vi.fn(),
+      showActionSheet,
+      showToast: vi.fn(),
+    })
+    await import('../miniprogram/pages/order-detail/index')
+    const definition = registerPage.mock.calls[0][0] as Record<string, unknown> & {
+      runPrimaryAction(): Promise<void>
+    }
+    const updated = merchantOrder({
+      status: 'READY_FOR_PICKUP',
+      paymentStatus: 'PAID',
+      paymentMethod: 'CASH',
+    })
+    const context = {
+      ...definition,
+      data: {
+        orderNo: 'ORD-1',
+        role: 'CASHIER',
+        order: merchantOrder({ status: 'READY_FOR_PICKUP' }),
+        primaryAction: 'MARK_PAID',
+        isMutating: false,
+        errorMessage: '',
+      },
+      setData(values: Record<string, unknown>) {
+        Object.assign(this.data, values)
+      },
+      applyOrder: vi.fn(),
+      reload: vi.fn().mockResolvedValue(undefined),
+      getOpenerEventChannel: () => ({ emit: vi.fn() }),
+    }
+
+    const firstTap = definition.runPrimaryAction.call(context)
+    const secondTap = definition.runPrimaryAction.call(context)
+
+    expect(showActionSheet).toHaveBeenCalledOnce()
+    actionSheet?.success({ tapIndex: 0 })
+    paymentResult.resolve(updated)
+    await Promise.all([firstTap, secondTap])
+
+    expect(markPaid).toHaveBeenCalledOnce()
+    expect(context.applyOrder).toHaveBeenCalledWith(updated)
+    expect(context.data.errorMessage).toBe('')
+  })
+
+  test('locks before a deferred cancel confirmation so a double tap cannot create a late mutation', async () => {
+    vi.resetModules()
+    const registerPage = vi.fn()
+    const cancelResult = deferred<MerchantOrder>()
+    const cancel = vi.fn().mockReturnValue(cancelResult.promise)
+    let modal:
+      | { success(result: { confirm: boolean; content?: string }): void }
+      | undefined
+    const showModal = vi.fn((options) => {
+      modal = options
+    })
+    vi.doMock('../miniprogram/services/orders', () => ({
+      merchantOrdersService: {
+        accept: vi.fn(),
+        cancel,
+        detail: vi.fn(),
+        markPaid: vi.fn(),
+        markReady: vi.fn(),
+      },
+    }))
+    vi.stubGlobal('Page', registerPage)
+    vi.stubGlobal('wx', {
+      getStorageSync: vi.fn(),
+      showModal,
+      showToast: vi.fn(),
+    })
+    await import('../miniprogram/pages/order-detail/index')
+    const definition = registerPage.mock.calls[0][0] as Record<string, unknown> & {
+      cancelOrder(): Promise<void>
+    }
+    const updated = merchantOrder({
+      status: 'CANCELLED',
+      cancelReason: '顾客要求取消',
+    })
+    const context = {
+      ...definition,
+      data: {
+        orderNo: 'ORD-1',
+        role: 'OWNER',
+        order: merchantOrder(),
+        isMutating: false,
+        errorMessage: '',
+      },
+      setData(values: Record<string, unknown>) {
+        Object.assign(this.data, values)
+      },
+      applyOrder: vi.fn(),
+      reload: vi.fn().mockResolvedValue(undefined),
+      getOpenerEventChannel: () => ({ emit: vi.fn() }),
+    }
+
+    const firstTap = definition.cancelOrder.call(context)
+    const secondTap = definition.cancelOrder.call(context)
+
+    expect(showModal).toHaveBeenCalledOnce()
+    modal?.success({ confirm: true, content: '顾客要求取消' })
+    cancelResult.resolve(updated)
+    await Promise.all([firstTap, secondTap])
+
+    expect(cancel).toHaveBeenCalledOnce()
+    expect(context.applyOrder).toHaveBeenCalledWith(updated)
+    expect(context.data.errorMessage).toBe('')
+  })
+
   test('does not change a filter while the current list request is still running', async () => {
     vi.resetModules()
     const registerPage = vi.fn()
@@ -256,7 +395,41 @@ describe('merchant order page interaction contracts', () => {
 
     expect(applyOrder).toHaveBeenCalledWith(updated)
     expect(emit).toHaveBeenCalledWith('orderUpdated', updated)
-    expect(reload).toHaveBeenCalledWith(false)
+    expect(reload).toHaveBeenCalledWith(false, true)
+  })
+
+  test('keeps a successful mutation state when its follow-up detail refresh fails late', async () => {
+    vi.resetModules()
+    const registerPage = vi.fn()
+    vi.doMock('../miniprogram/services/orders', () => ({
+      merchantOrdersService: {
+        detail: vi.fn().mockRejectedValue(new Error('late refresh failure')),
+      },
+    }))
+    vi.stubGlobal('Page', registerPage)
+    vi.stubGlobal('wx', { showToast: vi.fn() })
+    await import('../miniprogram/pages/order-detail/index')
+    const definition = registerPage.mock.calls[0][0] as {
+      mutate(operation: () => Promise<MerchantOrder>, message: string): Promise<void>
+      reload(showLoading: boolean, preserveCurrentOnError?: boolean): Promise<void>
+    }
+    const updated = merchantOrder({ status: 'PREPARING' })
+    const applyOrder = vi.fn()
+    const context = {
+      data: { orderNo: 'ORD-1', isMutating: false, errorMessage: '' },
+      setData(values: Record<string, unknown>) {
+        Object.assign(this.data, values)
+      },
+      applyOrder,
+      reload: definition.reload,
+      getOpenerEventChannel: () => ({ emit: vi.fn() }),
+    }
+
+    await definition.mutate.call(context, async () => updated, '接单成功')
+
+    expect(applyOrder).toHaveBeenCalledWith(updated)
+    expect(context.data.errorMessage).toBe('')
+    expect(context.data.isMutating).toBe(false)
   })
 
   test('retries the failed request mode instead of inferring it from stale rows', async () => {

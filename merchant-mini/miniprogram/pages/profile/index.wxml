@@ -22,6 +22,21 @@
     </view>
   </view>
 
+  <view class="section binding-card">
+    <text class="binding-title">当前微信绑定</text>
+    <text class="binding-description">解绑后将退出商家端，下次登录需要使用员工账号和密码重新绑定当前微信。</text>
+    <view class="binding-action">
+      <t-button
+        theme="danger"
+        variant="outline"
+        block
+        loading="{{isUnbinding}}"
+        disabled="{{isLoading || isUnbinding}}"
+        bindtap="confirmUnbind"
+      >{{isUnbinding ? '解绑中…' : '解绑当前微信'}}</t-button>
+    </view>
+  </view>
+
   <view wx:if="{{errorMessage}}" class="feedback-error" role="alert" aria-live="polite">
     <text>{{errorMessage}}</text>
   </view>
@@ -32,7 +47,7 @@
       variant="outline"
       block
       loading="{{isLoading}}"
-      disabled="{{isLoading}}"
+      disabled="{{isLoading || isUnbinding}}"
       bindtap="logout"
     >退出登录</t-button>
   </view>

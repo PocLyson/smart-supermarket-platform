@@ -126,7 +126,7 @@ Page({
     })
   },
 
-  async reload(showLoading: boolean) {
+  async reload(showLoading: boolean, preserveCurrentOnError = false) {
     if (!this.data.orderNo) {
       this.setData({ errorMessage: '订单编号无效，请返回订单列表重试' })
       return
@@ -135,7 +135,9 @@ Page({
     try {
       this.applyOrder(await merchantOrdersService.detail(this.data.orderNo))
     } catch (error) {
-      this.setData({ errorMessage: readableOrderError(error) })
+      if (!preserveCurrentOnError) {
+        this.setData({ errorMessage: readableOrderError(error) })
+      }
     } finally {
       if (showLoading) this.setData({ isLoading: false })
     }
@@ -145,15 +147,25 @@ Page({
     void this.reload(true)
   },
 
-  async mutate(operation: () => Promise<MerchantOrder>, successMessage: string) {
-    if (this.data.isMutating) return
-    this.setData({ isMutating: true, errorMessage: '' })
+  async mutate(
+    operation: () => Promise<MerchantOrder>,
+    successMessage: string,
+    lockAcquired = false,
+  ) {
+    if (!lockAcquired) {
+      if (this.data.isMutating) return
+      this.setData({ isMutating: true, errorMessage: '' })
+    }
     try {
       const updated = await operation()
       this.applyOrder(updated)
       this.getOpenerEventChannel().emit('orderUpdated', updated)
       wx.showToast({ title: successMessage, icon: 'success' })
-      await this.reload(false)
+      try {
+        await this.reload(false, true)
+      } catch {
+        // The mutation response is authoritative; keep its successful state.
+      }
     } catch (error) {
       this.setData({ errorMessage: readableOrderError(error) })
     } finally {
@@ -178,24 +190,36 @@ Page({
       )
       return
     }
+    this.setData({ isMutating: true, errorMessage: '' })
     const method = await choosePaymentMethod()
-    if (!method) return
+    if (!method) {
+      this.setData({ isMutating: false })
+      return
+    }
     await this.mutate(
       () => merchantOrdersService.markPaid(this.data.orderNo, method),
       '收款状态已更新',
+      true,
     )
   },
 
   async cancelOrder() {
-    if (!this.data.order || !canOwnerCancel(this.data.order.status, this.data.role)) return
+    if (
+      !this.data.order ||
+      this.data.isMutating ||
+      !canOwnerCancel(this.data.order.status, this.data.role)
+    ) return
+    this.setData({ isMutating: true, errorMessage: '' })
     const reason = await requestCancelReason()
     if (!reason) {
       wx.showToast({ title: '请输入取消原因', icon: 'none' })
+      this.setData({ isMutating: false })
       return
     }
     await this.mutate(
       () => merchantOrdersService.cancel(this.data.orderNo, reason),
       '订单已取消',
+      true,
     )
   },
 

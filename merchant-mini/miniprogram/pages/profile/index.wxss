@@ -47,6 +47,38 @@
   transform: rotate(45deg);
 }
 
+.binding-card {
+  padding: var(--space-4);
+  border: var(--border-width-default) solid var(--color-divider);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.binding-title,
+.binding-description {
+  display: block;
+}
+
+.binding-title {
+  color: var(--color-text-primary);
+  font-size: var(--type-card-title-size);
+  font-weight: var(--weight-semibold);
+  line-height: var(--type-card-title-line);
+}
+
+.binding-description {
+  margin-top: var(--space-2);
+  color: var(--color-text-secondary);
+  font-size: var(--type-helper-size);
+  line-height: var(--type-helper-line);
+}
+
+.binding-action {
+  min-height: var(--size-touch-min);
+  margin-top: var(--space-4);
+}
+
 .logout-action {
   margin-top: var(--space-2);
 }
