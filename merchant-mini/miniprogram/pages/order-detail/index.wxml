@@ -1,0 +1,107 @@
+<view class="detail-page">
+  <view wx:if="{{isLoading && !order}}" class="detail-state" role="status" aria-live="polite">
+    <t-loading theme="circular" size="48rpx" />
+    <text>正在加载订单详情…</text>
+  </view>
+
+  <view wx:elif="{{errorMessage && !order}}" class="detail-state detail-state--error" role="alert">
+    <text class="state-title">订单详情加载失败</text>
+    <text class="state-description">{{errorMessage}}</text>
+    <view class="state-action">
+      <t-button block loading="{{isLoading}}" disabled="{{isLoading}}" bindtap="retry">重新加载</t-button>
+    </view>
+    <view class="state-action">
+      <t-button block theme="default" variant="outline" bindtap="goBack">返回上一页</t-button>
+    </view>
+  </view>
+
+  <block wx:elif="{{order}}">
+    <view class="summary-card">
+      <view class="summary-top">
+        <view>
+          <text class="order-no">{{order.orderNo}}</text>
+          <text class="order-time">{{order.createdAtText}}</text>
+        </view>
+        <text class="status-badge status-badge--{{order.status}}">{{order.statusLabel}}</text>
+      </view>
+      <view class="summary-money-row">
+        <text class="summary-label">订单金额</text>
+        <text class="summary-money">{{order.amountText}}</text>
+      </view>
+      <view class="payment-row">
+        <text>{{order.paymentLabel}}</text>
+        <text>{{order.paymentMethodText}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{errorMessage}}" class="feedback-error" role="alert" aria-live="polite">
+      <text>{{errorMessage}}</text>
+      <text class="inline-retry" role="button" bindtap="retry">重新加载详情</text>
+    </view>
+
+    <view wx:if="{{primaryAction || (role === 'OWNER' && canCancel)}}" class="action-card">
+      <view wx:if="{{primaryAction}}" class="detail-action">
+        <t-button
+          block
+          loading="{{isMutating}}"
+          disabled="{{isMutating}}"
+          bindtap="runPrimaryAction"
+        >{{isMutating ? '处理中…' : primaryActionText}}</t-button>
+      </view>
+      <view wx:if="{{role === 'OWNER' && canCancel}}" class="detail-action detail-action--danger">
+        <t-button
+          theme="danger"
+          variant="outline"
+          block
+          loading="{{isMutating}}"
+          disabled="{{isMutating}}"
+          bindtap="cancelOrder"
+        >取消订单</t-button>
+      </view>
+    </view>
+
+    <view class="detail-card">
+      <text class="section-title">取货信息</text>
+      <view class="detail-row">
+        <text class="detail-label">取货人</text>
+        <text>{{order.pickupName}}</text>
+      </view>
+      <view class="detail-row">
+        <text class="detail-label">手机号</text>
+        <text>{{order.maskedPhone}}</text>
+      </view>
+      <view wx:if="{{order.customerNote}}" class="detail-note">
+        <text class="detail-label">顾客备注</text>
+        <text>{{order.customerNote}}</text>
+      </view>
+      <view wx:if="{{order.cancelReason}}" class="cancel-reason" role="status">
+        <text class="detail-label">取消原因</text>
+        <text>{{order.cancelReason}}</text>
+      </view>
+    </view>
+
+    <view class="detail-card">
+      <text class="section-title">商品明细</text>
+      <view wx:for="{{order.items}}" wx:key="productId" class="item-row">
+        <view class="item-main">
+          <text class="item-name">{{item.productName}}</text>
+          <text class="item-meta">{{item.unitPriceText}} / {{item.unit}} × {{item.quantity}}</text>
+        </view>
+        <text class="item-subtotal">{{item.subtotalText}}</text>
+      </view>
+    </view>
+
+    <view class="detail-card">
+      <text class="section-title">处理记录</text>
+      <view wx:if="{{order.history.length === 0}}" class="history-empty">暂时没有处理记录</view>
+      <view wx:for="{{order.history}}" wx:key="createdAt" class="history-row">
+        <view class="history-dot" aria-hidden="true"></view>
+        <view class="history-content">
+          <text class="history-status">{{item.statusLabel}}</text>
+          <text wx:if="{{item.remark}}" class="history-remark">{{item.remark}}</text>
+          <text class="history-time">{{item.createdAtText}}</text>
+        </view>
+      </view>
+    </view>
+  </block>
+</view>

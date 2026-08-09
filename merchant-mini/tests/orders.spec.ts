@@ -1,0 +1,314 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { afterEach, describe, expect, test, vi } from 'vitest'
+import { createOrdersService } from '../miniprogram/services/orders'
+import {
+  ORDER_STATUS_TABS,
+  availableOrderAction,
+  buildOrderDetailUrl,
+  canOwnerCancel,
+  maskPhone,
+  orderAction,
+  orderStatusLabel,
+  parseOrderListContext,
+  paymentMethodLabel,
+  paymentStatusLabel,
+  readableOrderError,
+  type MerchantOrder,
+} from '../miniprogram/types/order'
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
+
+const merchantOrder = (overrides: Partial<MerchantOrder> = {}): MerchantOrder => ({
+  orderNo: 'ORD-1',
+  totalCent: 590,
+  status: 'PENDING_CONFIRMATION',
+  paymentStatus: 'UNPAID',
+  paymentMethod: null,
+  pickupName: '张先生',
+  phone: '13800138000',
+  customerNote: null,
+  cancelReason: null,
+  createdAt: '2026-08-09T08:00:00Z',
+  items: [],
+  history: [],
+  ...overrides,
+})
+
+describe('merchant order presentation', () => {
+  test('presents every supported status as a clear Chinese filter', () => {
+    expect(ORDER_STATUS_TABS).toEqual([
+      { value: '', label: '全部' },
+      { value: 'PENDING_CONFIRMATION', label: '待接单' },
+      { value: 'PREPARING', label: '备货中' },
+      { value: 'READY_FOR_PICKUP', label: '待取货' },
+      { value: 'COMPLETED', label: '已完成' },
+      { value: 'CANCELLED', label: '已取消' },
+    ])
+    expect(orderStatusLabel.CANCELLED).toBe('已取消')
+  })
+
+  test('uses employee-readable payment labels', () => {
+    expect(paymentStatusLabel).toEqual({ UNPAID: '未付款', PAID: '已付款' })
+    expect(paymentMethodLabel).toEqual({
+      CASH: '现金',
+      WECHAT_QR: '微信收款码',
+    })
+  })
+
+  test('masks the middle digits of a pickup phone number', () => {
+    expect(maskPhone('13800138000')).toBe('138****8000')
+    expect(maskPhone('')).toBe('未提供')
+  })
+
+  test('chooses the next primary action from the server state without inventing transitions', () => {
+    expect(orderAction('PENDING_CONFIRMATION', 'CASHIER')).toBe('ACCEPT')
+    expect(orderAction('PREPARING', 'OWNER')).toBe('MARK_READY')
+    expect(orderAction('READY_FOR_PICKUP', 'CASHIER')).toBe('MARK_PAID')
+    expect(orderAction('COMPLETED', 'OWNER')).toBeUndefined()
+    expect(orderAction('CANCELLED', 'OWNER')).toBeUndefined()
+  })
+
+  test('keeps paid orders moving while hiding only the redundant payment action', () => {
+    expect(availableOrderAction('PENDING_CONFIRMATION', 'CASHIER', 'PAID')).toBe('ACCEPT')
+    expect(availableOrderAction('PREPARING', 'OWNER', 'PAID')).toBe('MARK_READY')
+    expect(availableOrderAction('READY_FOR_PICKUP', 'CASHIER', 'PAID')).toBeUndefined()
+  })
+
+  test('never exposes cancellation to cashiers and limits owners to active orders', () => {
+    expect(canOwnerCancel('PENDING_CONFIRMATION', 'CASHIER')).toBe(false)
+    expect(canOwnerCancel('PREPARING', 'OWNER')).toBe(true)
+    expect(canOwnerCancel('READY_FOR_PICKUP', 'OWNER')).toBe(true)
+    expect(canOwnerCancel('COMPLETED', 'OWNER')).toBe(false)
+  })
+
+  test('round-trips list filters, page, and scroll position through detail navigation', () => {
+    const url = buildOrderDetailUrl('ORD/2026 08', {
+      status: 'PREPARING',
+      paymentStatus: 'UNPAID',
+      keyword: '138 0013',
+      page: 2,
+      scrollTop: 640,
+    })
+    expect(url).toBe(
+      '/pages/order-detail/index?orderNo=ORD%2F2026%2008&status=PREPARING&paymentStatus=UNPAID&keyword=138%200013&page=2&scrollTop=640',
+    )
+    expect(parseOrderListContext(url.split('?')[1])).toEqual({
+      status: 'PREPARING',
+      paymentStatus: 'UNPAID',
+      keyword: '138 0013',
+      page: 2,
+      scrollTop: 640,
+    })
+  })
+
+  test('shows safe Chinese business errors verbatim and hides unsafe payloads', () => {
+    expect(readableOrderError(new Error('当前状态不允许接单'))).toBe('当前状态不允许接单')
+    expect(readableOrderError(new Error('<script>alert(1)</script>'))).toBe(
+      '订单操作失败，请重试',
+    )
+  })
+})
+
+describe('merchant order API boundary', () => {
+  test('sends list filters to the protected merchant list endpoint', async () => {
+    const get = vi.fn().mockResolvedValue({ items: [], total: 0, page: 1, size: 20 })
+    const service = createOrdersService({ get, post: vi.fn() })
+
+    await service.list({ status: 'PREPARING', paymentStatus: 'UNPAID', keyword: '138', page: 1, size: 20 })
+
+    expect(get).toHaveBeenCalledWith('/api/merchant-mini/orders', {
+      status: 'PREPARING',
+      paymentStatus: 'UNPAID',
+      keyword: '138',
+      page: 1,
+      size: 20,
+    })
+  })
+
+  test('uses encoded order numbers and exact mutation payloads', async () => {
+    const post = vi.fn().mockResolvedValue({ orderNo: 'ORD/1' })
+    const service = createOrdersService({ get: vi.fn(), post })
+
+    await service.accept('ORD/1')
+    await service.markReady('ORD/1')
+    await service.markPaid('ORD/1', 'WECHAT_QR')
+    await service.cancel('ORD/1', '顾客要求取消')
+
+    expect(post.mock.calls).toEqual([
+      ['/api/merchant-mini/orders/ORD%2F1/accept'],
+      ['/api/merchant-mini/orders/ORD%2F1/ready'],
+      ['/api/merchant-mini/orders/ORD%2F1/pay', { method: 'WECHAT_QR' }],
+      ['/api/merchant-mini/orders/ORD%2F1/cancel', { reason: '顾客要求取消' }],
+    ])
+  })
+
+  test('restores every previously loaded page instead of collapsing to page zero', async () => {
+    const get = vi.fn()
+      .mockResolvedValueOnce({ items: [merchantOrder()], total: 3, page: 0, size: 2 })
+      .mockResolvedValueOnce({
+        items: [
+          merchantOrder({ orderNo: 'ORD-2' }),
+          merchantOrder({ orderNo: 'ORD-3' }),
+        ],
+        total: 3,
+        page: 1,
+        size: 2,
+      })
+    const service = createOrdersService({ get, post: vi.fn() })
+
+    const restored = await service.listThrough({ status: 'PREPARING', size: 2 }, 1)
+
+    expect(restored.items.map(({ orderNo }) => orderNo)).toEqual(['ORD-1', 'ORD-2', 'ORD-3'])
+    expect(restored.page).toBe(1)
+    expect(get.mock.calls).toEqual([
+      ['/api/merchant-mini/orders', { status: 'PREPARING', size: 2, page: 0 }],
+      ['/api/merchant-mini/orders', { status: 'PREPARING', size: 2, page: 1 }],
+    ])
+  })
+})
+
+describe('merchant order page interaction contracts', () => {
+  test('does not change a filter while the current list request is still running', async () => {
+    vi.resetModules()
+    const registerPage = vi.fn()
+    vi.stubGlobal('Page', registerPage)
+    await import('../miniprogram/pages/orders/index')
+    const definition = registerPage.mock.calls[0][0] as {
+      onStatusTap(event: { currentTarget: { dataset: { status: string } } }): void
+    }
+    const loadOrders = vi.fn()
+    const context = {
+      data: {
+        selectedStatus: '',
+        isLoading: true,
+        isLoadingMore: false,
+      },
+      setData(values: Record<string, unknown>) {
+        Object.assign(this.data, values)
+      },
+      loadOrders,
+    }
+
+    definition.onStatusTap.call(context, {
+      currentTarget: { dataset: { status: 'PREPARING' } },
+    })
+
+    expect(context.data.selectedStatus).toBe('')
+    expect(loadOrders).not.toHaveBeenCalled()
+  })
+
+  test('preserves the loaded page range when returning from detail', async () => {
+    vi.resetModules()
+    const registerPage = vi.fn()
+    vi.stubGlobal('Page', registerPage)
+    vi.stubGlobal('wx', {
+      getStorageSync: () => ({
+        accessToken: 'token',
+        role: 'CASHIER',
+        staffId: 9,
+        username: 'cashier',
+        expiresAt: Date.now() + 60_000,
+      }),
+      reLaunch: vi.fn(),
+    })
+    await import('../miniprogram/pages/orders/index')
+    const definition = registerPage.mock.calls[0][0] as { onShow(): void }
+    const loadOrders = vi.fn()
+    const refreshLoadedPages = vi.fn()
+
+    definition.onShow.call({
+      data: { hasLoaded: true },
+      loadOrders,
+      refreshLoadedPages,
+    })
+
+    expect(refreshLoadedPages).toHaveBeenCalledOnce()
+    expect(loadOrders).not.toHaveBeenCalled()
+  })
+
+  test('patches the opener list before reloading detail after a successful mutation', async () => {
+    vi.resetModules()
+    const registerPage = vi.fn()
+    vi.stubGlobal('Page', registerPage)
+    vi.stubGlobal('wx', { showToast: vi.fn() })
+    await import('../miniprogram/pages/order-detail/index')
+    const definition = registerPage.mock.calls[0][0] as {
+      mutate(operation: () => Promise<MerchantOrder>, message: string): Promise<void>
+    }
+    const updated = merchantOrder({ status: 'PREPARING' })
+    const emit = vi.fn()
+    const applyOrder = vi.fn()
+    const reload = vi.fn().mockResolvedValue(undefined)
+    const context = {
+      data: { isMutating: false },
+      setData(values: Record<string, unknown>) {
+        Object.assign(this.data, values)
+      },
+      applyOrder,
+      reload,
+      getOpenerEventChannel: () => ({ emit }),
+    }
+
+    await definition.mutate.call(context, async () => updated, '接单成功')
+
+    expect(applyOrder).toHaveBeenCalledWith(updated)
+    expect(emit).toHaveBeenCalledWith('orderUpdated', updated)
+    expect(reload).toHaveBeenCalledWith(false)
+  })
+
+  test('retries the failed request mode instead of inferring it from stale rows', async () => {
+    vi.resetModules()
+    const registerPage = vi.fn()
+    vi.stubGlobal('Page', registerPage)
+    await import('../miniprogram/pages/orders/index')
+    const definition = registerPage.mock.calls[0][0] as { retry(): void }
+    const loadOrders = vi.fn()
+    const refreshLoadedPages = vi.fn()
+
+    definition.retry.call({
+      data: { lastFailedRequest: 'RESET', orders: [merchantOrder()] },
+      loadOrders,
+      refreshLoadedPages,
+    })
+    expect(loadOrders).toHaveBeenCalledWith(true)
+
+    loadOrders.mockClear()
+    definition.retry.call({
+      data: { lastFailedRequest: 'PRESERVE', orders: [merchantOrder()] },
+      loadOrders,
+      refreshLoadedPages,
+    })
+    expect(refreshLoadedPages).toHaveBeenCalledOnce()
+    expect(loadOrders).not.toHaveBeenCalled()
+  })
+
+  test('includes recoverable list states and touch-safe controls', () => {
+    const markup = readFileSync(resolve('miniprogram/pages/orders/index.wxml'), 'utf8')
+    const styles = readFileSync(resolve('miniprogram/pages/orders/index.wxss'), 'utf8')
+
+    expect(markup).toContain('bindtap="retry"')
+    expect(markup).toContain('没有符合条件的订单')
+    expect(markup).toContain('disabled="{{isLoadingMore}}"')
+    expect(styles).toMatch(/\.status-tab\s*\{[^}]*min-height:\s*var\(--size-touch-min\);/s)
+  })
+
+  test('gates cancellation by role, confirms a reason, and displays it afterwards', () => {
+    const markup = readFileSync(resolve('miniprogram/pages/order-detail/index.wxml'), 'utf8')
+    const source = readFileSync(resolve('miniprogram/pages/order-detail/index.ts'), 'utf8')
+
+    expect(markup).toContain('wx:if="{{role === \'OWNER\' && canCancel}}"')
+    expect(markup).toContain('{{order.cancelReason}}')
+    expect(source).toContain('editable: true')
+    expect(source).toContain("placeholderText: '请输入取消原因'")
+  })
+
+  test('disables detail actions while a mutation is running', () => {
+    const markup = readFileSync(resolve('miniprogram/pages/order-detail/index.wxml'), 'utf8')
+
+    expect(markup).toContain('loading="{{isMutating}}"')
+    expect(markup).toContain('disabled="{{isMutating}}"')
+  })
+})

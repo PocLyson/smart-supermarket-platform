@@ -18,10 +18,10 @@ describe('merchant primary navigation', () => {
     expect(NAV_ITEMS).toHaveLength(5)
   })
 
-  test('routes unavailable phase-one destinations to an explanatory page', () => {
+  test('routes implemented order destinations to their native pages', () => {
     expect(NAV_ITEMS.map((item) => item.url)).toEqual([
-      '/pages/messages-unavailable/index?feature=workbench',
-      '/pages/messages-unavailable/index?feature=orders',
+      '/pages/workbench/index',
+      '/pages/orders/index',
       '/pages/messages-unavailable/index?feature=verification',
       '/pages/messages-unavailable/index?feature=messages',
       '/pages/profile/index',
