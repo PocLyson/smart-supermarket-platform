@@ -1,6 +1,6 @@
 # 智慧超市平台
 
-智慧超市 MVP 包含微信顾客端、后台管理端与 Spring Boot 服务端。本工作区中的后端实现覆盖商品目录、在线库存、顾客认证、订单创建与取消、后台订单履约、员工权限、图片上传、审计日志和限流。
+智慧超市 MVP 包含微信顾客端、微信商家端、后台管理端与 Spring Boot 服务端。本工作区中的后端实现覆盖商品目录、在线库存、顾客认证、订单创建与取消、订单履约与取货核销、员工权限、图片上传、审计日志和限流。
 
 ## 目录
 
@@ -11,6 +11,7 @@
 - `docs/operations/`：部署、备份恢复和试运营验收手册
 - `admin/`：后台管理端
 - `mini/`：微信小程序端
+- `merchant-mini/`：微信商家小程序端（Phase 1）
 
 ## 本地启动
 
@@ -55,12 +56,37 @@ cd server
 
 集成测试使用 Testcontainers，需要 Docker 正常运行。
 
+## 商家小程序本地联调
+
+先启动 Docker 依赖，再在独立 PowerShell 窗口以本地模拟微信身份启动服务端：
+
+```powershell
+docker compose up -d
+$env:MERCHANT_WECHAT_LOCAL_MOCK_ENABLED = "true"
+$env:MERCHANT_WECHAT_LOCAL_MOCK_OPENID = "local-dev-staff"
+cd server
+.\mvnw.cmd spring-boot:run
+```
+
+在仓库根目录安装依赖并运行商家端自动检查：
+
+```powershell
+npm --prefix merchant-mini ci
+npm --prefix merchant-mini test -- --run
+npm --prefix merchant-mini run typecheck
+```
+
+微信开发者工具导入目录为 `merchant-mini/`，导入后执行“工具 → 构建 npm”。开发版 API 默认是 `http://localhost:8080`。受版本控制的 `merchant-mini/project.config.json` 必须保留 `touristappid`；真实商家 AppID 只在开发者工具的本地项目配置中选择，不得提交。`MERCHANT_WECHAT_APP_SECRET` 只允许通过服务端安全环境注入，不能写入小程序、仓库或验收证据。
+
+完整的环境地址、首次登录绑定、老板/收银员/停用员工测试、工作台订单处理与六位取货码核销路径见 [商家小程序本地与真机测试指南](docs/operations/merchant-mini-local-testing.md)。自动测试通过不代表真机门禁通过；真实 AppID、微信开发者工具和至少一台手机的结果必须单独记录在试运营验收单。
+
 ## 文档
 
 - [MVP API 契约](docs/api/mvp-api.md)
 - [生产部署](docs/operations/deployment.md)
 - [域名、备案与微信体验版](docs/operations/domain-and-wechat-trial.md)
 - [备份与恢复](docs/operations/backup-and-restore.md)
+- [商家小程序本地与真机测试指南](docs/operations/merchant-mini-local-testing.md)
 - [试运营验收](docs/operations/trial-acceptance.md)
 
 真实生产配置必须先运行就绪检查，再渲染 Compose：
