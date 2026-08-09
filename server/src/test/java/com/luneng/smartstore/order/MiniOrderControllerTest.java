@@ -317,9 +317,9 @@ class MiniOrderControllerTest extends IntegrationTestBase {
         jdbcTemplate.update(
             """
             insert into customer_order(
-                order_no, customer_id, idempotency_key, pickup_name, phone,
+                order_no, customer_id, idempotency_key, pickup_code, pickup_name, phone,
                 total_cent, status, payment_status, inventory_released
-            ) values (?, 1, ?, '李先生', '13800138000', 590, ?, 'UNPAID', false)
+            ) values (?, 1, ?, '123456', '李先生', '13800138000', 590, ?, 'UNPAID', false)
             """,
             orderNo,
             "key-" + orderNo,

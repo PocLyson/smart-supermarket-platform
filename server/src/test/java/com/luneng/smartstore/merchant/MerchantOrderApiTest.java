@@ -103,12 +103,14 @@ class MerchantOrderApiTest extends IntegrationTestBase {
         mockMvc.perform(get("/api/merchant-mini/orders")
                 .header("Authorization", "Bearer " + cashierToken))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.data.items[0].orderNo").value(orderNo));
+            .andExpect(jsonPath("$.data.items[0].orderNo").value(orderNo))
+            .andExpect(jsonPath("$.data.items[0].pickupCode").doesNotExist());
 
         mockMvc.perform(get("/api/merchant-mini/orders/{orderNo}", orderNo)
                 .header("Authorization", "Bearer " + cashierToken))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.data.status").value("PENDING_CONFIRMATION"));
+            .andExpect(jsonPath("$.data.status").value("PENDING_CONFIRMATION"))
+            .andExpect(jsonPath("$.data.pickupCode").doesNotExist());
 
         mockMvc.perform(post("/api/merchant-mini/orders/{orderNo}/accept", orderNo)
                 .header("Authorization", "Bearer " + cashierToken)
@@ -154,7 +156,20 @@ class MerchantOrderApiTest extends IntegrationTestBase {
     @Test
     void verifyPickupValidatesCodeBeforePayingAndCompletesAtomically() throws Exception {
         prepareForPickup();
-        String pickupCode = customerOrders.detail(1L, orderNo).pickupCode();
+        assertThat(jdbcTemplate.queryForObject(
+            """
+            select count(*) from information_schema.columns
+            where table_schema = database()
+              and table_name = 'customer_order'
+              and column_name = 'pickup_code'
+            """,
+            Integer.class
+        )).isEqualTo(1);
+        String pickupCode = jdbcTemplate.queryForObject(
+            "select pickup_code from customer_order where order_no = ?",
+            String.class,
+            orderNo
+        );
 
         mockMvc.perform(post("/api/merchant-mini/orders/{orderNo}/verify-pickup", orderNo)
                 .header("Authorization", "Bearer " + cashierToken)
@@ -166,7 +181,8 @@ class MerchantOrderApiTest extends IntegrationTestBase {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.status").value("COMPLETED"))
             .andExpect(jsonPath("$.data.paymentStatus").value("PAID"))
-            .andExpect(jsonPath("$.data.paymentMethod").value("CASH"));
+            .andExpect(jsonPath("$.data.paymentMethod").value("CASH"))
+            .andExpect(jsonPath("$.data.pickupCode").doesNotExist());
 
         assertThat(jdbcTemplate.queryForObject(
             "select count(*) from order_status_history h join customer_order o on o.id = h.order_id where o.order_no = ? and h.to_status = 'COMPLETED'",

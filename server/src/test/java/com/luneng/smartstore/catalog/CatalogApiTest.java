@@ -400,9 +400,9 @@ class CatalogApiTest extends IntegrationTestBase {
         jdbcTemplate.update(
             """
             insert into customer_order(
-                id, order_no, customer_id, idempotency_key, pickup_name, phone,
+                id, order_no, customer_id, idempotency_key, pickup_code, pickup_name, phone,
                 total_cent, status, payment_status, inventory_released
-            ) values (90, 'PD202608010001', 90, 'permanent-delete-order', '测试顾客',
+            ) values (90, 'PD202608010001', 90, 'permanent-delete-order', '345678', '测试顾客',
                       '13800000000', 590, 'COMPLETED', 'PAID', true)
             """
         );

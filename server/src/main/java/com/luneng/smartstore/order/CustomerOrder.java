@@ -38,6 +38,9 @@ public class CustomerOrder {
     @Column(name = "idempotency_key", nullable = false, length = 128)
     private String idempotencyKey;
 
+    @Column(name = "pickup_code", nullable = false, length = 6)
+    private String pickupCode;
+
     @Column(name = "pickup_name", nullable = false, length = 40)
     private String pickupName;
 
@@ -110,6 +113,7 @@ public class CustomerOrder {
         String orderNo,
         CustomerUser customer,
         String idempotencyKey,
+        String pickupCode,
         String pickupName,
         String phone,
         String customerNote,
@@ -118,6 +122,7 @@ public class CustomerOrder {
         this.orderNo = orderNo;
         this.customer = customer;
         this.idempotencyKey = idempotencyKey;
+        this.pickupCode = requireValidPickupCode(pickupCode);
         this.pickupName = pickupName;
         this.phone = phone;
         this.customerNote = normalizeCustomerNote(customerNote);
@@ -188,14 +193,14 @@ public class CustomerOrder {
 
     public void verifyPickupCode(String pickupCode) {
         requireStatus(OrderStatus.READY_FOR_PICKUP, "当前状态不允许完成订单");
-        if (pickupCode == null || !pickupCode.matches("\\d{6}")) {
+        if (pickupCode == null || !pickupCode.matches("[0-9]{6}")) {
             throw new BusinessException(
                 "VALIDATION_ERROR",
                 "请输入6位取货码",
                 HttpStatus.BAD_REQUEST
             );
         }
-        if (!PickupCode.fromOrderNo(orderNo).equals(pickupCode)) {
+        if (!this.pickupCode.equals(pickupCode)) {
             throw new BusinessException(
                 "PICKUP_CODE_MISMATCH",
                 "取货码不正确，请与顾客核对后重试"
@@ -294,6 +299,10 @@ public class CustomerOrder {
         return pickupName;
     }
 
+    public String getPickupCode() {
+        return pickupCode;
+    }
+
     public String getPhone() {
         return phone;
     }
@@ -351,5 +360,12 @@ public class CustomerOrder {
             );
         }
         return normalized;
+    }
+
+    private static String requireValidPickupCode(String value) {
+        if (value == null || !value.matches("[0-9]{6}")) {
+            throw new IllegalArgumentException("pickup code must contain six ASCII digits");
+        }
+        return value;
     }
 }

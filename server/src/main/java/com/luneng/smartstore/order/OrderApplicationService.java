@@ -31,6 +31,7 @@ public class OrderApplicationService {
     private final CatalogRepository catalogRepository;
     private final InventoryService inventoryService;
     private final OrderNumberGenerator orderNumberGenerator;
+    private final PickupCodeGenerator pickupCodeGenerator;
     private final JdbcTemplate jdbcTemplate;
     private final AuditService auditService;
 
@@ -40,6 +41,7 @@ public class OrderApplicationService {
         CatalogRepository catalogRepository,
         InventoryService inventoryService,
         OrderNumberGenerator orderNumberGenerator,
+        PickupCodeGenerator pickupCodeGenerator,
         JdbcTemplate jdbcTemplate,
         AuditService auditService
     ) {
@@ -48,6 +50,7 @@ public class OrderApplicationService {
         this.catalogRepository = catalogRepository;
         this.inventoryService = inventoryService;
         this.orderNumberGenerator = orderNumberGenerator;
+        this.pickupCodeGenerator = pickupCodeGenerator;
         this.jdbcTemplate = jdbcTemplate;
         this.auditService = auditService;
     }
@@ -88,6 +91,7 @@ public class OrderApplicationService {
             orderNo,
             customer,
             command.idempotencyKey(),
+            pickupCodeGenerator.next(),
             command.pickupName().trim(),
             command.phone(),
             command.customerNote(),

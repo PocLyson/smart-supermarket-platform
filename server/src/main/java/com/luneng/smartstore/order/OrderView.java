@@ -22,7 +22,7 @@ public record OrderView(
     static OrderView from(CustomerOrder order) {
         return new OrderView(
             order.getOrderNo(),
-            PickupCode.fromOrderNo(order.getOrderNo()),
+            order.getPickupCode(),
             order.getTotalCent(),
             order.getStatus(),
             order.getPaymentStatus(),

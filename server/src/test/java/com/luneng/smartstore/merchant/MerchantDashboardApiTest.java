@@ -103,9 +103,9 @@ class MerchantDashboardApiTest extends IntegrationTestBase {
         jdbcTemplate.update(
             """
             insert into customer_order(
-                order_no, customer_id, idempotency_key, pickup_name, phone,
+                order_no, customer_id, idempotency_key, pickup_code, pickup_name, phone,
                 total_cent, status, payment_status, created_at
-            ) values (?, 1, ?, 'Customer', '13800138000', 100, ?, 'UNPAID', timestampadd(minute, ?, current_timestamp(6)))
+            ) values (?, 1, ?, '456789', 'Customer', '13800138000', 100, ?, 'UNPAID', timestampadd(minute, ?, current_timestamp(6)))
             """,
             orderNo,
             "key-" + orderNo,

@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.luneng.smartstore.common.api.BusinessException;
 import com.luneng.smartstore.inventory.InventoryService;
 import com.luneng.smartstore.support.IntegrationTestBase;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -72,6 +73,27 @@ class OrderApplicationServiceTest extends IntegrationTestBase {
         assertThat(inventoryService.current(10L)).isEqualTo(8);
         assertThat(service.detail(1L, result.orderNo()).items()).hasSize(1);
         assertThat(service.detail(1L, result.orderNo()).history()).hasSize(1);
+    }
+
+    @Test
+    void createdPickupSecretIsNotDeterminedByMerchantVisibleOrderNumber() {
+        List<OrderView> orders = new ArrayList<>();
+        for (int index = 0; index < 4; index++) {
+            orders.add(service.create(new CreateOrderCommand(
+                command.customerId(),
+                "pickup-secret-" + index,
+                command.pickupName(),
+                command.phone(),
+                null,
+                List.of(new CreateOrderItem(10L, 1))
+            )));
+        }
+
+        assertThat(orders)
+            .extracting(OrderView::pickupCode)
+            .allSatisfy(code -> assertThat(code).matches("[0-9]{6}"));
+        assertThat(orders).anySatisfy(order -> assertThat(order.pickupCode())
+            .isNotEqualTo(order.orderNo().substring(order.orderNo().length() - 6)));
     }
 
     @Test
