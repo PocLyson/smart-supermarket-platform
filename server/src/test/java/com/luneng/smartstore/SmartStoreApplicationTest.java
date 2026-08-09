@@ -8,6 +8,7 @@ import com.luneng.smartstore.customer.CustomerAuthService;
 import com.luneng.smartstore.customer.CustomerUserRepository;
 import com.luneng.smartstore.inventory.InventoryService;
 import com.luneng.smartstore.inventory.InventoryRepository;
+import com.luneng.smartstore.merchantauth.MerchantAuthService;
 import com.luneng.smartstore.order.AdminOrderService;
 import com.luneng.smartstore.order.OrderApplicationService;
 import com.luneng.smartstore.order.OrderRepository;
@@ -58,6 +59,9 @@ class SmartStoreApplicationTest {
 
     @MockitoBean
     private CustomerUserRepository customerUserRepository;
+
+    @MockitoBean
+    private MerchantAuthService merchantAuthService;
 
     @MockitoBean
     private OrderApplicationService orderApplicationService;
