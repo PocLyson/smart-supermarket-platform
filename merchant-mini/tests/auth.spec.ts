@@ -24,6 +24,14 @@ const validSession = (overrides: Partial<MerchantSession> = {}): MerchantSession
   ...overrides,
 })
 
+const deferred = <T>() => {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((promiseResolve) => {
+    resolve = promiseResolve
+  })
+  return { promise, resolve }
+}
+
 describe('merchant session store', () => {
   test('rejects an expired session so stale credentials cannot be reused', () => {
     const clear = vi.fn()
@@ -121,6 +129,60 @@ describe('merchant HTTP boundary', () => {
 
     await expect(client.get('/api/merchant-mini/account')).rejects.toBeInstanceOf(HttpResponseError)
     expect(onUnauthorized).toHaveBeenCalledOnce()
+  })
+
+  test('a late 401 from an old token cannot clear or redirect a newly authenticated session', async () => {
+    let stored: MerchantSession | undefined = validSession({ accessToken: 'old-token' })
+    const session = createMerchantSessionStore({
+      read: () => stored,
+      write: (value) => { stored = value },
+      clear: () => { stored = undefined },
+    })
+    const response = deferred<unknown>()
+    const onUnauthorized = vi.fn()
+    const client = createMerchantHttp({
+      request: vi.fn().mockReturnValue(response.promise),
+      session,
+      onUnauthorized,
+    })
+
+    const pending = client.get('/api/merchant-mini/account')
+    session.save(validSession({ accessToken: 'new-token', staffId: 8 }))
+    response.resolve({
+      statusCode: 401,
+      data: { code: 'UNAUTHORIZED', message: '登录已失效', requestId: 'req-stale', data: null },
+    })
+
+    await expect(pending).rejects.toBeInstanceOf(HttpResponseError)
+    expect(session.current()?.accessToken).toBe('new-token')
+    expect(onUnauthorized).not.toHaveBeenCalled()
+  })
+
+  test('a late tokenless 401 cannot clear a session created after the request started', async () => {
+    let stored: MerchantSession | undefined
+    const session = createMerchantSessionStore({
+      read: () => stored,
+      write: (value) => { stored = value },
+      clear: () => { stored = undefined },
+    })
+    const response = deferred<unknown>()
+    const onUnauthorized = vi.fn()
+    const client = createMerchantHttp({
+      request: vi.fn().mockReturnValue(response.promise),
+      session,
+      onUnauthorized,
+    })
+
+    const pending = client.get('/api/merchant-mini/account')
+    session.save(validSession({ accessToken: 'new-token' }))
+    response.resolve({
+      statusCode: 401,
+      data: { code: 'UNAUTHORIZED', message: '登录已失效', requestId: 'req-tokenless', data: null },
+    })
+
+    await expect(pending).rejects.toBeInstanceOf(HttpResponseError)
+    expect(session.current()?.accessToken).toBe('new-token')
+    expect(onUnauthorized).not.toHaveBeenCalled()
   })
 
   test('a public authentication 401 stays on the form even if stale storage exists', async () => {
@@ -262,6 +324,7 @@ describe('merchant login flow', () => {
       reminderLifecycle,
     })
 
+    await reminderLifecycle.foreground()
     await service.loginWithWechat()
     expect(fetchSummary).toHaveBeenCalledOnce()
 
@@ -291,8 +354,47 @@ describe('merchant login flow', () => {
       reminderLifecycle,
     })
 
+    await reminderLifecycle.foreground()
     await service.loginWithPassword('owner', 'secret', true)
 
+    expect(fetchSummary).toHaveBeenCalledOnce()
+    reminderLifecycle.signedOut()
+  })
+
+  test('a login that resolves after the app is hidden waits for the next foreground to poll', async () => {
+    vi.useFakeTimers()
+    let stored: MerchantSession | undefined
+    const session = createMerchantSessionStore({
+      read: () => stored,
+      write: (value) => { stored = value },
+      clear: () => { stored = undefined },
+    })
+    const fetchSummary = vi.fn().mockResolvedValue([])
+    const reminder = createOrderReminder({
+      pollMs: 15_000,
+      hasValidSession: () => Boolean(session.current()),
+      fetchSummary,
+      onNewOrder: vi.fn(),
+    })
+    const reminderLifecycle = createMerchantOrderReminderLifecycle(session, reminder)
+    const loginResponse = deferred<MerchantSession>()
+    const service = createMerchantAuthService({
+      client: { post: vi.fn().mockReturnValue(loginResponse.promise) },
+      session,
+      login: vi.fn().mockResolvedValue({ code: 'wx-code' }),
+      reminderLifecycle,
+    })
+
+    await reminderLifecycle.foreground()
+    const pendingLogin = service.loginWithWechat()
+    reminderLifecycle.background()
+    loginResponse.resolve(validSession())
+    await pendingLogin
+    await vi.advanceTimersByTimeAsync(30_000)
+
+    expect(fetchSummary).not.toHaveBeenCalled()
+
+    await reminderLifecycle.foreground()
     expect(fetchSummary).toHaveBeenCalledOnce()
     reminderLifecycle.signedOut()
   })

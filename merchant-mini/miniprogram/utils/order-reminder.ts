@@ -106,8 +106,11 @@ export const createMerchantOrderReminderLifecycle = (
   session: Pick<MerchantSessionStore, 'current'>,
   reminder: OrderReminder,
 ): MerchantOrderReminderLifecycle => {
+  let isForeground = false
+
   const activate = async (freshBaseline: boolean): Promise<void> => {
     if (freshBaseline) reminder.reset()
+    if (!isForeground) return
     if (!session.current()) {
       reminder.reset()
       return
@@ -116,12 +119,18 @@ export const createMerchantOrderReminderLifecycle = (
     await reminder.refreshNow().catch(() => undefined)
   }
 
-  const foreground = (): Promise<void> => activate(false)
+  const foreground = (): Promise<void> => {
+    isForeground = true
+    return activate(false)
+  }
 
   return {
     foreground,
     authenticated: () => activate(true),
-    background: () => reminder.stop(),
+    background: () => {
+      isForeground = false
+      reminder.stop()
+    },
     signedOut: () => reminder.reset(),
   }
 }

@@ -85,6 +85,7 @@ export const createMerchantHttp = ({
   ): Promise<T> => {
     const protectedRequest = policy.authorization === 'protected'
     const current = protectedRequest ? session.current() : undefined
+    const requestToken = current?.accessToken
     const response = await request({
       url: `${apiBaseUrl()}${path}`,
       method,
@@ -97,8 +98,12 @@ export const createMerchantHttp = ({
     if (!isTransportResponse(response)) return response as T
     const { statusCode, data: body } = response
     if (statusCode === 401 && protectedRequest) {
-      session.clear()
-      onUnauthorized()
+      const currentToken = session.current()?.accessToken
+      const requestStillOwnsSession = requestToken === currentToken
+      if (requestStillOwnsSession) {
+        session.clear()
+        onUnauthorized()
+      }
     }
     if (!isApiResponse(body)) {
       throw new Error('服务响应异常，请重试')
