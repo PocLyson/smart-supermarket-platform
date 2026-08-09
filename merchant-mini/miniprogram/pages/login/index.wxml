@@ -62,7 +62,7 @@
           theme="primary"
           block
           loading="{{isLoading}}"
-          disabled="{{isLoading || !username || !password || !confirmed}}"
+          disabled="{{isLoading}}"
           aria-label="确认绑定并登录"
           bindtap="loginWithPassword"
         >{{isLoading ? '正在绑定' : '确认绑定并登录'}}</t-button>

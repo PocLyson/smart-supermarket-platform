@@ -108,6 +108,7 @@ describe('merchant primary navigation', () => {
     expect(login.indexOf('label="密码"')).toBeGreaterThan(bindingStart)
     expect(login).not.toContain('<text class="field-label">')
     expect(login).toContain('我确认将当前微信绑定到此员工账号')
-    expect(login).toContain('disabled="{{isLoading || !username || !password || !confirmed}}"')
+    expect(login).toContain('disabled="{{isLoading}}"')
+    expect(login).not.toContain('disabled="{{isLoading || !username || !password || !confirmed}}"')
   })
 })
