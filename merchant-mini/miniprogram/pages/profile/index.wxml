@@ -1,9 +1,16 @@
+<view class="merchant-page-header">
+  <text class="merchant-page-header__eyebrow">员工中心</text>
+  <text class="merchant-page-header__title">我的</text>
+  <text class="merchant-page-header__description">管理员工账号与常用功能</text>
+</view>
+
 <view class="page-shell profile-page" wx:if="{{session}}">
-  <view class="card">
+  <view class="profile-identity-card">
+    <text class="profile-identity-card__label">员工账号</text>
     <employee-header username="{{session.username}}" role="{{session.role}}" />
   </view>
 
-  <view class="section">
+  <view class="section profile-section">
     <text class="section-title">账号功能</text>
     <view class="shortcut-list">
       <view

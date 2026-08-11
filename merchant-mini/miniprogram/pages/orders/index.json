@@ -1,5 +1,6 @@
 {
   "navigationBarTitleText": "订单",
+  "navigationStyle": "custom",
   "enablePullDownRefresh": false,
   "usingComponents": {
     "app-tab-bar": "/components/app-tab-bar/index",

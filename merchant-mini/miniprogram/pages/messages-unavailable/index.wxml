@@ -1,10 +1,21 @@
+<view class="merchant-page-header">
+  <text class="merchant-page-header__eyebrow">门店通知</text>
+  <text class="merchant-page-header__title">消息中心</text>
+  <text class="merchant-page-header__description">集中查看订单和门店服务消息</text>
+</view>
+
 <view class="page-shell unavailable-page">
-  <view class="state-icon" aria-hidden="true">
-    <view class="state-icon__line"></view>
-    <view class="state-icon__dot"></view>
+  <view class="unavailable-card">
+    <view class="state-icon" aria-hidden="true">
+      <image class="state-icon__image" src="/assets/icons/messages.svg" mode="aspectFit" />
+    </view>
+    <text class="page-title">{{title}}</text>
+    <text class="page-description">{{description}}</text>
+    <view class="availability-note">
+      <text class="availability-note__title">当前可用功能</text>
+      <text class="availability-note__text">新订单提醒已在工作台启用，页面上线后将保留当前入口。</text>
+    </view>
   </view>
-  <text class="page-title">{{title}}</text>
-  <text class="page-description">{{description}}</text>
 </view>
 
 <app-tab-bar value="{{tab}}" />

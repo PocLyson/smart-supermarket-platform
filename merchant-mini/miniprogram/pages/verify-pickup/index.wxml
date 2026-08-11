@@ -1,7 +1,28 @@
+<view class="merchant-page-header">
+  <text class="merchant-page-header__eyebrow">取货服务</text>
+  <text class="merchant-page-header__title">取货核销</text>
+  <text class="merchant-page-header__description">核对顾客订单，安全完成交付</text>
+</view>
+
 <view class="page-shell verification-page">
+  <view class="verification-steps" aria-label="核销流程">
+    <view class="verification-step {{stage === 'INPUT' ? 'is-active' : 'is-complete'}}">
+      <text class="verification-step__index">1</text>
+      <text>录入信息</text>
+    </view>
+    <view class="verification-step {{stage === 'CONFIRM' ? 'is-active' : stage === 'SUCCESS' ? 'is-complete' : ''}}">
+      <text class="verification-step__index">2</text>
+      <text>核对订单</text>
+    </view>
+    <view class="verification-step {{stage === 'SUCCESS' ? 'is-active' : ''}}">
+      <text class="verification-step__index">3</text>
+      <text>完成核销</text>
+    </view>
+  </view>
+
   <view class="verification-heading">
-    <text class="page-title">取货核销</text>
-    <text class="page-description">录入订单号和顾客提供的六位取货码，核对订单后再确认核销</text>
+    <text class="page-title">核销信息</text>
+    <text class="page-description">输入订单号和顾客提供的六位取货码</text>
   </view>
 
   <view wx:if="{{stage === 'INPUT'}}" class="card input-card">

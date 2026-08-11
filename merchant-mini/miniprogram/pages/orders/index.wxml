@@ -1,5 +1,13 @@
+<view class="merchant-page-header">
+  <text class="merchant-page-header__eyebrow">门店订单</text>
+  <text class="merchant-page-header__title">订单管理</text>
+  <text class="merchant-page-header__description">查询订单并跟进备货、取货状态</text>
+</view>
+
 <view class="page-shell orders-page">
-  <view class="search-card">
+  <view class="order-filter-panel">
+    <text class="filter-section-label">快速查询</text>
+    <view class="search-card">
     <text class="search-label">搜索订单</text>
     <view class="search-row">
       <input
@@ -19,9 +27,10 @@
         hover-class="search-button--pressed"
       >查询</view>
     </view>
-  </view>
+    </view>
 
-  <scroll-view class="status-tabs" scroll-x enhanced show-scrollbar="{{false}}" aria-label="订单状态筛选">
+    <text class="filter-section-label filter-section-label--spaced">订单状态</text>
+    <scroll-view class="status-tabs" scroll-x enhanced show-scrollbar="{{false}}" aria-label="订单状态筛选">
     <view class="status-tabs__inner">
       <view
         wx:for="{{statusTabs}}"
@@ -36,9 +45,9 @@
         hover-class="filter--pressed"
       >{{item.label}}</view>
     </view>
-  </scroll-view>
+    </scroll-view>
 
-  <view class="payment-tabs" aria-label="付款状态筛选">
+    <view class="payment-tabs" aria-label="付款状态筛选">
     <view
       wx:for="{{paymentTabs}}"
       wx:key="value"
@@ -50,6 +59,7 @@
       bindtap="onPaymentTap"
       hover-class="filter--pressed"
     >{{item.label}}</view>
+    </view>
   </view>
 
   <view wx:if="{{isLoading && orders.length === 0}}" class="list-state" role="status" aria-live="polite">

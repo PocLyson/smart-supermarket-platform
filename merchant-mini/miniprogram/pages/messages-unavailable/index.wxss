@@ -1,37 +1,91 @@
+.merchant-page-header {
+  box-sizing: border-box;
+  min-height: 310rpx;
+  padding: calc(112rpx + env(safe-area-inset-top)) 32rpx 44rpx;
+  background: var(--primary-600);
+  color: var(--color-bg-surface);
+}
+
+.merchant-page-header__eyebrow,
+.merchant-page-header__title,
+.merchant-page-header__description,
+.availability-note__title,
+.availability-note__text {
+  display: block;
+}
+
+.merchant-page-header__eyebrow {
+  margin-bottom: 10rpx;
+  font-size: var(--type-caption-size);
+  letter-spacing: 2rpx;
+  opacity: 0.76;
+}
+
+.merchant-page-header__title {
+  font-size: 46rpx;
+  font-weight: var(--weight-bold);
+  line-height: 1.2;
+}
+
+.merchant-page-header__description {
+  margin-top: 12rpx;
+  font-size: var(--type-helper-size);
+  line-height: 1.5;
+  opacity: 0.8;
+}
+
 .unavailable-page {
   display: flex;
+  margin-top: -34rpx;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   text-align: center;
   flex-direction: column;
 }
 
+.unavailable-card {
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--space-8) var(--space-5) var(--space-5);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-surface);
+  box-shadow: var(--shadow-card);
+}
+
 .state-icon {
-  position: relative;
+  display: flex;
   width: 112rpx;
   height: 112rpx;
-  margin-bottom: var(--space-5);
-  border: 4rpx solid var(--primary-600);
+  margin: 0 auto var(--space-5);
+  align-items: center;
+  justify-content: center;
   border-radius: var(--radius-round);
   background: var(--primary-100);
 }
 
-.state-icon__line {
-  position: absolute;
-  top: 25rpx;
-  left: 51rpx;
-  width: 8rpx;
-  height: 42rpx;
-  border-radius: var(--radius-round);
-  background: var(--primary-600);
+.state-icon__image {
+  width: 52rpx;
+  height: 52rpx;
+  filter: brightness(0) saturate(100%) invert(16%) sepia(67%) saturate(2390%) hue-rotate(200deg) brightness(82%);
 }
 
-.state-icon__dot {
-  position: absolute;
-  bottom: 23rpx;
-  left: 49rpx;
-  width: 12rpx;
-  height: 12rpx;
-  border-radius: var(--radius-round);
-  background: var(--primary-600);
+.availability-note {
+  margin-top: var(--space-6);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-page);
+  text-align: left;
+}
+
+.availability-note__title {
+  color: var(--color-text-primary);
+  font-size: var(--type-label-size);
+  font-weight: var(--weight-semibold);
+}
+
+.availability-note__text {
+  margin-top: var(--space-2);
+  color: var(--color-text-secondary);
+  font-size: var(--type-helper-size);
+  line-height: var(--type-helper-line);
 }

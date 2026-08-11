@@ -1,7 +1,64 @@
+.merchant-page-header {
+  box-sizing: border-box;
+  min-height: 310rpx;
+  padding: calc(112rpx + env(safe-area-inset-top)) 32rpx 44rpx;
+  background: var(--primary-600);
+  color: var(--color-bg-surface);
+}
+
+.merchant-page-header__eyebrow,
+.merchant-page-header__title,
+.merchant-page-header__description,
+.profile-identity-card__label {
+  display: block;
+}
+
+.merchant-page-header__eyebrow {
+  margin-bottom: 10rpx;
+  font-size: var(--type-caption-size);
+  letter-spacing: 2rpx;
+  opacity: 0.76;
+}
+
+.merchant-page-header__title {
+  font-size: 46rpx;
+  font-weight: var(--weight-bold);
+  line-height: 1.2;
+}
+
+.merchant-page-header__description {
+  margin-top: 12rpx;
+  font-size: var(--type-helper-size);
+  line-height: 1.5;
+  opacity: 0.8;
+}
+
 .profile-page {
   display: flex;
+  margin-top: -34rpx;
   flex-direction: column;
   gap: var(--space-5);
+}
+
+.profile-identity-card {
+  padding: var(--space-4);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.profile-identity-card__label {
+  margin-bottom: var(--space-2);
+  color: var(--color-text-secondary);
+  font-size: var(--type-caption-size);
+  font-weight: var(--weight-semibold);
+}
+
+.profile-section {
+  padding: var(--space-4);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-surface);
+  box-shadow: var(--shadow-card);
 }
 
 .section-title {
@@ -15,8 +72,7 @@
 
 .shortcut-list {
   overflow: hidden;
-  border: var(--border-width-default) solid var(--color-divider);
-  border-radius: var(--radius-lg);
+  border-top: var(--border-width-default) solid var(--color-divider);
   background: var(--color-bg-surface);
 }
 
