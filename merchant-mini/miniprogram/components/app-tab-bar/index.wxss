@@ -1,29 +1,41 @@
 .app-tab-bar {
   position: fixed;
-  right: 0;
-  bottom: 0;
-  left: 0;
+  right: 16px;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  left: 16px;
   z-index: 90;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   box-sizing: border-box;
-  padding: 12rpx 12rpx calc(12rpx + env(safe-area-inset-bottom));
-  border-top: 2rpx solid var(--color-divider);
+  min-height: 72px;
+  padding: 6px 8px 8px;
+  border: 1px solid rgba(13, 27, 54, 0.06);
+  border-radius: 24px;
   background: var(--color-bg-surface);
-  box-shadow: 0 -8rpx 24rpx rgba(13, 27, 54, 0.08);
+  box-shadow: 0 10px 30px rgba(13, 27, 54, 0.16);
 }
 
 .tab-item {
+  position: relative;
   display: flex;
   min-width: 44px;
   min-height: 44px;
   align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-md);
+  justify-content: flex-end;
+  border-radius: 18px;
   color: var(--color-text-secondary);
   flex-direction: column;
-  gap: 4rpx;
-  transition: background-color var(--duration-fast) var(--easing-standard), color var(--duration-fast) var(--easing-standard);
+  gap: 2px;
+  transition: color var(--duration-fast) var(--easing-standard), background-color var(--duration-fast) var(--easing-standard);
+}
+
+.tab-icon-shell {
+  display: flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-round);
 }
 
 .tab-icon {
@@ -36,13 +48,45 @@
 }
 
 .tab-item.is-active {
-  background: var(--primary-100);
   color: var(--primary-600);
 }
 
+.tab-item.is-active .tab-icon {
+  filter: sepia(1) saturate(8) hue-rotate(174deg) brightness(0.48);
+}
+
+.active-indicator {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  width: 28px;
+  height: 3px;
+  border-radius: var(--radius-round);
+  background: var(--primary-600);
+  transform: translateX(-50%);
+}
+
+.tab-item--verification .tab-icon-shell {
+  width: 48px;
+  height: 48px;
+  background: var(--primary-600);
+  box-shadow: 0 6px 18px rgba(8, 47, 107, 0.30), 0 0 0 4px #FFFFFF;
+  transform: translateY(-16px);
+}
+
+.tab-item--verification .tab-icon {
+  width: 27px;
+  height: 27px;
+  filter: brightness(0) invert(1);
+}
+
+.tab-item--verification .tab-label {
+  margin-top: -14px;
+}
+
 .tab-label {
-  font-size: 22rpx;
+  font-size: 12px;
   font-weight: var(--weight-medium);
-  line-height: 30rpx;
+  line-height: 18px;
   white-space: nowrap;
 }

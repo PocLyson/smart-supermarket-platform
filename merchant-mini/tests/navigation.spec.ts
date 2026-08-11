@@ -78,6 +78,24 @@ describe('merchant primary navigation', () => {
     expect(styles).toContain('env(safe-area-inset-bottom)')
   })
 
+  test('floats the navigation dock and elevates the central verification action', () => {
+    const markup = readFileSync(
+      resolve('miniprogram/components/app-tab-bar/index.wxml'),
+      'utf8',
+    )
+    const styles = readFileSync(
+      resolve('miniprogram/components/app-tab-bar/index.wxss'),
+      'utf8',
+    )
+
+    expect(markup).toContain("item.id === 'verification' ? 'tab-item--verification' : ''")
+    expect(markup).toContain('class="tab-icon-shell"')
+    expect(styles).toMatch(/\.app-tab-bar\s*\{[^}]*right:\s*16px;[^}]*left:\s*16px;/s)
+    expect(styles).toMatch(/\.app-tab-bar\s*\{[^}]*border-radius:\s*24px;/s)
+    expect(styles).toMatch(/\.tab-item--verification\s+\.tab-icon-shell\s*\{[^}]*width:\s*48px;[^}]*height:\s*48px;/s)
+    expect(styles).toMatch(/\.tab-item--verification\s+\.tab-icon-shell\s*\{[^}]*transform:\s*translateY\(-16px\);/s)
+  })
+
   test('uses the accessible existing secondary text token for inactive tabs', () => {
     const styles = readFileSync(
       resolve('miniprogram/components/app-tab-bar/index.wxss'),

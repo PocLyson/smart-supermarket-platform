@@ -1,8 +1,8 @@
 {
   "navigationBarTitleText": "工作台",
+  "navigationStyle": "custom",
   "usingComponents": {
     "app-tab-bar": "/components/app-tab-bar/index",
-    "employee-header": "/components/employee-header/index",
     "t-button": "tdesign-miniprogram/button/button",
     "t-loading": "tdesign-miniprogram/loading/loading"
   }

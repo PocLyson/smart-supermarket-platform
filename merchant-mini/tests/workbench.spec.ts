@@ -49,17 +49,72 @@ describe('merchant workbench presentation', () => {
     expect(markup).toContain('<app-tab-bar value="workbench" />')
   })
 
-  test('uses the accessible secondary token for the small metric unit text', () => {
+  test('renders the approved operations hierarchy under a custom app header', () => {
+    const markup = readFileSync(
+      resolve('miniprogram/pages/workbench/index.wxml'),
+      'utf8',
+    )
+    const config = JSON.parse(readFileSync(
+      resolve('miniprogram/pages/workbench/index.json'),
+      'utf8',
+    )) as { navigationStyle?: string }
+
+    expect(config.navigationStyle).toBe('custom')
+    expect(markup).toContain('class="workbench-header"')
+    expect(markup).toContain('鲁能超市李老家分店')
+    expect(markup).toContain('优先处理')
+    expect(markup).toContain('扫码核销')
+    expect(markup).toContain('商品管理')
+    expect(markup).toContain('发布公告')
+    expect(markup).toContain('今日概览')
+    expect(markup).toContain('全部订单')
+  })
+
+  test('keeps every approved workbench shortcut wired to a real tap handler', () => {
+    const markup = readFileSync(
+      resolve('miniprogram/pages/workbench/index.wxml'),
+      'utf8',
+    )
+
+    expect(markup).toContain('data-shortcut="verification"')
+    expect(markup).toContain('data-shortcut="products"')
+    expect(markup).toContain('data-shortcut="announcements"')
+    expect(markup.match(/bindtap="onShortcutTap"/g)).toHaveLength(3)
+    expect(markup).toContain('bindtap="onAllOrdersTap"')
+  })
+
+  test('keeps the custom header content below the WeChat capsule on device', () => {
+    const styles = readFileSync(
+      resolve('miniprogram/pages/workbench/index.wxss'),
+      'utf8',
+    )
+
+    expect(styles).toMatch(/\.workbench-header\s*\{[^}]*min-height:\s*300rpx;/s)
+    expect(styles).toMatch(/\.workbench-header\s*\{[^}]*padding:\s*calc\(112rpx \+ env\(safe-area-inset-top\)\)/s)
+    expect(styles).toMatch(/\.employee-pill\s*\{[^}]*font-size:\s*24rpx;/s)
+  })
+
+  test('uses class selectors that compile without page WXSS warnings', () => {
+    const styles = readFileSync(
+      resolve('miniprogram/pages/workbench/index.wxss'),
+      'utf8',
+    )
+
+    expect(styles).not.toMatch(/\.priority-row__icon[^,{]*\s+image\s*\{/)
+    expect(styles).toContain('.priority-icon-image {')
+  })
+
+  test('uses the accessible secondary token for small order metadata', () => {
     const styles = readFileSync(
       resolve('miniprogram/pages/workbench/index.wxss'),
       'utf8',
     )
     const theme = readFileSync(resolve('miniprogram/styles/theme.wxss'), 'utf8')
-    const token = styles.match(/\.metric-unit\s*\{[^}]*color:\s*var\((--[\w-]+)\);/s)?.[1]
+    const token = styles.match(/\.order-customer,\s*\.order-time\s*\{[^}]*color:\s*var\((--[\w-]+)\);/s)?.[1]
     const hex = token
       ? theme.match(new RegExp(`${token}:\\s*(#[0-9A-F]{6});`, 'i'))?.[1]
       : undefined
-    if (!token || !hex) throw new Error('Metric unit must resolve to a theme color')
+    if (!token || !hex) throw new Error('Order metadata must resolve to a theme color')
     const luminance = (value: string): number => {
       const channels = [1, 3, 5].map((start) => Number.parseInt(value.slice(start, start + 2), 16) / 255)
       const linear = channels.map((channel) =>

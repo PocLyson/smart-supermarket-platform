@@ -2,7 +2,7 @@
   <view
     wx:for="{{items}}"
     wx:key="id"
-    class="tab-item {{value === item.id ? 'is-active' : ''}}"
+    class="tab-item {{value === item.id ? 'is-active' : ''}} {{item.id === 'verification' ? 'tab-item--verification' : ''}}"
     role="button"
     aria-label="{{item.label}}"
     aria-current="{{value === item.id ? 'page' : 'false'}}"
@@ -10,7 +10,10 @@
     bindtap="onTabTap"
     hover-class="tab-item--pressed"
   >
-    <image class="tab-icon" src="{{item.icon}}" mode="aspectFit" aria-hidden="true" />
+    <view class="active-indicator" wx:if="{{value === item.id && item.id !== 'verification'}}" aria-hidden="true"></view>
+    <view class="tab-icon-shell">
+      <image class="tab-icon" src="{{item.icon}}" mode="aspectFit" aria-hidden="true" />
+    </view>
     <text class="tab-label">{{item.label}}</text>
   </view>
 </view>
