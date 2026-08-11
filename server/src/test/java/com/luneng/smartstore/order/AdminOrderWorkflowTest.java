@@ -115,7 +115,7 @@ class AdminOrderWorkflowTest extends IntegrationTestBase {
             "req-complete-wrong"
         ))
             .isInstanceOf(BusinessException.class)
-            .hasMessageContaining("取货码不正确");
+            .hasMessageContaining("取件码不正确");
         assertThat(orderRepository.findByOrderNo(orderNo).orElseThrow().getStatus())
             .isEqualTo(OrderStatus.READY_FOR_PICKUP);
 

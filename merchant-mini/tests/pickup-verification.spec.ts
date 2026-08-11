@@ -7,6 +7,7 @@ import type { MerchantOrder } from '../miniprogram/types/order'
 
 const orderService = vi.hoisted(() => ({
   detail: vi.fn(),
+  pickupPreview: vi.fn(),
   verifyPickup: vi.fn(),
 }))
 
@@ -54,6 +55,7 @@ afterEach(() => {
 beforeEach(() => {
   vi.resetModules()
   orderService.detail.mockReset()
+  orderService.pickupPreview.mockReset()
   orderService.verifyPickup.mockReset()
 })
 
@@ -64,7 +66,7 @@ describe('pickup code and payment rules', () => {
     expect(parsePickupScan('473898')).toEqual({ pickupCode: '473898' })
     expect(parsePickupScan(' 473898 ')).toEqual({ pickupCode: '473898' })
     for (const invalid of ['12', '47389A', '{"pickupCode":"473898"}', 'https://x/473898']) {
-      expect(() => parsePickupScan(invalid)).toThrow('请输入6位取货码')
+      expect(() => parsePickupScan(invalid)).toThrow('请输入6位取件码')
     }
   })
 
@@ -82,6 +84,18 @@ describe('pickup code and payment rules', () => {
 })
 
 describe('pickup verification API boundary', () => {
+  test('gets the order preview using only the six-digit pickup code', async () => {
+    const get = vi.fn().mockResolvedValue(order())
+    const service = createOrdersService({ get, post: vi.fn() })
+
+    await service.pickupPreview('473898')
+
+    expect(get).toHaveBeenCalledWith(
+      '/api/merchant-mini/orders/pickup-preview',
+      { pickupCode: '473898' },
+    )
+  })
+
   test('posts the code and collection method to the encoded order endpoint', async () => {
     const post = vi.fn().mockResolvedValue(order({ status: 'COMPLETED', paymentStatus: 'PAID' }))
     const service = createOrdersService({ get: vi.fn(), post })
@@ -155,7 +169,7 @@ describe('pickup verification page flow', () => {
 
     await definition.scanPickup.call(context)
 
-    expect(context.data.errorMessage).toBe('请输入6位取货码')
+    expect(context.data.errorMessage).toBe('请输入6位取件码')
     expect(context.data.stage).toBe('INPUT')
     expect(orderService.detail).not.toHaveBeenCalled()
   })
@@ -177,12 +191,28 @@ describe('pickup verification page flow', () => {
   test('rejects malformed keyboard input before fetching an order', async () => {
     const definition = await loadPage()
     const context = pageContext(definition)
-    Object.assign(context.data, { orderNo: 'ORD-1', pickupCode: '12' })
+    Object.assign(context.data, { pickupCode: '12' })
 
     await definition.loadPreview.call(context)
 
-    expect(context.data.errorMessage).toBe('请输入6位取货码')
+    expect(context.data.errorMessage).toBe('请输入6位取件码')
     expect(orderService.detail).not.toHaveBeenCalled()
+    expect(orderService.pickupPreview).not.toHaveBeenCalled()
+  })
+
+  test('finds the order and opens the preview without an entered order number', async () => {
+    const preview = order({ paymentStatus: 'PAID', paymentMethod: 'WECHAT_QR' })
+    orderService.pickupPreview.mockResolvedValue(preview)
+    const definition = await loadPage()
+    const context = pageContext(definition)
+    Object.assign(context.data, { pickupCode: '473898' })
+
+    await definition.loadPreview.call(context)
+
+    expect(orderService.pickupPreview).toHaveBeenCalledWith('473898')
+    expect(orderService.detail).not.toHaveBeenCalled()
+    expect(context.data.orderNo).toBe(preview.orderNo)
+    expect(context.data.stage).toBe('CONFIRM')
   })
 
   test('shows a read-only preview before an explicitly confirmed mutation', async () => {
@@ -192,7 +222,7 @@ describe('pickup verification page flow', () => {
       paymentMethod: 'WECHAT_QR',
       status: 'COMPLETED',
     })
-    orderService.detail.mockResolvedValue(preview)
+    orderService.pickupPreview.mockResolvedValue(preview)
     orderService.verifyPickup.mockResolvedValue(completed)
     vi.stubGlobal('wx', {
       showModal: ({ success }: { success(result: { confirm: boolean }): void }) => success({ confirm: true }),
@@ -201,7 +231,6 @@ describe('pickup verification page flow', () => {
     const definition = await loadPage()
     const context = pageContext(definition)
     Object.assign(context.data, {
-      orderNo: preview.orderNo,
       pickupCode: '473898',
     })
 
@@ -223,9 +252,9 @@ describe('pickup verification page flow', () => {
   })
 
   test('keeps invalid-code failures recoverable and never presents success', async () => {
-    orderService.detail.mockResolvedValue(order())
+    orderService.pickupPreview.mockResolvedValue(order())
     orderService.verifyPickup.mockRejectedValue(
-      Object.assign(new Error('取货码不正确，请与顾客核对后重试'), {
+      Object.assign(new Error('取件码不正确，请与顾客核对后重试'), {
         code: 'PICKUP_CODE_MISMATCH',
       }),
     )
@@ -387,6 +416,8 @@ describe('pickup verification page flow', () => {
     expect(markup).toContain('继续核销')
     expect(markup).toContain('查看订单')
     expect(markup).toContain('loading="{{isSubmitting}}"')
+    expect(markup).not.toContain('bindinput="onOrderNoInput"')
+    expect(markup).not.toContain('placeholder="请输入订单号"')
     expect(markup).toContain("disabled=\"{{isSubmitting || (preview.paymentStatus === 'UNPAID' && !selectedPaymentMethod)}}\"")
     expect(styles).toContain('env(safe-area-inset-bottom)')
     expect(styles).toMatch(/\.touch-control\s*\{[^}]*min-height:\s*var\(--size-touch-min\);/s)

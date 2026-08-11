@@ -24,7 +24,7 @@ export interface PickupPreview extends MerchantOrder {
 
 export const parsePickupScan = (raw: string): PickupScan => {
   const pickupCode = raw.trim()
-  if (!/^\d{6}$/.test(pickupCode)) throw new Error('请输入6位取货码')
+  if (!/^\d{6}$/.test(pickupCode)) throw new Error('请输入6位取件码')
   return { pickupCode }
 }
 
@@ -68,7 +68,9 @@ export const presentPickupPreview = (order: MerchantOrder): PickupPreview => {
 }
 
 const pickupErrorByCode: Record<string, string> = {
-  PICKUP_CODE_MISMATCH: '取货码不正确，请与顾客核对后重试',
+  PICKUP_CODE_NOT_FOUND: '未找到可核销的订单，请与顾客核对取件码',
+  PICKUP_CODE_AMBIGUOUS: '取件码对应多个订单，请联系管理员处理',
+  PICKUP_CODE_MISMATCH: '取件码不正确，请与顾客核对后重试',
   ORDER_ALREADY_COMPLETED: '订单已完成，无需重复核销',
   ORDER_STATE_CONFLICT: '订单状态已变化，可能已完成或暂不允许核销，请重新加载订单确认',
   ORDER_STATUS_CONFLICT: '订单状态已变化，暂不能核销，请重新加载后重试',

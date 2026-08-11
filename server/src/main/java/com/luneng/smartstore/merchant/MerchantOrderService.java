@@ -11,6 +11,7 @@ import com.luneng.smartstore.order.OrderStatus;
 import com.luneng.smartstore.order.PaymentMethod;
 import com.luneng.smartstore.order.PaymentStatus;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -45,6 +46,26 @@ public class MerchantOrderService {
 
     public AdminOrderView detail(String orderNo) {
         return adminOrders.detail(orderNo);
+    }
+
+    @Transactional(readOnly = true)
+    public AdminOrderView pickupPreview(String pickupCode) {
+        List<CustomerOrder> matches = repository.findReadyForPickupByCode(pickupCode);
+        if (matches.isEmpty()) {
+            throw new BusinessException(
+                "PICKUP_CODE_NOT_FOUND",
+                "未找到可核销的取件码",
+                HttpStatus.NOT_FOUND
+            );
+        }
+        if (matches.size() > 1) {
+            throw new BusinessException(
+                "PICKUP_CODE_AMBIGUOUS",
+                "取件码对应多个待取货订单，请联系管理员处理",
+                HttpStatus.CONFLICT
+            );
+        }
+        return AdminOrderView.from(matches.get(0));
     }
 
     public AdminOrderView accept(String orderNo, CurrentPrincipal actor, String requestId) {

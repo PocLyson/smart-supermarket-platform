@@ -56,7 +56,6 @@ Page({
   },
 
   onLoad(options: Record<string, string | undefined>) {
-    const orderNo = options.orderNo ? decodeURIComponent(options.orderNo) : ''
     const candidateCode = options.pickupCode ? decodeURIComponent(options.pickupCode) : ''
     let pickupCode = ''
     let errorMessage = ''
@@ -68,7 +67,6 @@ Page({
       }
     }
     this.setData({
-      orderNo,
       pickupCode,
       errorMessage,
       openedFromDetail: options.from === 'detail',
@@ -81,22 +79,10 @@ Page({
     }
   },
 
-  onOrderNoInput(event: WechatMiniprogram.Input) {
-    if (this.data.isSubmitting) return
-    this.setData({
-      orderNo: event.detail.value.trim(),
-      stage: 'INPUT',
-      preview: null,
-      completedOrder: null,
-      verificationRequestId: '',
-      verificationIntentKey: '',
-      errorMessage: '',
-    })
-  },
-
   onPickupCodeInput(event: WechatMiniprogram.Input) {
     if (this.data.isSubmitting) return
     this.setData({
+      orderNo: '',
       pickupCode: event.detail.value,
       stage: 'INPUT',
       preview: null,
@@ -126,6 +112,7 @@ Page({
           try {
             const { pickupCode } = parsePickupScan(result)
             this.setData({
+              orderNo: '',
               pickupCode,
               stage: 'INPUT',
               preview: null,
@@ -134,7 +121,7 @@ Page({
               verificationIntentKey: '',
               errorMessage: '',
             })
-            if (this.data.orderNo) await this.loadPreview()
+            await this.loadPreview()
           } catch (error) {
             this.setData({
               stage: 'INPUT',
@@ -150,7 +137,7 @@ Page({
         },
         fail: ({ errMsg }) => {
           if (!errMsg.includes('cancel')) {
-            this.setData({ errorMessage: '扫码失败，请重试或手动输入取货码' })
+            this.setData({ errorMessage: '扫码失败，请重试或手动输入取件码' })
           }
           resolve()
         },
@@ -160,11 +147,6 @@ Page({
 
   async loadPreview() {
     if (this.data.isPreviewLoading || this.data.isSubmitting) return
-    const orderNo = this.data.orderNo.trim()
-    if (!orderNo) {
-      this.setData({ errorMessage: '请输入订单号' })
-      return
-    }
     let pickupCode = ''
     try {
       pickupCode = parsePickupScan(this.data.pickupCode).pickupCode
@@ -174,7 +156,7 @@ Page({
     }
     this.setData({ isPreviewLoading: true, errorMessage: '' })
     try {
-      const order = await merchantOrdersService.detail(orderNo)
+      const order = await merchantOrdersService.pickupPreview(pickupCode)
       if (order.status === 'COMPLETED') {
         throw Object.assign(new Error('订单已完成，无需重复核销'), {
           code: 'ORDER_ALREADY_COMPLETED',
@@ -186,7 +168,7 @@ Page({
         })
       }
       this.setData({
-        orderNo,
+        orderNo: order.orderNo,
         pickupCode,
         preview: presentPickupPreview(order),
         paymentOptions: paymentOptionsFor(order.paymentStatus),
@@ -317,6 +299,7 @@ Page({
     if (this.data.isSubmitting) return
     this.setData({
       stage: 'INPUT',
+      orderNo: '',
       preview: null,
       verificationRequestId: '',
       verificationIntentKey: '',

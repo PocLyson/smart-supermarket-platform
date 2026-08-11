@@ -196,14 +196,14 @@ public class CustomerOrder {
         if (pickupCode == null || !pickupCode.matches("[0-9]{6}")) {
             throw new BusinessException(
                 "VALIDATION_ERROR",
-                "请输入6位取货码",
+                "请输入6位取件码",
                 HttpStatus.BAD_REQUEST
             );
         }
         if (!this.pickupCode.equals(pickupCode)) {
             throw new BusinessException(
                 "PICKUP_CODE_MISMATCH",
-                "取货码不正确，请与顾客核对后重试"
+                "取件码不正确，请与顾客核对后重试"
             );
         }
     }

@@ -31,6 +31,11 @@ export const createOrdersService = (
     client.get<MerchantOrder>(
       `/api/merchant-mini/orders/${encodeURIComponent(orderNo)}`,
     ),
+  pickupPreview: (pickupCode: string): Promise<MerchantOrder> =>
+    client.get<MerchantOrder>(
+      '/api/merchant-mini/orders/pickup-preview',
+      { pickupCode },
+    ),
   accept: (orderNo: string): Promise<MerchantOrder> =>
     client.post<MerchantOrder>(
       `/api/merchant-mini/orders/${encodeURIComponent(orderNo)}/accept`,

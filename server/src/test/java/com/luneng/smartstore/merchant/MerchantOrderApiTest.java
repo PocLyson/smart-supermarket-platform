@@ -192,6 +192,24 @@ class MerchantOrderApiTest extends IntegrationTestBase {
     }
 
     @Test
+    void pickupPreviewFindsReadyOrderByCodeWithoutExposingTheSecret() throws Exception {
+        prepareForPickup();
+        String pickupCode = jdbcTemplate.queryForObject(
+            "select pickup_code from customer_order where order_no = ?",
+            String.class,
+            orderNo
+        );
+
+        mockMvc.perform(get("/api/merchant-mini/orders/pickup-preview")
+                .header("Authorization", "Bearer " + cashierToken)
+                .param("pickupCode", pickupCode))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.orderNo").value(orderNo))
+            .andExpect(jsonPath("$.data.status").value("READY_FOR_PICKUP"))
+            .andExpect(jsonPath("$.data.pickupCode").doesNotExist());
+    }
+
+    @Test
     void invalidPickupCodeLeavesOrderUnpaidAndReady() throws Exception {
         prepareForPickup();
         String pickupCode = customerOrders.detail(1L, orderNo).pickupCode();

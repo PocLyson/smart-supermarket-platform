@@ -22,37 +22,24 @@
 
   <view class="verification-heading">
     <text class="page-title">核销信息</text>
-    <text class="page-description">输入订单号和顾客提供的六位取货码</text>
+    <text class="page-description">输入顾客提供的六位取件码，系统会自动查找订单</text>
   </view>
 
   <view wx:if="{{stage === 'INPUT'}}" class="card input-card">
     <label class="field-group">
-      <text class="field-label">订单号</text>
-      <input
-        class="field-input"
-        value="{{orderNo}}"
-        maxlength="64"
-        placeholder="请输入订单号"
-        aria-label="订单号"
-        disabled="{{isPreviewLoading}}"
-        bindinput="onOrderNoInput"
-      />
-    </label>
-
-    <label class="field-group">
-      <text class="field-label">六位取货码</text>
+      <text class="field-label">六位取件码</text>
       <input
         class="field-input pickup-code-input"
         type="number"
         value="{{pickupCode}}"
         maxlength="6"
-        placeholder="请输入6位取货码"
-        aria-label="六位取货码"
+        placeholder="请输入6位取件码"
+        aria-label="六位取件码"
         disabled="{{isPreviewLoading}}"
         bindinput="onPickupCodeInput"
         bindconfirm="loadPreview"
       />
-      <text class="field-help">仅接受普通六位数字，不接受链接或其他二维码内容</text>
+      <text class="field-help">只需取件码，不需要输入订单号</text>
     </label>
 
     <view wx:if="{{errorMessage}}" class="feedback-error" role="alert" aria-live="polite">
@@ -64,9 +51,9 @@
         <t-button
           block
           loading="{{isPreviewLoading}}"
-          disabled="{{isPreviewLoading || !orderNo || !pickupCode}}"
+          disabled="{{isPreviewLoading || !pickupCode}}"
           bindtap="loadPreview"
-        >核对订单</t-button>
+        >查找并核对订单</t-button>
       </view>
       <view class="touch-control">
         <t-button
@@ -75,7 +62,7 @@
           variant="outline"
           disabled="{{isPreviewLoading}}"
           bindtap="scanPickup"
-        >扫码录入取货码</t-button>
+        >扫码录入取件码</t-button>
       </view>
     </view>
   </view>

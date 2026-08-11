@@ -2,6 +2,7 @@ package com.luneng.smartstore.order;
 
 import jakarta.persistence.LockModeType;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -49,6 +50,14 @@ public interface OrderRepository extends JpaRepository<CustomerOrder, Long> {
         where o.orderNo = :orderNo
         """)
     Optional<CustomerOrder> findAdminDetailedByOrderNo(@Param("orderNo") String orderNo);
+
+    @EntityGraph(attributePaths = "items")
+    @Query("""
+        select o from CustomerOrder o
+        where o.pickupCode = :pickupCode
+          and o.status = com.luneng.smartstore.order.OrderStatus.READY_FOR_PICKUP
+        """)
+    List<CustomerOrder> findReadyForPickupByCode(@Param("pickupCode") String pickupCode);
 
     @Query("""
         select o from CustomerOrder o

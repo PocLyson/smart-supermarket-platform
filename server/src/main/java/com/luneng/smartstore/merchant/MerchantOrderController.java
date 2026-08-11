@@ -60,6 +60,19 @@ public class MerchantOrderController {
         );
     }
 
+    @GetMapping("/pickup-preview")
+    ApiResponse<AdminOrderView> pickupPreview(
+        @RequestParam
+        @Pattern(regexp = "\\d{6}", message = "取件码必须为6位数字")
+        String pickupCode,
+        HttpServletRequest request
+    ) {
+        return ApiResponse.success(
+            RequestIdFilter.requestId(request),
+            service.pickupPreview(pickupCode)
+        );
+    }
+
     @PostMapping("/{orderNo}/accept")
     ApiResponse<AdminOrderView> accept(
         @PathVariable String orderNo,
@@ -136,7 +149,7 @@ public class MerchantOrderController {
 
     record VerifyPickupRequest(
         @NotBlank
-        @Pattern(regexp = "\\d{6}", message = "取货码必须为6位数字")
+        @Pattern(regexp = "\\d{6}", message = "取件码必须为6位数字")
         String pickupCode,
         @NotNull PaymentMethod payAtStoreMethod
     ) {
