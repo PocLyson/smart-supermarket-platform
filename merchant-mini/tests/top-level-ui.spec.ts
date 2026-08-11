@@ -17,7 +17,7 @@ describe('merchant top-level page presentation', () => {
     const config = JSON.parse(pageSource(page, 'json')) as { navigationStyle?: string }
 
     expect(config.navigationStyle).toBe('custom')
-    expect(markup).toContain('class="merchant-page-header"')
+    expect(markup).toMatch(/class="[^"]*\bmerchant-page-header\b[^"]*"/)
     expect(markup).toContain(title)
     expect(styles).toMatch(/\.merchant-page-header\s*\{[^}]*safe-area-inset-top/s)
     expect(styles).toMatch(/\.merchant-page-header\s*\{[^}]*var\(--primary-600\)/s)
@@ -61,13 +61,24 @@ describe('merchant top-level page presentation', () => {
     expect(markup).not.toContain('state-icon__dot')
   })
 
-  test('profile starts with a distinct employee identity panel', () => {
+  test('profile matches the selected layered security layout', () => {
     const markup = pageSource('profile', 'wxml')
     const styles = pageSource('profile', 'wxss')
 
+    expect(markup).toMatch(/class="[^"]*\bprofile-security-header\b[^"]*"/)
     expect(markup).toContain('class="profile-identity-card"')
-    expect(markup).toContain('员工账号')
-    expect(styles).toMatch(/\.profile-identity-card\s*\{[^}]*border-radius:/s)
+    expect(markup).toContain('微信已绑定')
+    expect(markup).toContain('class="profile-account-card"')
+    expect(markup).toContain('class="security-notice"')
+    expect(markup).toContain('管理微信绑定')
+    expect(markup).toContain('bindtap="confirmUnbind"')
+    expect(markup).toContain('bindtap="logout"')
+    expect(markup).toContain('/assets/icons/shield-check.svg')
+    expect(markup).toContain('/assets/icons/info.svg')
+    expect(markup).not.toContain('<employee-header')
+    expect(markup).not.toContain('shortcut-chevron')
+    expect(styles).toMatch(/\.profile-identity-card\s*\{[^}]*margin:\s*-96rpx/s)
+    expect(styles).toMatch(/\.security-notice\s*\{[^}]*var\(--primary-100\)/s)
   })
 
   test('order detail uses a custom back header and operational summary', () => {

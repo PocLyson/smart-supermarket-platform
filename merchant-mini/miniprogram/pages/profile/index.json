@@ -2,8 +2,6 @@
   "navigationBarTitleText": "我的",
   "navigationStyle": "custom",
   "usingComponents": {
-    "app-tab-bar": "/components/app-tab-bar/index",
-    "employee-header": "/components/employee-header/index",
-    "t-button": "tdesign-miniprogram/button/button"
+    "app-tab-bar": "/components/app-tab-bar/index"
   }
 }

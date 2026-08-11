@@ -1,46 +1,102 @@
-<view class="merchant-page-header">
-  <text class="merchant-page-header__eyebrow">员工中心</text>
-  <text class="merchant-page-header__title">我的</text>
-  <text class="merchant-page-header__description">管理员工账号与常用功能</text>
+<view class="merchant-page-header profile-security-header">
+  <view class="profile-security-header__copy">
+    <text class="profile-security-header__title">我的</text>
+    <view class="profile-security-header__subtitle">
+      <image class="profile-security-header__subtitle-icon" src="/assets/icons/shield-check.svg" mode="aspectFit" aria-hidden="true" />
+      <text>安全管理</text>
+      <text class="profile-security-header__subtitle-divider">·</text>
+      <text>保护账号</text>
+    </view>
+  </view>
+  <image class="profile-security-header__shield" src="/assets/icons/shield-check.svg" mode="aspectFit" aria-hidden="true" />
 </view>
 
 <view class="page-shell profile-page" wx:if="{{session}}">
-  <view class="profile-identity-card">
-    <text class="profile-identity-card__label">员工账号</text>
-    <employee-header username="{{session.username}}" role="{{session.role}}" />
+  <view
+    class="profile-identity-card"
+    role="button"
+    aria-label="员工账号 {{session.username}}，进入账号与微信"
+    data-id="account"
+    bindtap="onShortcutTap"
+    hover-class="profile-card--pressed"
+  >
+    <view class="profile-avatar" aria-hidden="true">
+      <image class="profile-avatar__image" src="/assets/icons/profile.svg" mode="aspectFit" />
+    </view>
+    <view class="profile-identity-card__copy">
+      <text class="profile-identity-card__name">{{session.username}}</text>
+      <text class="profile-identity-card__role">{{session.role === 'OWNER' ? '老板' : '收银员'}}<text class="profile-identity-card__divider">｜</text>员工端</text>
+      <view class="wechat-binding-badge">
+        <image class="wechat-binding-badge__icon" src="/assets/icons/messages.svg" mode="aspectFit" aria-hidden="true" />
+        <text>微信已绑定</text>
+      </view>
+    </view>
+    <image class="profile-row-chevron profile-row-chevron--identity" src="/assets/icons/chevron-right.svg" mode="aspectFit" aria-hidden="true" />
   </view>
 
-  <view class="section profile-section">
-    <text class="section-title">账号功能</text>
-    <view class="shortcut-list">
-      <view
-        wx:for="{{shortcuts}}"
-        wx:key="id"
-        class="shortcut-item"
-        role="button"
-        aria-label="{{item.label}}"
-        data-id="{{item.id}}"
-        bindtap="onShortcutTap"
-        hover-class="shortcut-item--pressed"
-      >
-        <text>{{item.label}}</text>
-        <view class="shortcut-chevron" aria-hidden="true"></view>
+  <view class="profile-account-card">
+    <view
+      class="profile-account-row"
+      role="button"
+      aria-label="账号与微信"
+      data-id="account"
+      bindtap="onShortcutTap"
+      hover-class="profile-account-row--pressed"
+    >
+      <view class="profile-account-row__icon-shell">
+        <image class="profile-account-row__icon" src="/assets/icons/messages.svg" mode="aspectFit" aria-hidden="true" />
       </view>
+      <view class="profile-account-row__copy">
+        <text class="profile-account-row__title">账号与微信</text>
+        <text class="profile-account-row__description">查看账号与微信绑定关系</text>
+      </view>
+      <image class="profile-row-chevron" src="/assets/icons/chevron-right.svg" mode="aspectFit" aria-hidden="true" />
+    </view>
+
+    <view
+      wx:if="{{session.role === 'OWNER'}}"
+      class="profile-account-row"
+      role="button"
+      aria-label="员工管理"
+      data-id="staff"
+      bindtap="onShortcutTap"
+      hover-class="profile-account-row--pressed"
+    >
+      <view class="profile-account-row__icon-shell">
+        <image class="profile-account-row__icon" src="/assets/icons/profile.svg" mode="aspectFit" aria-hidden="true" />
+      </view>
+      <view class="profile-account-row__copy">
+        <text class="profile-account-row__title">员工管理</text>
+        <text class="profile-account-row__description">管理员工账号与权限</text>
+      </view>
+      <image class="profile-row-chevron" src="/assets/icons/chevron-right.svg" mode="aspectFit" aria-hidden="true" />
+    </view>
+
+    <view class="profile-account-row" aria-label="当前微信绑定，已绑定">
+      <view class="profile-account-row__icon-shell">
+        <image class="profile-account-row__icon" src="/assets/icons/shield-check.svg" mode="aspectFit" aria-hidden="true" />
+      </view>
+      <view class="profile-account-row__copy">
+        <text class="profile-account-row__title">当前微信绑定</text>
+        <text class="profile-account-row__description">查看当前绑定状态</text>
+      </view>
+      <text class="profile-account-row__status">已绑定</text>
     </view>
   </view>
 
-  <view class="section binding-card">
-    <text class="binding-title">当前微信绑定</text>
-    <text class="binding-description">解绑后将退出商家端，下次登录需要使用员工账号和密码重新绑定当前微信。</text>
-    <view class="binding-action">
-      <t-button
-        theme="danger"
-        variant="outline"
-        block
-        loading="{{isUnbinding}}"
-        disabled="{{isLoading || isUnbinding}}"
+  <view class="security-notice">
+    <image class="security-notice__icon" src="/assets/icons/info.svg" mode="aspectFit" aria-hidden="true" />
+    <view class="security-notice__content">
+      <text class="security-notice__title">安全提示</text>
+      <text class="security-notice__description">解除绑定将退出商家端，下次登录需要使用员工账号和密码重新绑定当前微信。</text>
+      <view
+        class="manage-binding-button {{isLoading || isUnbinding ? 'is-disabled' : ''}}"
+        role="button"
+        aria-label="管理微信绑定"
+        aria-disabled="{{isLoading || isUnbinding}}"
         bindtap="confirmUnbind"
-      >{{isUnbinding ? '解绑中…' : '解绑当前微信'}}</t-button>
+        hover-class="manage-binding-button--pressed"
+      >{{isUnbinding ? '解绑中…' : '管理微信绑定'}}</view>
     </view>
   </view>
 
@@ -48,15 +104,16 @@
     <text>{{errorMessage}}</text>
   </view>
 
-  <view class="logout-action">
-    <t-button
-      theme="danger"
-      variant="outline"
-      block
-      loading="{{isLoading}}"
-      disabled="{{isLoading || isUnbinding}}"
-      bindtap="logout"
-    >退出登录</t-button>
+  <view
+    class="logout-action {{isLoading || isUnbinding ? 'is-disabled' : ''}}"
+    role="button"
+    aria-label="退出登录"
+    aria-disabled="{{isLoading || isUnbinding}}"
+    bindtap="logout"
+    hover-class="logout-action--pressed"
+  >
+    <text>{{isLoading ? '退出中…' : '退出登录'}}</text>
+    <image class="logout-action__chevron" src="/assets/icons/chevron-right.svg" mode="aspectFit" aria-hidden="true" />
   </view>
 </view>
 

@@ -70,4 +70,13 @@
 - Changed the three-column order summary into a four-corner card with a `-24rpx` overlap into the navy header, restoring the selected concept's curved transition.
 - Automated presentation contracts pass, but no new runtime screenshot or side-by-side comparison was captured because the owner explicitly asked Codex not to control the local computer for visual inspection.
 
+## Profile option 3 implementation awaiting owner visual review
+
+- Selected visual truth: `C:\Users\k\.codex\generated_images\019fa442-921b-77e3-9dc4-8c3354447a37\exec-9be5938a-21cc-4fcc-9b9d-1970ebaab3fc.png`.
+- Implemented the selected deep-navy rounded security header, oversized `我的` title, shield subtitle, overlapping employee identity card, bound-WeChat badge, grouped account rows, blue security notice, outlined binding-management action, quiet logout action, and the existing floating five-item dock.
+- Preserved the real employee session, OWNER-only staff-management entry, account navigation, duplicate-safe WeChat unbind flow, recoverable error state, logout flow, and role display.
+- Added local Lucide Static 0.468.0 `shield-check` and `info` SVG assets with ISC license comments; no emoji, CSS-drawn icons, remote icon fonts, gradients, mock sessions, or new routes were introduced.
+- Automated evidence: focused profile/presentation suite 12/12 PASS; merchant-mini full suite 118/118 PASS; TypeScript `tsc --noEmit` PASS; `git diff --check` exit 0.
+- Runtime visual comparison is intentionally not recorded: the owner explicitly asked Codex not to control the local computer or Developer Tools. The implementation therefore still needs the owner's visual inspection at the real mini-program viewport before fidelity can be marked complete.
+
 final result: blocked
