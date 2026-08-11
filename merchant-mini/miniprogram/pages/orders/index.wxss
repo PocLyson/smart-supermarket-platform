@@ -9,7 +9,6 @@
   color: var(--color-bg-surface);
 }
 
-.merchant-page-header__eyebrow,
 .merchant-page-header__title,
 .summary-metric__label,
 .summary-metric__value,
@@ -18,13 +17,6 @@
 .customer-name,
 .customer-phone {
   display: block;
-}
-
-.merchant-page-header__eyebrow {
-  margin-bottom: 8rpx;
-  font-size: var(--type-caption-size);
-  letter-spacing: 2rpx;
-  opacity: 0.72;
 }
 
 .merchant-page-header__title {
@@ -80,10 +72,13 @@
 }
 
 .order-summary-strip {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: -24rpx 16rpx 0;
   padding: 28rpx 24rpx 30rpx;
-  border-radius: 0 0 32rpx 32rpx;
+  border-radius: 32rpx;
   background: var(--color-bg-surface);
   box-shadow: 0 12rpx 32rpx rgba(13, 27, 54, 0.08);
 }

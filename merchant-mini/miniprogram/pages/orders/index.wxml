@@ -1,6 +1,5 @@
 <view class="merchant-page-header">
   <view class="merchant-page-header__copy">
-    <text class="merchant-page-header__eyebrow">门店订单</text>
     <text class="merchant-page-header__title">订单管理</text>
   </view>
   <view

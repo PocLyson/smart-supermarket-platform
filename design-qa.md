@@ -64,4 +64,10 @@
 - [x] Loading, recoverable error, empty and pagination states retained.
 - [x] Side-by-side source/implementation evidence saved.
 
-final result: passed
+## Latest adjustment awaiting owner review
+
+- Removed the `门店订单` eyebrow from the order-management header.
+- Changed the three-column order summary into a four-corner card with a `-24rpx` overlap into the navy header, restoring the selected concept's curved transition.
+- Automated presentation contracts pass, but no new runtime screenshot or side-by-side comparison was captured because the owner explicitly asked Codex not to control the local computer for visual inspection.
+
+final result: blocked

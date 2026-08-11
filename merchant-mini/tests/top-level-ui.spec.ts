@@ -27,6 +27,7 @@ describe('merchant top-level page presentation', () => {
     const markup = pageSource('orders', 'wxml')
     const styles = pageSource('orders', 'wxss')
 
+    expect(markup).not.toContain('门店订单')
     expect(markup).toContain('class="order-summary-strip"')
     expect(markup).toContain('class="summary-metric')
     expect(markup).toContain('class="filter-trigger')
@@ -38,6 +39,8 @@ describe('merchant top-level page presentation', () => {
     }
     expect(markup).not.toContain('<t-icon')
     expect(styles).toMatch(/\.order-summary-strip\s*\{[^}]*grid-template-columns:\s*repeat\(3,/s)
+    expect(styles).toMatch(/\.order-summary-strip\s*\{[^}]*margin:\s*-24rpx\s+16rpx\s+0/s)
+    expect(styles).toMatch(/\.order-summary-strip\s*\{[^}]*border-radius:\s*32rpx/s)
     expect(styles).toMatch(/\.merchant-page-header\s*\{[^}]*min-height:\s*220rpx/s)
   })
 
