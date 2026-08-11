@@ -87,4 +87,12 @@
 - Automated evidence: focused profile/presentation suite 12/12 PASS; merchant-mini full suite 118/118 PASS; TypeScript `tsc --noEmit` PASS; `git diff --check` exit 0.
 - Owner visual confirmation after refresh is still required because Codex did not control Developer Tools.
 
+## Account and WeChat security-content relocation
+
+- Removed the security notice, unbind action, and unbind error state from the profile overview.
+- Added a registered `account-wechat` child page containing employee identity, current binding status, the security notice, recoverable unbind feedback, and the existing duplicate-safe binding-management flow.
+- Changed the account shortcut to native child-page navigation so Back returns to the profile overview instead of leaving the profile flow.
+- Automated evidence: focused navigation/profile/presentation suite 25/25 PASS; merchant-mini full suite 122/122 PASS; TypeScript `tsc --noEmit` PASS; `git diff --check` exit 0.
+- Runtime visual confirmation remains with the owner because Codex did not control Developer Tools.
+
 final result: blocked

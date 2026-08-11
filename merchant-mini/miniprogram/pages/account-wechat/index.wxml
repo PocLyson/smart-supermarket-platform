@@ -1,0 +1,52 @@
+<view class="merchant-page-header">
+  <view class="account-header__row">
+    <view class="account-header__back" role="button" aria-label="返回" bindtap="goBack" hover-class="account-header__back--pressed">
+      <image class="account-header__back-icon" src="/assets/icons/chevron-right.svg" mode="aspectFit" aria-hidden="true" />
+    </view>
+    <text class="account-header__title">账号与微信</text>
+  </view>
+  <text class="account-header__description">查看员工账号及当前微信绑定状态</text>
+</view>
+
+<view class="page-shell account-wechat-page" wx:if="{{session}}">
+  <view class="account-summary-card">
+    <view class="account-summary-card__avatar" aria-hidden="true">
+      <image class="account-summary-card__avatar-icon" src="/assets/icons/profile.svg" mode="aspectFit" />
+    </view>
+    <view class="account-summary-card__copy">
+      <text class="account-summary-card__name">{{session.username}}</text>
+      <text class="account-summary-card__role">{{session.role === 'OWNER' ? '老板' : '收银员'}} · 员工端</text>
+    </view>
+  </view>
+
+  <view class="binding-status-card">
+    <view class="binding-status-card__icon-shell">
+      <image class="binding-status-card__icon" src="/assets/icons/shield-check.svg" mode="aspectFit" aria-hidden="true" />
+    </view>
+    <view class="binding-status-card__copy">
+      <text class="binding-status-card__title">当前微信绑定</text>
+      <text class="binding-status-card__description">当前微信可用于快速安全登录</text>
+    </view>
+    <text class="binding-status-card__badge">已绑定</text>
+  </view>
+
+  <view class="security-notice">
+    <image class="security-notice__icon" src="/assets/icons/info.svg" mode="aspectFit" aria-hidden="true" />
+    <view class="security-notice__content">
+      <text class="security-notice__title">安全提示</text>
+      <text class="security-notice__description">解除绑定将退出商家端，下次登录需要使用员工账号和密码重新绑定当前微信。</text>
+      <view
+        class="manage-binding-button {{isLoading || isUnbinding ? 'is-disabled' : ''}}"
+        role="button"
+        aria-label="管理微信绑定"
+        aria-disabled="{{isLoading || isUnbinding}}"
+        bindtap="confirmUnbind"
+        hover-class="manage-binding-button--pressed"
+      >{{isUnbinding ? '解绑中…' : '管理微信绑定'}}</view>
+    </view>
+  </view>
+
+  <view wx:if="{{errorMessage}}" class="feedback-error" role="alert" aria-live="polite">
+    <text>{{errorMessage}}</text>
+  </view>
+</view>

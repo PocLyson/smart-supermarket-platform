@@ -22,7 +22,7 @@ const deferred = <T>() => {
   return { promise, resolve }
 }
 
-describe('merchant profile unbind flow', () => {
+describe('merchant account and WeChat unbind flow', () => {
   test.each(['OWNER', 'CASHIER'] as const)(
     'lets a %s confirm unbinding once, exposes loading, and reports success',
     async (role) => {
@@ -41,7 +41,7 @@ describe('merchant profile unbind flow', () => {
       }))
       vi.stubGlobal('Page', registerPage)
       vi.stubGlobal('wx', { showModal, showToast, reLaunch })
-      await import('../miniprogram/pages/profile/index')
+      await import('../miniprogram/pages/account-wechat/index')
       const definition = registerPage.mock.calls[0][0] as Record<string, unknown> & {
         confirmUnbind(): Promise<void>
       }
@@ -96,7 +96,7 @@ describe('merchant profile unbind flow', () => {
       showToast: vi.fn(),
       reLaunch,
     })
-    await import('../miniprogram/pages/profile/index')
+    await import('../miniprogram/pages/account-wechat/index')
     const definition = registerPage.mock.calls[0][0] as Record<string, unknown> & {
       confirmUnbind(): Promise<void>
     }
@@ -121,5 +121,34 @@ describe('merchant profile unbind flow', () => {
     expect(context.data.errorMessage).toBe('网络连接失败，请检查网络后重试')
     expect(context.data.isUnbinding).toBe(false)
     expect(reLaunch).not.toHaveBeenCalled()
+  })
+})
+
+describe('merchant profile child navigation', () => {
+  test('opens account and WeChat as a child page so back returns to profile', async () => {
+    vi.resetModules()
+    const registerPage = vi.fn()
+    const navigateTo = vi.fn()
+    const redirectTo = vi.fn()
+    vi.stubGlobal('Page', registerPage)
+    vi.stubGlobal('wx', { navigateTo, redirectTo })
+
+    await import('../miniprogram/pages/profile/index')
+    const definition = registerPage.mock.calls[0][0] as Record<string, unknown> & {
+      onShortcutTap(event: { currentTarget: { dataset: { id: string } } }): void
+    }
+    const context = {
+      ...definition,
+      data: {
+        shortcuts: [{ id: 'account', url: '/pages/account-wechat/index' }],
+      },
+    }
+
+    definition.onShortcutTap.call(context, {
+      currentTarget: { dataset: { id: 'account' } },
+    })
+
+    expect(navigateTo).toHaveBeenCalledWith({ url: '/pages/account-wechat/index' })
+    expect(redirectTo).not.toHaveBeenCalled()
   })
 })

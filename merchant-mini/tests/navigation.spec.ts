@@ -31,6 +31,19 @@ describe('merchant primary navigation', () => {
   test('never exposes owner-only shortcuts to a cashier', () => {
     expect(shortcutsForRole('CASHIER').some((item) => item.ownerOnly)).toBe(false)
     expect(shortcutsForRole('OWNER').some((item) => item.ownerOnly)).toBe(true)
+    expect(shortcutsForRole('CASHIER').find((item) => item.id === 'account')?.url)
+      .toBe('/pages/account-wechat/index')
+  })
+
+  test('registers the account and WeChat management page', () => {
+    const app = JSON.parse(readFileSync(resolve('miniprogram/app.json'), 'utf8')) as {
+      pages: string[]
+    }
+
+    expect(app.pages).toContain('pages/account-wechat/index')
+    for (const extension of ['json', 'ts', 'wxml', 'wxss']) {
+      expect(existsSync(resolve(`miniprogram/pages/account-wechat/index.${extension}`))).toBe(true)
+    }
   })
 
   test('registers complete native page artifacts for every navigation target', () => {

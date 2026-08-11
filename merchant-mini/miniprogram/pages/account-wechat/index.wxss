@@ -1,0 +1,187 @@
+.merchant-page-header {
+  box-sizing: border-box;
+  min-height: 300rpx;
+  padding: calc(96rpx + env(safe-area-inset-top)) 32rpx 48rpx;
+  border-radius: 0 0 56rpx 56rpx;
+  background: var(--primary-600);
+  color: var(--color-bg-surface);
+}
+
+.account-header__row {
+  display: grid;
+  align-items: center;
+  grid-template-columns: 88rpx minmax(0, 1fr) 88rpx;
+}
+
+.account-header__back {
+  display: flex;
+  width: 72rpx;
+  height: 72rpx;
+  align-items: center;
+  justify-content: center;
+  border: var(--border-width-default) solid rgba(255, 255, 255, 0.36);
+  border-radius: var(--radius-round);
+}
+
+.account-header__back--pressed,
+.manage-binding-button--pressed {
+  opacity: 0.76;
+}
+
+.account-header__back-icon {
+  width: 40rpx;
+  height: 40rpx;
+  filter: brightness(0) invert(1);
+  transform: rotate(180deg);
+}
+
+.account-header__title {
+  justify-self: center;
+  font-size: 38rpx;
+  font-weight: var(--weight-semibold);
+}
+
+.account-header__description {
+  display: block;
+  margin-top: var(--space-3);
+  color: rgba(255, 255, 255, 0.78);
+  font-size: var(--type-helper-size);
+  text-align: center;
+}
+
+.account-wechat-page {
+  display: flex;
+  padding-top: var(--space-5);
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.account-summary-card,
+.binding-status-card {
+  display: grid;
+  padding: var(--space-5);
+  align-items: center;
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-surface);
+  box-shadow: var(--shadow-card);
+  gap: var(--space-3);
+}
+
+.account-summary-card {
+  grid-template-columns: 112rpx minmax(0, 1fr);
+}
+
+.account-summary-card__avatar,
+.binding-status-card__icon-shell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-round);
+  background: var(--primary-50);
+}
+
+.account-summary-card__avatar {
+  width: 104rpx;
+  height: 104rpx;
+  border: var(--border-width-default) solid var(--primary-300);
+}
+
+.account-summary-card__avatar-icon {
+  width: 68rpx;
+  height: 68rpx;
+  filter: sepia(1) saturate(8) hue-rotate(174deg) brightness(0.48);
+}
+
+.account-summary-card__name,
+.account-summary-card__role,
+.binding-status-card__title,
+.binding-status-card__description,
+.security-notice__title,
+.security-notice__description {
+  display: block;
+}
+
+.account-summary-card__name,
+.binding-status-card__title {
+  color: var(--color-text-primary);
+  font-size: var(--type-card-title-size);
+  font-weight: var(--weight-semibold);
+}
+
+.account-summary-card__role,
+.binding-status-card__description {
+  margin-top: var(--space-1);
+  color: var(--color-text-secondary);
+  font-size: var(--type-helper-size);
+}
+
+.binding-status-card {
+  grid-template-columns: 88rpx minmax(0, 1fr) auto;
+}
+
+.binding-status-card__icon-shell {
+  width: 80rpx;
+  height: 80rpx;
+}
+
+.binding-status-card__icon {
+  width: 48rpx;
+  height: 48rpx;
+}
+
+.binding-status-card__badge {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+  font-size: var(--type-helper-size);
+  font-weight: var(--weight-medium);
+}
+
+.security-notice {
+  display: grid;
+  padding: var(--space-5);
+  grid-template-columns: 72rpx minmax(0, 1fr);
+  border: var(--border-width-default) solid var(--primary-300);
+  border-radius: var(--radius-xl);
+  background: var(--primary-100);
+  gap: var(--space-3);
+}
+
+.security-notice__icon {
+  width: 56rpx;
+  height: 56rpx;
+  margin-top: 4rpx;
+}
+
+.security-notice__title {
+  color: var(--primary-600);
+  font-size: var(--type-section-title-size);
+  font-weight: var(--weight-semibold);
+}
+
+.security-notice__description {
+  margin-top: var(--space-2);
+  color: var(--color-text-secondary);
+  font-size: var(--type-helper-size);
+  line-height: var(--type-helper-line);
+}
+
+.manage-binding-button {
+  display: flex;
+  box-sizing: border-box;
+  min-height: var(--size-touch-min);
+  margin-top: var(--space-4);
+  align-items: center;
+  justify-content: center;
+  border: var(--border-width-default) solid var(--primary-600);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface);
+  color: var(--primary-600);
+  font-size: var(--type-button-size);
+  font-weight: var(--weight-semibold);
+}
+
+.manage-binding-button.is-disabled {
+  opacity: 0.45;
+}

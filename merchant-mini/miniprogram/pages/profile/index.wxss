@@ -19,9 +19,7 @@
 .profile-identity-card__name,
 .profile-identity-card__role,
 .profile-account-row__title,
-.profile-account-row__description,
-.security-notice__title,
-.security-notice__description {
+.profile-account-row__description {
   display: block;
 }
 
@@ -228,52 +226,6 @@
   font-weight: var(--weight-medium);
 }
 
-.security-notice {
-  display: grid;
-  padding: var(--space-5);
-  grid-template-columns: 72rpx minmax(0, 1fr);
-  border: var(--border-width-default) solid var(--primary-300);
-  border-radius: var(--radius-xl);
-  background: var(--primary-100);
-  gap: var(--space-3);
-}
-
-.security-notice__icon {
-  width: 56rpx;
-  height: 56rpx;
-  margin-top: 4rpx;
-}
-
-.security-notice__title {
-  color: var(--primary-600);
-  font-size: var(--type-section-title-size);
-  font-weight: var(--weight-semibold);
-  line-height: var(--type-section-title-line);
-}
-
-.security-notice__description {
-  margin-top: var(--space-2);
-  color: var(--color-text-secondary);
-  font-size: var(--type-helper-size);
-  line-height: var(--type-helper-line);
-}
-
-.manage-binding-button {
-  display: flex;
-  box-sizing: border-box;
-  min-height: var(--size-touch-min);
-  margin-top: var(--space-4);
-  align-items: center;
-  justify-content: center;
-  border: var(--border-width-default) solid var(--primary-600);
-  border-radius: var(--radius-md);
-  background: var(--color-bg-surface);
-  color: var(--primary-600);
-  font-size: var(--type-button-size);
-  font-weight: var(--weight-semibold);
-}
-
-.manage-binding-button.is-disabled,
 .logout-action.is-disabled {
   opacity: 0.45;
 }

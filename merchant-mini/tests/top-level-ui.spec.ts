@@ -11,6 +11,7 @@ describe('merchant top-level page presentation', () => {
     ['verify-pickup', '取货核销'],
     ['messages-unavailable', '消息中心'],
     ['profile', '我的'],
+    ['account-wechat', '账号与微信'],
   ])('%s uses the approved custom navy header', (page, title) => {
     const markup = pageSource(page, 'wxml')
     const styles = pageSource(page, 'wxss')
@@ -69,16 +70,26 @@ describe('merchant top-level page presentation', () => {
     expect(markup).toContain('class="profile-identity-card"')
     expect(markup).toContain('微信已绑定')
     expect(markup).toContain('class="profile-account-card"')
-    expect(markup).toContain('class="security-notice"')
-    expect(markup).toContain('管理微信绑定')
-    expect(markup).toContain('bindtap="confirmUnbind"')
+    expect(markup).not.toContain('class="security-notice"')
+    expect(markup).not.toContain('管理微信绑定')
+    expect(markup).not.toContain('bindtap="confirmUnbind"')
     expect(markup).toContain('bindtap="logout"')
     expect(markup).toContain('/assets/icons/shield-check.svg')
-    expect(markup).toContain('/assets/icons/info.svg')
+    expect(markup).not.toContain('/assets/icons/info.svg')
     expect(markup).not.toContain('<employee-header')
     expect(markup).not.toContain('shortcut-chevron')
     expect(styles).toMatch(/\.profile-identity-card\s*\{[^}]*margin:\s*-96rpx/s)
     expect(styles).toMatch(/\.profile-identity-card\s*\{[^}]*position:\s*relative[^}]*z-index:\s*1/s)
+  })
+
+  test('account and WeChat page owns the security notice and binding action', () => {
+    const markup = pageSource('account-wechat', 'wxml')
+    const styles = pageSource('account-wechat', 'wxss')
+
+    expect(markup).toContain('class="security-notice"')
+    expect(markup).toContain('管理微信绑定')
+    expect(markup).toContain('bindtap="confirmUnbind"')
+    expect(markup).toContain('/assets/icons/info.svg')
     expect(styles).toMatch(/\.security-notice\s*\{[^}]*var\(--primary-100\)/s)
   })
 

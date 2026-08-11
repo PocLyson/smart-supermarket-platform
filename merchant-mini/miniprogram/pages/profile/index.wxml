@@ -84,31 +84,11 @@
     </view>
   </view>
 
-  <view class="security-notice">
-    <image class="security-notice__icon" src="/assets/icons/info.svg" mode="aspectFit" aria-hidden="true" />
-    <view class="security-notice__content">
-      <text class="security-notice__title">安全提示</text>
-      <text class="security-notice__description">解除绑定将退出商家端，下次登录需要使用员工账号和密码重新绑定当前微信。</text>
-      <view
-        class="manage-binding-button {{isLoading || isUnbinding ? 'is-disabled' : ''}}"
-        role="button"
-        aria-label="管理微信绑定"
-        aria-disabled="{{isLoading || isUnbinding}}"
-        bindtap="confirmUnbind"
-        hover-class="manage-binding-button--pressed"
-      >{{isUnbinding ? '解绑中…' : '管理微信绑定'}}</view>
-    </view>
-  </view>
-
-  <view wx:if="{{errorMessage}}" class="feedback-error" role="alert" aria-live="polite">
-    <text>{{errorMessage}}</text>
-  </view>
-
   <view
-    class="logout-action {{isLoading || isUnbinding ? 'is-disabled' : ''}}"
+    class="logout-action {{isLoading ? 'is-disabled' : ''}}"
     role="button"
     aria-label="退出登录"
-    aria-disabled="{{isLoading || isUnbinding}}"
+    aria-disabled="{{isLoading}}"
     bindtap="logout"
     hover-class="logout-action--pressed"
   >

@@ -34,7 +34,7 @@ const SHORTCUTS: readonly MerchantShortcut[] = [
   {
     id: 'account',
     label: '账号与微信',
-    url: '/pages/profile/index',
+    url: '/pages/account-wechat/index',
     ownerOnly: false,
   },
 ]
