@@ -79,4 +79,12 @@
 - Automated evidence: focused profile/presentation suite 12/12 PASS; merchant-mini full suite 118/118 PASS; TypeScript `tsc --noEmit` PASS; `git diff --check` exit 0.
 - Runtime visual comparison is intentionally not recorded: the owner explicitly asked Codex not to control the local computer or Developer Tools. The implementation therefore still needs the owner's visual inspection at the real mini-program viewport before fidelity can be marked complete.
 
+## Profile overlap fix from owner screenshot
+
+- Runtime evidence: `C:\Users\k\AppData\Local\Temp\codex-clipboard-57a5f452-0b0c-4610-a3e2-1d7d6956ab33.png` showed the navy positioned header painting above the non-positioned identity card and clipping the top of `cashier1`.
+- Root cause: unlike the working order-summary overlap pattern, `.profile-identity-card` had a negative margin but no positioned stacking layer.
+- Fix: added `position: relative` and `z-index: 1` to the identity card, with a regression contract that requires the overlap layer.
+- Automated evidence: focused profile/presentation suite 12/12 PASS; merchant-mini full suite 118/118 PASS; TypeScript `tsc --noEmit` PASS; `git diff --check` exit 0.
+- Owner visual confirmation after refresh is still required because Codex did not control Developer Tools.
+
 final result: blocked

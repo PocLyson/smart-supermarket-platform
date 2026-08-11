@@ -78,6 +78,7 @@ describe('merchant top-level page presentation', () => {
     expect(markup).not.toContain('<employee-header')
     expect(markup).not.toContain('shortcut-chevron')
     expect(styles).toMatch(/\.profile-identity-card\s*\{[^}]*margin:\s*-96rpx/s)
+    expect(styles).toMatch(/\.profile-identity-card\s*\{[^}]*position:\s*relative[^}]*z-index:\s*1/s)
     expect(styles).toMatch(/\.security-notice\s*\{[^}]*var\(--primary-100\)/s)
   })
 

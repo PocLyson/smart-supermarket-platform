@@ -70,6 +70,8 @@
 }
 
 .profile-identity-card {
+  position: relative;
+  z-index: 1;
   display: grid;
   min-height: 250rpx;
   margin: -96rpx 0 0;
