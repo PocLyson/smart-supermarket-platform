@@ -39,7 +39,6 @@
         bindinput="onPickupCodeInput"
         bindconfirm="loadPreview"
       />
-      <text class="field-help">只需取件码，不需要输入订单号</text>
     </label>
 
     <view wx:if="{{errorMessage}}" class="feedback-error" role="alert" aria-live="polite">

@@ -418,6 +418,7 @@ describe('pickup verification page flow', () => {
     expect(markup).toContain('loading="{{isSubmitting}}"')
     expect(markup).not.toContain('bindinput="onOrderNoInput"')
     expect(markup).not.toContain('placeholder="请输入订单号"')
+    expect(markup).not.toContain('只需取件码，不需要输入订单号')
     expect(markup).toContain("disabled=\"{{isSubmitting || (preview.paymentStatus === 'UNPAID' && !selectedPaymentMethod)}}\"")
     expect(styles).toContain('env(safe-area-inset-bottom)')
     expect(styles).toMatch(/\.touch-control\s*\{[^}]*min-height:\s*var\(--size-touch-min\);/s)
