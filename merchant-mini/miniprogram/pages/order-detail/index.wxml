@@ -1,3 +1,12 @@
+<view class="detail-header">
+  <view class="detail-header__back" role="button" aria-label="返回订单列表" bindtap="goBack" hover-class="detail-header__back--pressed">
+    <view class="detail-header__back-icon" aria-hidden="true"></view>
+    <text>返回</text>
+  </view>
+  <text class="detail-header__title">订单详情</text>
+  <text class="detail-header__description">{{order ? '查看订单信息并跟进处理' : '正在获取订单信息'}}</text>
+</view>
+
 <view class="detail-page">
   <view wx:if="{{isLoading && !order}}" class="detail-state" role="status" aria-live="polite">
     <t-loading theme="circular" size="48rpx" />
@@ -22,7 +31,10 @@
           <text class="order-no">{{order.orderNo}}</text>
           <text class="order-time">{{order.createdAtText}}</text>
         </view>
-        <text class="status-badge status-badge--{{order.status}}">{{order.statusLabel}}</text>
+        <view class="summary-status-block">
+          <text class="summary-status-label">当前状态</text>
+          <text class="status-badge status-badge--{{order.status}}">{{order.statusLabel}}</text>
+        </view>
       </view>
       <view class="summary-money-row">
         <text class="summary-label">订单金额</text>

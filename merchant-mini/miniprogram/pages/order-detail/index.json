@@ -1,5 +1,6 @@
 {
   "navigationBarTitleText": "订单详情",
+  "navigationStyle": "custom",
   "usingComponents": {
     "t-button": "tdesign-miniprogram/button/button",
     "t-loading": "tdesign-miniprogram/loading/loading"

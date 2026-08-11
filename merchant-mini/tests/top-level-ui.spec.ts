@@ -57,4 +57,18 @@ describe('merchant top-level page presentation', () => {
     expect(markup).toContain('员工账号')
     expect(styles).toMatch(/\.profile-identity-card\s*\{[^}]*border-radius:/s)
   })
+
+  test('order detail uses a custom back header and operational summary', () => {
+    const markup = pageSource('order-detail', 'wxml')
+    const styles = pageSource('order-detail', 'wxss')
+    const config = JSON.parse(pageSource('order-detail', 'json')) as { navigationStyle?: string }
+
+    expect(config.navigationStyle).toBe('custom')
+    expect(markup).toContain('class="detail-header"')
+    expect(markup).toContain('bindtap="goBack"')
+    expect(markup).toContain('class="summary-status-block"')
+    expect(markup).toContain('订单详情')
+    expect(styles).toMatch(/\.detail-header\s*\{[^}]*safe-area-inset-top/s)
+    expect(styles).toMatch(/\.detail-header\s*\{[^}]*var\(--primary-600\)/s)
+  })
 })
