@@ -72,6 +72,14 @@ const isApiResponse = (value: unknown): value is ApiResponse<unknown> =>
       'data' in value,
   )
 
+const compactQuery = (data?: unknown): unknown => {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return data
+  return Object.fromEntries(
+    Object.entries(data as Record<string, unknown>)
+      .filter(([, value]) => value !== undefined),
+  )
+}
+
 export const createMerchantHttp = ({
   request,
   session,
@@ -97,7 +105,7 @@ export const createMerchantHttp = ({
     const response = await request({
       url: `${apiBaseUrl()}${path}`,
       method,
-      data,
+      data: method === 'GET' ? compactQuery(data) : data,
       header: Object.keys(header).length > 0 ? header : undefined,
     })
 

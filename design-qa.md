@@ -1,71 +1,67 @@
-# 商家小程序工作台 Design QA
+# 商家小程序订单管理 Design QA
 
 ## Evidence
 
-- Source visual truth: `C:\Users\k\.codex\generated_images\019fa442-921b-77e3-9dc4-8c3354447a37\exec-3221c7d5-7a31-491b-8f21-e6aca399bd86.png`
-- Implementation screenshot: `C:\Users\k\Documents\智慧超市平台\.worktrees\merchant-mini-phase1\design-qa-implementation.png`
-- Full-view comparison: `C:\Users\k\Documents\智慧超市平台\.worktrees\merchant-mini-phase1\design-qa-comparison.png`
-- Focused floating-navigation comparison: `C:\Users\k\Documents\智慧超市平台\.worktrees\merchant-mini-phase1\design-qa-focused-bottom.png`
+- Source visual truth: `C:\Users\k\.codex\generated_images\019fa442-921b-77e3-9dc4-8c3354447a37\exec-525479b6-9abb-49b2-ba8f-dc4af270882a.png`
+- Implementation screenshot: `C:\Users\k\Documents\智慧超市平台\.worktrees\merchant-mini-phase1\docs\ui\merchant-orders-status-board-implementation.png`
+- Side-by-side comparison: `C:\Users\k\Documents\智慧超市平台\.worktrees\merchant-mini-phase1\docs\ui\merchant-orders-status-board-comparison.png`
 - Runtime: 微信开发者工具 Stable 2.01.2510290, iPhone 12/13 simulator, WeChatLib 3.17.0.
-- State: authenticated `cashier1` / 收银员, workbench loaded from the local API with live dashboard and order data.
+- State: authenticated `cashier1` / 收银员，连接本地 API，加载真实订单列表。
 
 ## Viewport and normalization
 
-- Source pixels: 853 × 1844.
-- Implementation window capture: 1251 × 1000; simulator region cropped from the DevTools window at 365 × 789 logical pixels.
-- App CSS viewport reported by DevTools: 390 × 844.
-- Density normalization: source and cropped implementation were both resampled to 390 × 844 before the side-by-side comparison.
-- Runtime-owned status bar, notch, WeChat capsule and home indicator are present only in the implementation and were not treated as app-owned design drift.
-
-## Full-view comparison
-
-The final comparison confirms the same major composition as the approved visual: deep-navy identity header, priority queue card, three utility actions, three-column daily overview, recent-order list, and a floating white five-item dock. The main information hierarchy and above-the-fold density remain intact at 390 × 844; the floating dock overlays the recent-order region in the same intended way as the source.
-
-## Focused comparison
-
-The focused bottom-region comparison verifies the requested change specifically: the navigation is detached from the screen edges, has a rounded white dock and shadow, preserves five equally distributed destinations, and elevates the center 核销 action in a 48px navy circle. The workbench active indicator, labels, safe-area spacing and home indicator do not collide.
+- Source pixels: 852 × 1864.
+- Implementation simulator crop: 365 × 788 pixels from the DevTools window.
+- The comparison scales the source to 365px width and places it beside the unscaled implementation crop.
+- Runtime-owned status bar, notch, WeChat capsule and home indicator exist only in the implementation and are not app-owned drift.
 
 ## Required fidelity surfaces
 
-- Fonts and typography: system PingFang/WeChat stack, bold section hierarchy, tab labels and numeric emphasis correspond to the reference. No clipping or unintended wrapping remains. The live order numbers are longer than the mock data but remain contained.
-- Spacing and layout rhythm: 16px dock side margins, 12px safe-area gap, 24px dock radius, card groups and 44px minimum touch targets are preserved. The custom header was expanded after device testing so employee controls sit below the WeChat capsule.
-- Colors and visual tokens: primary navy uses the existing `#082F6B` token; white surfaces, `#F7F9FC` page background and red/blue/green queue semantics match the approved direction and retain readable contrast.
-- Image and icon fidelity: all visible icons use bundled local linear SVG assets. The implementation uses the closest existing project icons for stock/product/announcement concepts rather than introducing handcrafted SVG or CSS art. This is an acceptable P3 asset variation from the generated concept.
-- Copy and content: 工作台、鲁能超市李老家分店、优先处理、扫码核销、商品管理、发布公告、今日概览、最近订单 and all five tab labels match the approved Chinese copy. Counts and orders intentionally use live API data rather than mock values.
+- Hierarchy: deep-navy compact header, three-column active-order summary, search/filter row, horizontal status pills, timeline-like cards and floating five-item dock all match the selected direction.
+- Typography: title, summary numbers, customer names, order totals and secondary metadata retain a clear four-level hierarchy without clipping.
+- Spacing: 44px minimum controls, card padding, timeline gutter and safe-area dock spacing remain usable on the 365px simulator width.
+- Color: existing `#082F6B` brand navy, white surfaces, light page background and semantic payment/status badges match the approved customer/merchant visual system.
+- Icons: refresh, search, filter, timeline marker and chevron use bundled Lucide 0.468.0 SVG assets with ISC license comments. This removes the TDesign remote icon-font dependency that rendered missing-glyph squares in the first device capture.
+- Data: summary counts and cards use the local API rather than mock values. The current dataset contains no active orders and several completed orders, so counts and status colors intentionally differ from the concept data.
+- Search: the retained navy “查询” control comes from the previously approved interaction requirement; the concept’s navy filter treatment is also preserved.
 
-## Interaction and console checks
+## Interaction and runtime checks
 
-- Clicked the floating 核销 action: it opened `/pages/verify-pickup/index` and visibly selected 核销.
-- Clicked 工作台 from the floating dock: it returned to `/pages/workbench/index` and restored the selected state.
-- Existing queue, shortcut and all-order handlers are covered by the workbench contract tests.
-- DevTools reported 0 runtime errors. A historical WXSS warning exposed during iteration 2 was fixed by replacing tag-descendant selectors with class selectors; the final source contract prevents its return. Remaining DevTools notices are environment/base-library informational warnings.
+- The initial real request reliably reproduced a server 500 because empty filters crossed the WeChat transport as literal `undefined` values.
+- The merchant HTTP GET boundary now removes undefined query fields before transport; the same authenticated page subsequently loaded the real list successfully.
+- Query, status chips, payment disclosure, refresh, pagination, detail navigation, error recovery and the floating navigation remain covered by Vitest contracts.
+- No missing icon glyphs or new order-page runtime errors remain in the final device capture. Remaining DevTools notices are environment/base-library informational warnings.
 
 ## Comparison history
 
 ### Iteration 1
 
-- P1: the employee pill overlapped the runtime-owned WeChat capsule in the first device capture.
-- Fix: increased the custom header safe top region to 300rpx, moved content below the capsule, and compacted the employee pill while retaining a 44px target.
-- Post-fix evidence: `design-qa-implementation.png` and the right side of `design-qa-comparison.png` show the pill fully below and separate from the capsule.
+- P1: all new TDesign font icons appeared as missing-glyph squares when the external font could not be cached.
+- Fix: replaced the five order-page glyphs with bundled Lucide SVG assets and added a static contract requiring the local licensed files.
 
 ### Iteration 2
 
-- P2: page WXSS used a tag-descendant selector for priority icons, producing a DevTools compile warning.
-- Fix: added explicit `priority-icon-image` tone classes and a regression test that rejects the unsupported selector.
-- Post-fix evidence: final automated tests and typecheck pass; hot reload renders all priority icons and no new selector warning is emitted.
+- P1: real order loading failed because `status`, `paymentStatus` and `keyword` were serialized as the string `undefined`.
+- Fix: added a failing merchant HTTP boundary test, compacted GET query objects, and confirmed the real list loaded.
+
+### Iteration 3
+
+- P2: the filter control was visually weaker than the selected option.
+- Fix: changed it to a filled navy treatment with a white local filter icon while preserving its disclosure behavior.
 
 ## Findings
 
 - No actionable P0, P1 or P2 mismatch remains.
-- P3 follow-up: if a dedicated project icon set is added later, the 商品管理 and 发布公告 icons can be replaced with box and megaphone glyphs closer to the concept image.
+- P3 accepted variation: the implementation keeps the explicit “查询” button required by the existing product flow, and real long order numbers make cards slightly denser than the generated sample.
+- P3 accepted variation: the actual status list contains more states than the five shown in the concept, so the status row remains horizontally scrollable.
 
 ## Implementation checklist
 
-- [x] Approved workbench hierarchy implemented.
-- [x] Floating five-item navigation implemented globally.
-- [x] Center 48px navy 核销 action implemented and exercised.
-- [x] Runtime capsule and safe-area behavior verified.
-- [x] Loading, recoverable error and empty states retained.
-- [x] Automated regression and typecheck completed.
+- [x] Selected option 2 hierarchy implemented.
+- [x] Real API data loaded after fixing undefined GET filters.
+- [x] Local icon assets verified in WeChat Developer Tools.
+- [x] Floating navigation and safe-area spacing retained.
+- [x] Loading, recoverable error, empty and pagination states retained.
+- [x] Side-by-side source/implementation evidence saved.
 
 final result: passed

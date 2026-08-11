@@ -339,6 +339,67 @@ describe('merchant order page interaction contracts', () => {
     expect(loadOrders).not.toHaveBeenCalled()
   })
 
+  test('toggles the compact payment filter without changing the selected value', async () => {
+    vi.resetModules()
+    const registerPage = vi.fn()
+    vi.stubGlobal('Page', registerPage)
+    await import('../miniprogram/pages/orders/index')
+    const definition = registerPage.mock.calls[0][0] as {
+      togglePaymentFilter(): void
+    }
+    const context = {
+      data: {
+        isPaymentFilterOpen: false,
+        selectedPaymentStatus: 'PAID',
+        isLoading: false,
+        isLoadingMore: false,
+      },
+      setData(values: Record<string, unknown>) {
+        Object.assign(this.data, values)
+      },
+    }
+
+    definition.togglePaymentFilter.call(context)
+    expect(context.data.isPaymentFilterOpen).toBe(true)
+    expect(context.data.selectedPaymentStatus).toBe('PAID')
+
+    definition.togglePaymentFilter.call(context)
+    expect(context.data.isPaymentFilterOpen).toBe(false)
+    expect(context.data.selectedPaymentStatus).toBe('PAID')
+  })
+
+  test('keeps the order list usable when active-count summary loading fails', async () => {
+    vi.resetModules()
+    const registerPage = vi.fn()
+    vi.doMock('../miniprogram/services/dashboard', () => ({
+      merchantDashboardService: {
+        summary: vi.fn().mockRejectedValue(new Error('summary unavailable')),
+      },
+    }))
+    vi.stubGlobal('Page', registerPage)
+    await import('../miniprogram/pages/orders/index')
+    const definition = registerPage.mock.calls[0][0] as {
+      loadActiveCounts(): Promise<void>
+    }
+    const context = {
+      data: {
+        isSummaryLoading: false,
+        pendingCount: 2,
+        preparingCount: 3,
+        readyCount: 1,
+      },
+      setData(values: Record<string, unknown>) {
+        Object.assign(this.data, values)
+      },
+    }
+
+    await expect(definition.loadActiveCounts.call(context)).resolves.toBeUndefined()
+    expect(context.data.isSummaryLoading).toBe(false)
+    expect(context.data.pendingCount).toBe(2)
+    expect(context.data.preparingCount).toBe(3)
+    expect(context.data.readyCount).toBe(1)
+  })
+
   test('preserves the loaded page range when returning from detail', async () => {
     vi.resetModules()
     const registerPage = vi.fn()
@@ -357,15 +418,18 @@ describe('merchant order page interaction contracts', () => {
     const definition = registerPage.mock.calls[0][0] as { onShow(): void }
     const loadOrders = vi.fn()
     const refreshLoadedPages = vi.fn()
+    const loadActiveCounts = vi.fn()
 
     definition.onShow.call({
       data: { hasLoaded: true },
       loadOrders,
       refreshLoadedPages,
+      loadActiveCounts,
     })
 
     expect(refreshLoadedPages).toHaveBeenCalledOnce()
     expect(loadOrders).not.toHaveBeenCalled()
+    expect(loadActiveCounts).toHaveBeenCalledOnce()
   })
 
   test('patches the opener list before reloading detail after a successful mutation', async () => {

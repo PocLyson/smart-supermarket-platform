@@ -23,13 +23,22 @@ describe('merchant top-level page presentation', () => {
     expect(styles).toMatch(/\.merchant-page-header\s*\{[^}]*var\(--primary-600\)/s)
   })
 
-  test('orders keeps filters inside one elevated control surface', () => {
+  test('orders uses the selected status-board hierarchy', () => {
     const markup = pageSource('orders', 'wxml')
     const styles = pageSource('orders', 'wxss')
 
-    expect(markup).toContain('class="order-filter-panel"')
-    expect(markup).toContain('class="filter-section-label"')
-    expect(styles).toMatch(/\.order-filter-panel\s*\{[^}]*box-shadow:\s*var\(--shadow-card\)/s)
+    expect(markup).toContain('class="order-summary-strip"')
+    expect(markup).toContain('class="summary-metric')
+    expect(markup).toContain('class="filter-trigger')
+    expect(markup).toContain('class="order-timeline"')
+    for (const icon of ['refresh-cw', 'search', 'list-filter', 'chevron-right', 'circle']) {
+      const iconPath = resolve(`miniprogram/assets/icons/${icon}.svg`)
+      expect(markup).toContain(`/assets/icons/${icon}.svg`)
+      expect(readFileSync(iconPath, 'utf8')).toContain('@license lucide-static')
+    }
+    expect(markup).not.toContain('<t-icon')
+    expect(styles).toMatch(/\.order-summary-strip\s*\{[^}]*grid-template-columns:\s*repeat\(3,/s)
+    expect(styles).toMatch(/\.merchant-page-header\s*\{[^}]*min-height:\s*220rpx/s)
   })
 
   test('pickup page presents a clear three-step verification cue', () => {

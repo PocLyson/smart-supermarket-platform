@@ -57,6 +57,26 @@ describe('merchant session store', () => {
 })
 
 describe('merchant HTTP boundary', () => {
+  test('omits undefined GET query values before handing them to WeChat transport', async () => {
+    const request = vi.fn().mockResolvedValue({ ok: true })
+    const client = createMerchantHttp({
+      request,
+      session: { current: () => validSession(), save: vi.fn(), clear: vi.fn(), revision: () => 0 },
+    })
+
+    await client.get('/api/merchant-mini/orders', {
+      status: undefined,
+      paymentStatus: undefined,
+      keyword: undefined,
+      page: 0,
+      size: 20,
+    })
+
+    const [options] = request.mock.calls[0]
+    expect(options.method).toBe('GET')
+    expect(options.data).toStrictEqual({ page: 0, size: 20 })
+  })
+
   test('adds the current merchant bearer token automatically', async () => {
     const request = vi.fn().mockResolvedValue({ ok: true })
     const client = createMerchantHttp({

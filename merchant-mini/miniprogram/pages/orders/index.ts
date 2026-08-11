@@ -1,4 +1,5 @@
 import { merchantOrdersService } from '../../services/orders'
+import { merchantDashboardService } from '../../services/dashboard'
 import { merchantSessionStore } from '../../store/session'
 import {
   ORDER_STATUS_TABS,
@@ -45,6 +46,11 @@ Page({
     ],
     selectedStatus: '' as OrderStatus | '',
     selectedPaymentStatus: '' as PaymentStatus | '',
+    isPaymentFilterOpen: false,
+    pendingCount: 0,
+    preparingCount: 0,
+    readyCount: 0,
+    isSummaryLoading: false,
     keyword: '',
     draftKeyword: '',
     orders: [] as PresentedOrder[],
@@ -74,6 +80,30 @@ Page({
     } else {
       void this.loadOrders(true)
     }
+    void this.loadActiveCounts()
+  },
+
+  async loadActiveCounts() {
+    if (this.data.isSummaryLoading) return
+    this.setData({ isSummaryLoading: true })
+    try {
+      const summary = await merchantDashboardService.summary()
+      this.setData({
+        pendingCount: summary.orderCounts.PENDING_CONFIRMATION || 0,
+        preparingCount: summary.orderCounts.PREPARING || 0,
+        readyCount: summary.orderCounts.READY_FOR_PICKUP || 0,
+      })
+    } catch {
+      // Counts are supportive context; keep the last successful values when unavailable.
+    } finally {
+      this.setData({ isSummaryLoading: false })
+    }
+  },
+
+  refresh() {
+    if (this.data.isLoading || this.data.isLoadingMore || this.data.isSummaryLoading) return
+    void this.loadOrders(true)
+    void this.loadActiveCounts()
   },
 
   onPageScroll(event: { scrollTop: number }) {
@@ -178,8 +208,13 @@ Page({
     if (this.data.isLoading || this.data.isLoadingMore) return
     const value = event.currentTarget.dataset.status as PaymentStatus | ''
     if (value === this.data.selectedPaymentStatus) return
-    this.setData({ selectedPaymentStatus: value, scrollTop: 0 })
+    this.setData({ selectedPaymentStatus: value, scrollTop: 0, isPaymentFilterOpen: false })
     void this.loadOrders(true)
+  },
+
+  togglePaymentFilter() {
+    if (this.data.isLoading || this.data.isLoadingMore) return
+    this.setData({ isPaymentFilterOpen: !this.data.isPaymentFilterOpen })
   },
 
   onKeywordInput(event: WechatMiniprogram.Input) {

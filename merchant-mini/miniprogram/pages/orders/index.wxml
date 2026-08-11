@@ -1,36 +1,70 @@
 <view class="merchant-page-header">
-  <text class="merchant-page-header__eyebrow">门店订单</text>
-  <text class="merchant-page-header__title">订单管理</text>
-  <text class="merchant-page-header__description">查询订单并跟进备货、取货状态</text>
+  <view class="merchant-page-header__copy">
+    <text class="merchant-page-header__eyebrow">门店订单</text>
+    <text class="merchant-page-header__title">订单管理</text>
+  </view>
+  <view
+    class="header-refresh {{isLoading || isSummaryLoading ? 'is-disabled' : ''}}"
+    role="button"
+    aria-label="刷新订单"
+    aria-disabled="{{isLoading || isSummaryLoading}}"
+    bindtap="refresh"
+    hover-class="header-refresh--pressed"
+  >
+    <image class="local-icon local-icon--refresh" src="/assets/icons/refresh-cw.svg" mode="aspectFit" aria-hidden="true" />
+  </view>
+</view>
+
+<view class="order-summary-strip" aria-label="待处理订单概览">
+  <view class="summary-metric" data-status="PENDING_CONFIRMATION" bindtap="onStatusTap">
+    <text class="summary-metric__label">待接单</text>
+    <text class="summary-metric__value">{{pendingCount}}</text>
+  </view>
+  <view class="summary-metric" data-status="PREPARING" bindtap="onStatusTap">
+    <text class="summary-metric__label">备货中</text>
+    <text class="summary-metric__value">{{preparingCount}}</text>
+  </view>
+  <view class="summary-metric" data-status="READY_FOR_PICKUP" bindtap="onStatusTap">
+    <text class="summary-metric__label">待取货</text>
+    <text class="summary-metric__value">{{readyCount}}</text>
+  </view>
 </view>
 
 <view class="page-shell orders-page">
-  <view class="order-filter-panel">
-    <text class="filter-section-label">快速查询</text>
-    <view class="search-card">
-    <text class="search-label">搜索订单</text>
-    <view class="search-row">
+  <view class="search-toolbar">
+    <view class="search-control">
+      <image class="local-icon local-icon--search" src="/assets/icons/search.svg" mode="aspectFit" aria-hidden="true" />
       <input
         class="search-input"
         value="{{draftKeyword}}"
-        placeholder="输入订单号、姓名或手机号"
+        placeholder="订单号、姓名或手机号"
         confirm-type="search"
         aria-label="订单号、姓名或手机号"
         bindinput="onKeywordInput"
         bindconfirm="search"
       />
-      <view
-        class="search-button {{isLoading || isLoadingMore ? 'is-disabled' : ''}}"
-        role="button"
-        aria-disabled="{{isLoading || isLoadingMore}}"
-        bindtap="search"
-        hover-class="search-button--pressed"
-      >查询</view>
     </view>
+    <view
+      class="search-action {{isLoading || isLoadingMore ? 'is-disabled' : ''}}"
+      role="button"
+      aria-disabled="{{isLoading || isLoadingMore}}"
+      bindtap="search"
+      hover-class="control--pressed"
+    >查询</view>
+    <view
+      class="filter-trigger {{isPaymentFilterOpen || selectedPaymentStatus ? 'is-active' : ''}}"
+      role="button"
+      aria-label="付款状态筛选"
+      aria-expanded="{{isPaymentFilterOpen}}"
+      aria-disabled="{{isLoading || isLoadingMore}}"
+      bindtap="togglePaymentFilter"
+      hover-class="control--pressed"
+    >
+      <image class="local-icon local-icon--filter" src="/assets/icons/list-filter.svg" mode="aspectFit" aria-hidden="true" />
     </view>
+  </view>
 
-    <text class="filter-section-label filter-section-label--spaced">订单状态</text>
-    <scroll-view class="status-tabs" scroll-x enhanced show-scrollbar="{{false}}" aria-label="订单状态筛选">
+  <scroll-view class="status-tabs" scroll-x enhanced show-scrollbar="{{false}}" aria-label="订单状态筛选">
     <view class="status-tabs__inner">
       <view
         wx:for="{{statusTabs}}"
@@ -42,12 +76,12 @@
         aria-disabled="{{isLoading || isLoadingMore}}"
         data-status="{{item.value}}"
         bindtap="onStatusTap"
-        hover-class="filter--pressed"
+        hover-class="control--pressed"
       >{{item.label}}</view>
     </view>
-    </scroll-view>
+  </scroll-view>
 
-    <view class="payment-tabs" aria-label="付款状态筛选">
+  <view wx:if="{{isPaymentFilterOpen}}" class="payment-filter-panel" aria-label="付款状态筛选">
     <view
       wx:for="{{paymentTabs}}"
       wx:key="value"
@@ -57,9 +91,8 @@
       aria-disabled="{{isLoading || isLoadingMore}}"
       data-status="{{item.value}}"
       bindtap="onPaymentTap"
-      hover-class="filter--pressed"
+      hover-class="control--pressed"
     >{{item.label}}</view>
-    </view>
   </view>
 
   <view wx:if="{{isLoading && orders.length === 0}}" class="list-state" role="status" aria-live="polite">
@@ -81,30 +114,41 @@
   </view>
 
   <view wx:else class="order-list">
-    <view
-      wx:for="{{orders}}"
-      wx:key="orderNo"
-      class="order-card"
-      role="button"
-      aria-label="订单 {{item.orderNo}}，{{item.statusLabel}}，{{item.paymentLabel}}"
-      data-order-no="{{item.orderNo}}"
-      bindtap="onOrderTap"
-      hover-class="order-card--pressed"
-    >
-      <view class="order-card__top">
-        <view>
-          <text class="order-no">{{item.orderNo}}</text>
+    <view class="order-timeline">
+      <view
+        wx:for="{{orders}}"
+        wx:key="orderNo"
+        class="order-card order-card--{{item.status}}"
+        role="button"
+        aria-label="订单 {{item.orderNo}}，{{item.statusLabel}}，{{item.paymentLabel}}"
+        data-order-no="{{item.orderNo}}"
+        bindtap="onOrderTap"
+        hover-class="order-card--pressed"
+      >
+        <view class="timeline-marker" aria-hidden="true">
+          <image class="local-icon local-icon--marker" src="/assets/icons/circle.svg" mode="aspectFit" />
+        </view>
+        <view class="order-card__top">
+          <view class="order-title-line">
+            <text class="status-badge status-badge--{{item.status}}">{{item.statusLabel}}</text>
+            <text class="order-no">{{item.orderNo}}</text>
+          </view>
           <text class="order-time">{{item.createdAtText}}</text>
         </view>
-        <text class="status-badge status-badge--{{item.status}}">{{item.statusLabel}}</text>
-      </view>
-      <view class="order-customer">
-        <text>{{item.pickupName}}</text>
-        <text>{{item.maskedPhone}}</text>
-      </view>
-      <view class="order-card__bottom">
-        <text class="payment-badge payment-badge--{{item.paymentStatus}}">{{item.paymentLabel}}</text>
-        <text class="order-money">{{item.amountText}}</text>
+        <view class="order-card__body">
+          <view class="order-customer">
+            <text class="customer-name">{{item.pickupName}}</text>
+            <text class="customer-phone">{{item.maskedPhone}}</text>
+          </view>
+          <view class="order-meta">
+            <text>共 {{item.items.length}} 件商品</text>
+            <text class="payment-badge payment-badge--{{item.paymentStatus}}">{{item.paymentLabel}}</text>
+          </view>
+        </view>
+        <view class="order-card__amount">
+          <text class="order-money">{{item.amountText}}</text>
+          <image class="local-icon local-icon--chevron" src="/assets/icons/chevron-right.svg" mode="aspectFit" aria-hidden="true" />
+        </view>
       </view>
     </view>
 
