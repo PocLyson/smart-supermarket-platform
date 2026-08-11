@@ -152,3 +152,85 @@ describe('merchant profile child navigation', () => {
     expect(redirectTo).not.toHaveBeenCalled()
   })
 })
+
+describe('merchant profile logout confirmation', () => {
+  test('asks once before logout and only exits after confirmation', async () => {
+    vi.resetModules()
+    const registerPage = vi.fn()
+    const logoutResult = deferred<void>()
+    const logout = vi.fn().mockReturnValue(logoutResult.promise)
+    let modal: { success(result: { confirm: boolean }): void } | undefined
+    const showModal = vi.fn((options) => { modal = options })
+    const reLaunch = vi.fn()
+    vi.doMock('../miniprogram/services/auth', () => ({
+      merchantAuthService: { logout, unbindWechat: vi.fn() },
+    }))
+    vi.stubGlobal('Page', registerPage)
+    vi.stubGlobal('wx', { showModal, showToast: vi.fn(), reLaunch })
+
+    await import('../miniprogram/pages/profile/index')
+    const definition = registerPage.mock.calls[0][0] as Record<string, unknown> & {
+      logout(): Promise<void>
+    }
+    const context = {
+      ...definition,
+      data: { isLoading: false },
+      setData(values: Record<string, unknown>) {
+        Object.assign(this.data, values)
+      },
+    }
+
+    const firstTap = definition.logout.call(context)
+    const secondTap = definition.logout.call(context)
+
+    expect(showModal).toHaveBeenCalledOnce()
+    expect(logout).not.toHaveBeenCalled()
+    expect(context.data.isLoading).toBe(true)
+
+    modal?.success({ confirm: true })
+    await Promise.resolve()
+    expect(logout).toHaveBeenCalledOnce()
+    logoutResult.resolve()
+    await Promise.all([firstTap, secondTap])
+
+    expect(reLaunch).toHaveBeenCalledWith({ url: '/pages/login/index' })
+    expect(context.data.isLoading).toBe(false)
+  })
+
+  test('keeps the employee signed in when logout is cancelled', async () => {
+    vi.resetModules()
+    const registerPage = vi.fn()
+    const logout = vi.fn()
+    let modal: { success(result: { confirm: boolean }): void } | undefined
+    const reLaunch = vi.fn()
+    vi.doMock('../miniprogram/services/auth', () => ({
+      merchantAuthService: { logout, unbindWechat: vi.fn() },
+    }))
+    vi.stubGlobal('Page', registerPage)
+    vi.stubGlobal('wx', {
+      showModal: vi.fn((options) => { modal = options }),
+      showToast: vi.fn(),
+      reLaunch,
+    })
+
+    await import('../miniprogram/pages/profile/index')
+    const definition = registerPage.mock.calls[0][0] as Record<string, unknown> & {
+      logout(): Promise<void>
+    }
+    const context = {
+      ...definition,
+      data: { isLoading: false },
+      setData(values: Record<string, unknown>) {
+        Object.assign(this.data, values)
+      },
+    }
+
+    const pending = definition.logout.call(context)
+    modal?.success({ confirm: false })
+    await pending
+
+    expect(logout).not.toHaveBeenCalled()
+    expect(reLaunch).not.toHaveBeenCalled()
+    expect(context.data.isLoading).toBe(false)
+  })
+})
