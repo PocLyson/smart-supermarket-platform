@@ -49,7 +49,7 @@
           </view>
           <text class="priority-row__label">{{item.label}}</text>
           <text class="priority-row__count priority-row__count--{{item.tone}}">{{item.count}}笔</text>
-          <view wx:if="{{index === 0}}" class="priority-row__button">
+          <view wx:if="{{index === 0 && item.count > 0}}" class="priority-row__button">
             <text>立即处理</text><text class="priority-row__button-arrow">›</text>
           </view>
           <text wx:else class="priority-row__arrow">›</text>

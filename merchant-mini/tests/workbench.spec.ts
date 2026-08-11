@@ -83,6 +83,15 @@ describe('merchant workbench presentation', () => {
     expect(markup).toContain('bindtap="onAllOrdersTap"')
   })
 
+  test('only shows the immediate-action button when pending orders exist', () => {
+    const markup = readFileSync(
+      resolve('miniprogram/pages/workbench/index.wxml'),
+      'utf8',
+    )
+
+    expect(markup).toContain('wx:if="{{index === 0 && item.count > 0}}"')
+  })
+
   test('keeps the custom header content below the WeChat capsule on device', () => {
     const styles = readFileSync(
       resolve('miniprogram/pages/workbench/index.wxss'),
