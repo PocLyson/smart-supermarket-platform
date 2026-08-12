@@ -1,7 +1,14 @@
 <view class="merchant-page-header profile-security-header">
   <view class="profile-security-header__copy">
     <text class="profile-security-header__title">我的</text>
+    <view class="profile-security-header__subtitle">
+      <image class="profile-security-header__subtitle-icon" src="/assets/icons/shield-check.svg" mode="aspectFit" aria-hidden="true" />
+      <text>安全管理</text>
+      <text class="profile-security-header__subtitle-divider">·</text>
+      <text>保护账号</text>
+    </view>
   </view>
+  <image class="profile-security-header__shield" src="/assets/icons/shield-check.svg" mode="aspectFit" aria-hidden="true" />
 </view>
 
 <view class="page-shell profile-page" wx:if="{{session}}">

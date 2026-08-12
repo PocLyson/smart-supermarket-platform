@@ -62,7 +62,7 @@ describe('merchant top-level page presentation', () => {
     expect(markup).not.toContain('state-icon__dot')
   })
 
-  test('profile uses a compact title header without duplicated security messaging', () => {
+  test('profile matches the selected layered security layout', () => {
     const markup = pageSource('profile', 'wxml')
     const styles = pageSource('profile', 'wxss')
 
@@ -76,15 +76,11 @@ describe('merchant top-level page presentation', () => {
     expect(markup).not.toContain('管理微信绑定')
     expect(markup).not.toContain('bindtap="confirmUnbind"')
     expect(markup).not.toContain('bindtap="logout"')
-    expect(markup).not.toContain('安全管理')
-    expect(markup).not.toContain('保护账号')
-    expect(markup).not.toContain('profile-security-header__subtitle')
-    expect(markup).not.toContain('profile-security-header__shield')
+    expect(markup).toContain('/assets/icons/shield-check.svg')
     expect(markup).not.toContain('/assets/icons/info.svg')
     expect(markup).not.toContain('<employee-header')
     expect(markup).not.toContain('shortcut-chevron')
-    expect(styles).toMatch(/\.merchant-page-header\s*\{[^}]*min-height:\s*300rpx/s)
-    expect(styles).toMatch(/\.profile-identity-card\s*\{[^}]*margin:\s*-68rpx/s)
+    expect(styles).toMatch(/\.profile-identity-card\s*\{[^}]*margin:\s*-96rpx/s)
     expect(styles).toMatch(/\.profile-identity-card\s*\{[^}]*position:\s*relative[^}]*z-index:\s*1/s)
   })
 
