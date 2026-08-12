@@ -167,7 +167,8 @@ describe('customer support chat page contract', () => {
     const markup = read('pages/support-chat/index.wxml')
     const style = read('pages/support-chat/index.wxss')
 
-    expect(markup).toContain('class="send-action {{!draft || sending ? \'is-disabled\' : \'\'}}"')
+    expect(markup).toContain('class="send-action {{!draft || sending ? \'send-action--disabled\' : \'\'}}"')
+    expect(markup).not.toContain("sending ? 'is-disabled'")
     expect(markup).toContain('aria-disabled="{{!draft || sending}}"')
     expect(markup).not.toContain('<button class="send-button"')
     expect(declarationsFor(style, '.composer-row')).toMatchObject({ gap: '12rpx' })

@@ -35,7 +35,7 @@
     <view class="composer-row">
       <textarea class="composer-input" value="{{draft}}" maxlength="500" auto-height fixed placeholder="输入消息" bindinput="onDraftInput" />
       <view
-        class="send-action {{!draft || sending ? 'is-disabled' : ''}}"
+        class="send-action {{!draft || sending ? 'send-action--disabled' : ''}}"
         role="button"
         aria-label="{{sending ? '正在发送' : '发送消息'}}"
         aria-disabled="{{!draft || sending}}"

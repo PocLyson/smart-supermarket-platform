@@ -197,11 +197,11 @@
   opacity: 0.86;
 }
 
-.send-action.is-disabled {
+.send-action--disabled {
   color: var(--color-disabled-text);
 }
 
-.send-action.is-disabled .send-button__visual {
+.send-action--disabled .send-button__visual {
   background: var(--color-disabled-bg);
   opacity: 1;
 }
