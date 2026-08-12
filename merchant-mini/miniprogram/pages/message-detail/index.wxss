@@ -21,9 +21,9 @@
 .reply-composer { padding: 16rpx 24rpx calc(16rpx + env(safe-area-inset-bottom)); border-top: 2rpx solid var(--color-divider); background: #FFFFFF; }
 .reply-row { display: flex; align-items: flex-end; gap: 12rpx; }
 .reply-input { box-sizing: border-box; min-height: 88rpx; max-height: 192rpx; padding: 20rpx 24rpx; border: 2rpx solid var(--color-border-control); border-radius: 24rpx; background: var(--color-bg-subtle); flex: 1; }
-.reply-button { display: flex; width: 108rpx; min-width: 108rpx; min-height: 88rpx; margin: 0; padding: 0 4rpx; border: 0; background: transparent; color: #FFFFFF; flex: none; align-items: flex-end; justify-content: center; }
-.reply-button::after { border: 0; }
+.reply-action { display: flex; box-sizing: border-box; width: 108rpx; min-width: 108rpx; min-height: 88rpx; color: #FFFFFF; flex: none; align-items: flex-end; justify-content: center; }
 .reply-button__visual { display: flex; box-sizing: border-box; width: 100rpx; height: 76rpx; border-radius: 20rpx; background: var(--primary-600); font-size: 26rpx; align-items: center; justify-content: center; }
-.reply-button[disabled] { background: transparent; color: var(--color-disabled-text); }
-.reply-button[disabled] .reply-button__visual { background: var(--color-disabled-bg); }
+.reply-action:active .reply-button__visual { opacity: .86; }
+.reply-action.is-disabled { color: var(--color-disabled-text); }
+.reply-action.is-disabled .reply-button__visual { background: var(--color-disabled-bg); opacity: 1; }
 .reply-error { padding: 0 16rpx 12rpx; color: var(--color-error-text); font-size: var(--type-caption-size); }

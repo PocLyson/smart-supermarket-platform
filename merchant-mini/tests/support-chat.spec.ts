@@ -110,12 +110,17 @@ describe('merchant message center contract', () => {
   })
 
   it('bottom-aligns a compact send control while retaining a safe touch target', () => {
+    const template = read('pages/message-detail/index.wxml')
     const style = read('pages/message-detail/index.wxss')
 
+    expect(template).toContain('class="reply-action {{!draft || sending ? \'is-disabled\' : \'\'}}"')
+    expect(template).toContain('role="button"')
+    expect(template).toContain('aria-disabled="{{!draft || sending}}"')
+    expect(template).not.toContain('<button class="reply-button"')
     expect(declarationsFor(style, '.reply-row')).toMatchObject({
       gap: '12rpx',
     })
-    expect(declarationsFor(style, '.reply-button')).toMatchObject({
+    expect(declarationsFor(style, '.reply-action')).toMatchObject({
       width: '108rpx',
       'min-width': '108rpx',
       'min-height': '88rpx',
