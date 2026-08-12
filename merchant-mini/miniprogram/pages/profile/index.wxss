@@ -75,7 +75,7 @@
   margin: -96rpx 0 0;
   padding: 40rpx 32rpx;
   align-items: center;
-  grid-template-columns: 144rpx minmax(0, 1fr) 48rpx;
+  grid-template-columns: 144rpx minmax(0, 1fr);
   border: var(--border-width-default) solid rgba(13, 27, 54, 0.04);
   border-radius: 40rpx;
   background: var(--color-bg-surface);
@@ -83,7 +83,6 @@
   gap: var(--space-4);
 }
 
-.profile-card--pressed,
 .profile-account-row--pressed {
   opacity: 0.76;
 }
@@ -152,10 +151,6 @@
 .profile-row-chevron {
   width: 40rpx;
   height: 40rpx;
-}
-
-.profile-row-chevron--identity {
-  justify-self: end;
 }
 
 .profile-account-card {

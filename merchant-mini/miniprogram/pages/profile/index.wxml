@@ -14,11 +14,7 @@
 <view class="page-shell profile-page" wx:if="{{session}}">
   <view
     class="profile-identity-card"
-    role="button"
-    aria-label="员工账号 {{session.username}}，进入账号与微信"
-    data-id="account"
-    bindtap="onShortcutTap"
-    hover-class="profile-card--pressed"
+    aria-label="员工账号 {{session.username}}，{{session.role === 'OWNER' ? '老板' : '收银员'}}"
   >
     <view class="profile-avatar" aria-hidden="true">
       <image class="profile-avatar__image" src="/assets/icons/profile.svg" mode="aspectFit" />
@@ -31,7 +27,6 @@
         <text>微信已绑定</text>
       </view>
     </view>
-    <image class="profile-row-chevron profile-row-chevron--identity" src="/assets/icons/chevron-right.svg" mode="aspectFit" aria-hidden="true" />
   </view>
 
   <view class="profile-account-card">

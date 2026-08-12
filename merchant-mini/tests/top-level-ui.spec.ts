@@ -68,6 +68,8 @@ describe('merchant top-level page presentation', () => {
 
     expect(markup).toMatch(/class="[^"]*\bprofile-security-header\b[^"]*"/)
     expect(markup).toContain('class="profile-identity-card"')
+    expect(markup).not.toContain('profile-row-chevron--identity')
+    expect(markup).not.toContain('hover-class="profile-card--pressed"')
     expect(markup).toContain('微信已绑定')
     expect(markup).toContain('class="profile-account-card"')
     expect(markup).not.toContain('class="security-notice"')
