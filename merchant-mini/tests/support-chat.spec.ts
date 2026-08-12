@@ -10,7 +10,7 @@ const read = (path: string) => readFileSync(resolve(root, path), 'utf8')
 describe('merchant support service', () => {
   it('uses protected conversation, message, reply, and read endpoints', async () => {
     const client = {
-      get: vi.fn().mockResolvedValue({ content: [] }),
+      get: vi.fn().mockResolvedValue({ items: [], total: 0, page: 0, size: 20 }),
       post: vi.fn().mockResolvedValue({ id: 1 }),
     }
     const service = createMerchantSupportService(client)
@@ -57,6 +57,7 @@ describe('merchant message center contract', () => {
     expect(detail).toContain('订单 {{item.orderNo}}')
     expect(style).toContain('env(safe-area-inset-bottom)')
     expect(style).toContain('min-height: 88rpx')
+    expect(read('pages/messages/index.ts')).toContain('result.items.map(present)')
   })
 
   it('lets the workbench waiting metric open the inbox', () => {

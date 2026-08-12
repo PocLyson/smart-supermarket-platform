@@ -61,7 +61,7 @@ Page({
       const result = await merchantSupportService.list(0, 50)
       if (generation !== this.refreshGeneration) return
       this.setData({
-        conversations: result.content.map(present),
+        conversations: result.items.map(present),
         hasLoaded: true,
         errorMessage: '',
       })

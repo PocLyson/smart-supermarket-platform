@@ -11,10 +11,10 @@ export interface MerchantSupportConversation {
 }
 
 export interface MerchantSupportConversationPage {
-  content: MerchantSupportConversation[]
-  totalElements: number
-  totalPages: number
-  number: number
+  items: MerchantSupportConversation[]
+  total: number
+  page: number
+  size: number
 }
 
 export interface MerchantSupportMessage {
