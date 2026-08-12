@@ -6,6 +6,20 @@ import { NAV_ITEMS } from '../miniprogram/components/app-tab-bar/navigation'
 
 const root = resolve(__dirname, '..', 'miniprogram')
 const read = (path: string) => readFileSync(resolve(root, path), 'utf8')
+const declarationsFor = (css: string, selector: string): Record<string, string> => {
+  const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const block = css.match(new RegExp(`${escapedSelector}\\s*\\{([^}]*)\\}`))?.[1] || ''
+  return Object.fromEntries(
+    block
+      .split(';')
+      .map((declaration) => declaration.trim())
+      .filter(Boolean)
+      .map((declaration) => {
+        const separator = declaration.indexOf(':')
+        return [declaration.slice(0, separator).trim(), declaration.slice(separator + 1).trim()]
+      }),
+  )
+}
 
 describe('merchant support service', () => {
   it('uses protected conversation, message, reply, and read endpoints', async () => {
@@ -92,8 +106,25 @@ describe('merchant message center contract', () => {
     expect(style).toContain('env(safe-area-inset-bottom)')
     expect(style).toContain('min-height: 88rpx')
     expect(detail).toContain('reply-button__visual')
-    expect(style).toContain('height: 68rpx')
     expect(read('pages/messages/index.ts')).toContain('result.items.map(present)')
+  })
+
+  it('bottom-aligns a compact send control while retaining a safe touch target', () => {
+    const style = read('pages/message-detail/index.wxss')
+
+    expect(declarationsFor(style, '.reply-row')).toMatchObject({
+      gap: '12rpx',
+    })
+    expect(declarationsFor(style, '.reply-button')).toMatchObject({
+      'min-width': '108rpx',
+      'min-height': '88rpx',
+      'align-items': 'flex-end',
+    })
+    expect(declarationsFor(style, '.reply-button__visual')).toMatchObject({
+      width: '100rpx',
+      height: '76rpx',
+      'border-radius': '20rpx',
+    })
   })
 
   it('lets the workbench waiting metric open the inbox', () => {
