@@ -13,6 +13,7 @@
     "pages/legal/index",
     "pages/orders/index",
     "pages/order-detail/index",
+    "pages/support-chat/index",
     "pages/settings/index",
     "pages/pickup-info/index",
     "pages/profile/index"

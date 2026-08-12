@@ -125,4 +125,10 @@ Page({
   onCallStore() {
     void callStorePhone(this.data.storeContact.phone)
   },
+
+  onContactStore() {
+    wx.navigateTo({
+      url: `/pages/support-chat/index?orderNo=${encodeURIComponent(this.data.orderNo)}`,
+    })
+  },
 })

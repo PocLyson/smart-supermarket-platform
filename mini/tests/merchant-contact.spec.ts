@@ -99,10 +99,11 @@ describe('merchant contact page markup', () => {
   it.each([
     'pages/profile/index.wxml',
     'pages/order-detail/index.wxml',
-  ])('%s offers native online support and a phone action', (page) => {
+  ])('%s offers self-built online support and a phone action', (page) => {
     const markup = read(page)
 
-    expect(markup.match(/open-type="contact"/g)).toHaveLength(1)
+    expect(markup).not.toContain('open-type="contact"')
+    expect(markup.match(/bindtap="onContactStore"/g)).toHaveLength(1)
     expect(markup.match(/bindtap="onCallStore"/g)).toHaveLength(1)
   })
 })

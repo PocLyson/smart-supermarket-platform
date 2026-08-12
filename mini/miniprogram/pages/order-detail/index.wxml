@@ -38,7 +38,7 @@
     <view class="card merchant-contact-card">
       <view class="section-title">联系商家</view>
       <view class="merchant-contact-actions">
-        <button wx:if="{{storeContact.customerServiceEnabled}}" class="merchant-contact-button is-secondary" open-type="contact">联系在线客服</button>
+        <button class="merchant-contact-button is-secondary" bindtap="onContactStore">联系在线客服</button>
         <button class="merchant-contact-button is-primary" bindtap="onCallStore">拨打门店电话</button>
       </view>
     </view>

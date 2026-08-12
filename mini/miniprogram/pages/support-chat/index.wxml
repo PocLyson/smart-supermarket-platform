@@ -1,0 +1,40 @@
+<view class="support-page">
+  <view class="support-header">
+    <text class="support-title">联系门店</text>
+    <text class="support-subtitle">鲁能超市李老家分店</text>
+    <text class="support-hours">门店员工将在营业时间内回复</text>
+  </view>
+
+  <scroll-view class="message-scroll" scroll-y scroll-with-animation scroll-into-view="{{scrollIntoView}}">
+    <view wx:if="{{loading && !messages.length}}" class="chat-state">正在连接门店...</view>
+    <view wx:elif="{{error && !messages.length}}" class="chat-state" role="alert">
+      <text>消息加载失败</text>
+      <button class="button-secondary retry-button" bindtap="onRetry">重新加载</button>
+    </view>
+    <view wx:elif="{{!messages.length}}" class="welcome-card">
+      <text class="welcome-title">您好，需要什么帮助？</text>
+      <text class="welcome-copy">可以咨询订单、取货时间或门店服务，工作人员看到后会回复。</text>
+    </view>
+
+    <view wx:for="{{messages}}" wx:key="id" id="message-{{item.id}}" class="message-row {{item.isMine ? 'is-mine' : 'is-store'}}">
+      <view class="message-stack">
+        <text class="message-sender">{{item.isMine ? '我' : '门店'}}</text>
+        <view class="message-bubble">
+          <view wx:if="{{item.orderNo}}" class="order-chip">订单 {{item.orderNo}}</view>
+          <text class="message-content">{{item.content}}</text>
+        </view>
+        <text class="message-time">{{item.displayTime}}</text>
+      </view>
+    </view>
+    <view class="scroll-spacer"></view>
+  </scroll-view>
+
+  <view class="composer">
+    <view wx:if="{{orderNo}}" class="composer-order">关联订单 {{orderNo}}</view>
+    <view wx:if="{{error && messages.length}}" class="send-error" role="alert">{{error}}</view>
+    <view class="composer-row">
+      <textarea class="composer-input" value="{{draft}}" maxlength="500" auto-height fixed placeholder="输入消息" bindinput="onDraftInput" />
+      <button class="send-button" disabled="{{!draft || sending}}" loading="{{sending}}" bindtap="onSend">发送</button>
+    </view>
+  </view>
+</view>

@@ -110,6 +110,14 @@ Page({
     void callStorePhone(this.data.storeContact.phone)
   },
 
+  onContactStore() {
+    if (!sessionStore.current()) {
+      this.onLogin()
+      return
+    }
+    wx.navigateTo({ url: '/pages/support-chat/index' })
+  },
+
   onRetry() {
     void this.loadProfile()
   },
