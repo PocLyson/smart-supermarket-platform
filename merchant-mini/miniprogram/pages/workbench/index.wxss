@@ -126,15 +126,12 @@
   min-height: 132rpx;
   padding: 22rpx 24rpx;
   border-bottom: 2rpx solid var(--color-divider);
+  background: var(--color-bg-surface);
   gap: 22rpx;
 }
 
 .priority-row:last-child {
   border-bottom: 0;
-}
-
-.priority-row--urgent {
-  background: #FFF6F6;
 }
 
 .priority-row--pressed,

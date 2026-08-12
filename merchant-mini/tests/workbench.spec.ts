@@ -92,6 +92,16 @@ describe('merchant workbench presentation', () => {
     expect(markup).toContain('wx:if="{{index === 0 && item.count > 0}}"')
   })
 
+  test('uses one white background for every priority order row', () => {
+    const styles = readFileSync(
+      resolve('miniprogram/pages/workbench/index.wxss'),
+      'utf8',
+    )
+
+    expect(styles).toMatch(/\.priority-row\s*\{[^}]*background:\s*var\(--color-bg-surface\);/s)
+    expect(styles).not.toMatch(/\.priority-row--urgent\s*\{/)
+  })
+
   test('keeps the custom header content below the WeChat capsule on device', () => {
     const styles = readFileSync(
       resolve('miniprogram/pages/workbench/index.wxss'),
