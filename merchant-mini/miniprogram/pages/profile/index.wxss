@@ -2,9 +2,9 @@
   position: relative;
   overflow: hidden;
   box-sizing: border-box;
-  min-height: 410rpx;
-  padding: calc(118rpx + env(safe-area-inset-top)) 48rpx 128rpx;
-  border-radius: 0 0 72rpx 72rpx;
+  min-height: 300rpx;
+  padding: calc(118rpx + env(safe-area-inset-top)) 48rpx 96rpx;
+  border-radius: 0 0 56rpx 56rpx;
   background: var(--primary-600);
   color: var(--color-bg-surface);
 }
@@ -15,7 +15,6 @@
 }
 
 .profile-security-header__title,
-.profile-security-header__subtitle,
 .profile-identity-card__name,
 .profile-identity-card__role,
 .profile-account-row__title,
@@ -27,36 +26,6 @@
   font-size: 64rpx;
   font-weight: var(--weight-bold);
   line-height: 1.15;
-}
-
-.profile-security-header__subtitle {
-  display: flex;
-  margin-top: var(--space-3);
-  align-items: center;
-  color: rgba(255, 255, 255, 0.82);
-  font-size: var(--type-body-size);
-  gap: var(--space-2);
-}
-
-.profile-security-header__subtitle-icon {
-  width: 36rpx;
-  height: 36rpx;
-  filter: brightness(0) invert(1);
-  opacity: 0.82;
-}
-
-.profile-security-header__subtitle-divider {
-  opacity: 0.56;
-}
-
-.profile-security-header__shield {
-  position: absolute;
-  right: 58rpx;
-  bottom: 128rpx;
-  width: 124rpx;
-  height: 124rpx;
-  filter: brightness(0) invert(1);
-  opacity: 0.26;
 }
 
 .profile-page {
@@ -72,7 +41,7 @@
   z-index: 1;
   display: grid;
   min-height: 250rpx;
-  margin: -96rpx 0 0;
+  margin: -68rpx 0 0;
   padding: 40rpx 32rpx;
   align-items: center;
   grid-template-columns: 144rpx minmax(0, 1fr);
