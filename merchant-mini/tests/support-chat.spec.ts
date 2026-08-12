@@ -116,8 +116,10 @@ describe('merchant message center contract', () => {
       gap: '12rpx',
     })
     expect(declarationsFor(style, '.reply-button')).toMatchObject({
+      width: '108rpx',
       'min-width': '108rpx',
       'min-height': '88rpx',
+      flex: 'none',
       'align-items': 'flex-end',
     })
     expect(declarationsFor(style, '.reply-button__visual')).toMatchObject({
