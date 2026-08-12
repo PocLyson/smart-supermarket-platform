@@ -84,9 +84,7 @@
 }
 
 .profile-card--pressed,
-.profile-account-row--pressed,
-.manage-binding-button--pressed,
-.logout-action--pressed {
+.profile-account-row--pressed {
   opacity: 0.76;
 }
 
@@ -224,25 +222,4 @@
   color: var(--color-success-text);
   font-size: var(--type-body-size);
   font-weight: var(--weight-medium);
-}
-
-.logout-action.is-disabled {
-  opacity: 0.45;
-}
-
-.logout-action {
-  display: flex;
-  min-height: var(--size-touch-min);
-  margin: var(--space-1) auto 0;
-  padding: 0 var(--space-4);
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-secondary);
-  font-size: var(--type-body-size);
-  gap: var(--space-1);
-}
-
-.logout-action__chevron {
-  width: 36rpx;
-  height: 36rpx;
 }

@@ -153,7 +153,7 @@ describe('merchant profile child navigation', () => {
   })
 })
 
-describe('merchant profile logout confirmation', () => {
+describe('merchant account and WeChat logout confirmation', () => {
   test('asks once before logout and only exits after confirmation', async () => {
     vi.resetModules()
     const registerPage = vi.fn()
@@ -168,13 +168,13 @@ describe('merchant profile logout confirmation', () => {
     vi.stubGlobal('Page', registerPage)
     vi.stubGlobal('wx', { showModal, showToast: vi.fn(), reLaunch })
 
-    await import('../miniprogram/pages/profile/index')
+    await import('../miniprogram/pages/account-wechat/index')
     const definition = registerPage.mock.calls[0][0] as Record<string, unknown> & {
       logout(): Promise<void>
     }
     const context = {
       ...definition,
-      data: { isLoading: false },
+      data: { isLoading: false, isUnbinding: false },
       setData(values: Record<string, unknown>) {
         Object.assign(this.data, values)
       },
@@ -213,13 +213,13 @@ describe('merchant profile logout confirmation', () => {
       reLaunch,
     })
 
-    await import('../miniprogram/pages/profile/index')
+    await import('../miniprogram/pages/account-wechat/index')
     const definition = registerPage.mock.calls[0][0] as Record<string, unknown> & {
       logout(): Promise<void>
     }
     const context = {
       ...definition,
-      data: { isLoading: false },
+      data: { isLoading: false, isUnbinding: false },
       setData(values: Record<string, unknown>) {
         Object.assign(this.data, values)
       },

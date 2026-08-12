@@ -84,17 +84,6 @@
     </view>
   </view>
 
-  <view
-    class="logout-action {{isLoading ? 'is-disabled' : ''}}"
-    role="button"
-    aria-label="退出登录"
-    aria-disabled="{{isLoading}}"
-    bindtap="logout"
-    hover-class="logout-action--pressed"
-  >
-    <text>{{isLoading ? '退出中…' : '退出登录'}}</text>
-    <image class="logout-action__chevron" src="/assets/icons/chevron-right.svg" mode="aspectFit" aria-hidden="true" />
-  </view>
 </view>
 
 <app-tab-bar value="profile" />

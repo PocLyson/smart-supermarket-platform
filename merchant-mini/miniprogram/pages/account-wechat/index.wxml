@@ -49,4 +49,16 @@
   <view wx:if="{{errorMessage}}" class="feedback-error" role="alert" aria-live="polite">
     <text>{{errorMessage}}</text>
   </view>
+
+  <view
+    class="logout-action {{isLoading || isUnbinding ? 'is-disabled' : ''}}"
+    role="button"
+    aria-label="退出登录"
+    aria-disabled="{{isLoading || isUnbinding}}"
+    bindtap="logout"
+    hover-class="logout-action--pressed"
+  >
+    <text>{{isLoading ? '退出中…' : '退出登录'}}</text>
+    <image class="logout-action__chevron" src="/assets/icons/chevron-right.svg" mode="aspectFit" aria-hidden="true" />
+  </view>
 </view>
