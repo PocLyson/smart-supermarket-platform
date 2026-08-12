@@ -87,6 +87,7 @@ npm --prefix merchant-mini run typecheck
 - [域名、备案与微信体验版](docs/operations/domain-and-wechat-trial.md)
 - [备份与恢复](docs/operations/backup-and-restore.md)
 - [商家小程序本地与真机测试指南](docs/operations/merchant-mini-local-testing.md)
+- [顾客与门店消息本地验收](docs/operations/customer-support-chat-local-acceptance.md)
 - [试运营验收](docs/operations/trial-acceptance.md)
 
 真实生产配置必须先运行就绪检查，再渲染 Compose：
