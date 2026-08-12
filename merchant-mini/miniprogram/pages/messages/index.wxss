@@ -14,7 +14,7 @@
 .merchant-page-header__description { margin-top: 8rpx; font-size: var(--type-helper-size); opacity: 0.8; }
 .messages-page { min-height: calc(100vh - 260rpx); padding: 24rpx 16rpx calc(176rpx + env(safe-area-inset-bottom)); }
 .conversation-list { overflow: hidden; border: 2rpx solid var(--color-divider); border-radius: var(--radius-xl); background: #FFFFFF; }
-.conversation-row { position: relative; display: flex; min-height: 176rpx; padding: var(--space-4); border-bottom: 2rpx solid var(--color-divider); align-items: center; gap: var(--space-3); }
+.conversation-row { position: relative; display: flex; box-sizing: border-box; min-height: 144rpx; padding: 20rpx 24rpx; border-bottom: 2rpx solid var(--color-divider); align-items: center; gap: var(--space-3); }
 .conversation-row:last-child { border-bottom: 0; }
 .conversation-row--pressed { background: var(--primary-50); }
 .conversation-avatar { display: flex; width: 80rpx; height: 80rpx; flex: none; border-radius: var(--radius-round); background: var(--primary-100); align-items: center; justify-content: center; }

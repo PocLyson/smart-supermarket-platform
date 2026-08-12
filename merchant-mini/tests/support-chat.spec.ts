@@ -134,6 +134,16 @@ describe('merchant message center contract', () => {
     })
   })
 
+  it('keeps each conversation row compact without shrinking its touch content', () => {
+    const style = read('pages/messages/index.wxss')
+
+    expect(declarationsFor(style, '.conversation-row')).toMatchObject({
+      'box-sizing': 'border-box',
+      'min-height': '144rpx',
+      padding: '20rpx 24rpx',
+    })
+  })
+
   it('lets the workbench waiting metric open the inbox', () => {
     expect(read('pages/workbench/index.wxml')).toContain('bindtap="onMessagesTap"')
     expect(read('pages/workbench/index.ts')).toContain("'/pages/messages/index'")
