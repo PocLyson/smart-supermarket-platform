@@ -24,7 +24,7 @@
 }
 
 .profile-security-header__title {
-  font-size: 64rpx;
+  font-size: 52rpx;
   font-weight: var(--weight-bold);
   line-height: 1.15;
 }
