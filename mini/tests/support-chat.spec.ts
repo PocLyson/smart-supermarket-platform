@@ -6,6 +6,20 @@ import { createSupportPoller } from '../miniprogram/utils/support-poller'
 
 const root = resolve(__dirname, '..', 'miniprogram')
 const read = (path: string) => readFileSync(resolve(root, path), 'utf8')
+const declarationsFor = (css: string, selector: string): Record<string, string> => {
+  const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const block = css.match(new RegExp(`${escapedSelector}\\s*\\{([^}]*)\\}`))?.[1] || ''
+  return Object.fromEntries(
+    block
+      .split(';')
+      .map((declaration) => declaration.trim())
+      .filter(Boolean)
+      .map((declaration) => {
+        const separator = declaration.indexOf(':')
+        return [declaration.slice(0, separator).trim(), declaration.slice(separator + 1).trim()]
+      }),
+  )
+}
 
 describe('customer support chat service', () => {
   it('uses authenticated customer endpoints and an idempotent client message id', async () => {
@@ -147,6 +161,31 @@ describe('customer support chat page contract', () => {
     expect(style).toContain('var(--primary-600)')
     expect(style).toContain('env(safe-area-inset-bottom)')
     expect(style).toContain('min-height: 88rpx')
+  })
+
+  it('matches the merchant composer with equal-height compact controls', () => {
+    const markup = read('pages/support-chat/index.wxml')
+    const style = read('pages/support-chat/index.wxss')
+
+    expect(markup).toContain('class="send-action {{!draft || sending ? \'is-disabled\' : \'\'}}"')
+    expect(markup).toContain('aria-disabled="{{!draft || sending}}"')
+    expect(markup).not.toContain('<button class="send-button"')
+    expect(declarationsFor(style, '.composer-row')).toMatchObject({ gap: '12rpx' })
+    expect(declarationsFor(style, '.composer-input')).toMatchObject({
+      'min-height': '88rpx',
+      'border-radius': '24rpx',
+    })
+    expect(declarationsFor(style, '.send-action')).toMatchObject({
+      width: '108rpx',
+      'min-width': '108rpx',
+      'min-height': '88rpx',
+      flex: 'none',
+    })
+    expect(declarationsFor(style, '.send-button__visual')).toMatchObject({
+      width: '100rpx',
+      height: '88rpx',
+      'border-radius': '24rpx',
+    })
   })
 
   it('replaces native contact buttons with the authenticated self-built chat entry', () => {

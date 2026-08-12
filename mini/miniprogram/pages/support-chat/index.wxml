@@ -34,7 +34,15 @@
     <view wx:if="{{error && messages.length}}" class="send-error" role="alert">{{error}}</view>
     <view class="composer-row">
       <textarea class="composer-input" value="{{draft}}" maxlength="500" auto-height fixed placeholder="输入消息" bindinput="onDraftInput" />
-      <button class="send-button" disabled="{{!draft || sending}}" loading="{{sending}}" bindtap="onSend">发送</button>
+      <view
+        class="send-action {{!draft || sending ? 'is-disabled' : ''}}"
+        role="button"
+        aria-label="{{sending ? '正在发送' : '发送消息'}}"
+        aria-disabled="{{!draft || sending}}"
+        bindtap="onSend"
+      >
+        <view class="send-button__visual">{{sending ? '发送中' : '发送'}}</view>
+      </view>
     </view>
   </view>
 </view>
