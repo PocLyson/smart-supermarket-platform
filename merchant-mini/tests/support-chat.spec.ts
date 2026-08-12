@@ -129,8 +129,8 @@ describe('merchant message center contract', () => {
     })
     expect(declarationsFor(style, '.reply-button__visual')).toMatchObject({
       width: '100rpx',
-      height: '76rpx',
-      'border-radius': '20rpx',
+      height: '88rpx',
+      'border-radius': '24rpx',
     })
   })
 
