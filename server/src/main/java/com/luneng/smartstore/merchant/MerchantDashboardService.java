@@ -5,6 +5,7 @@ import com.luneng.smartstore.order.AdminOrderService;
 import com.luneng.smartstore.order.AdminOrderView;
 import com.luneng.smartstore.order.OrderRepository;
 import com.luneng.smartstore.order.OrderStatus;
+import com.luneng.smartstore.support.SupportConversationRepository;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -18,15 +19,18 @@ public class MerchantDashboardService {
     private final OrderRepository orderRepository;
     private final AdminOrderService adminOrders;
     private final InventoryService inventoryService;
+    private final SupportConversationRepository supportConversations;
 
     public MerchantDashboardService(
         OrderRepository orderRepository,
         AdminOrderService adminOrders,
-        InventoryService inventoryService
+        InventoryService inventoryService,
+        SupportConversationRepository supportConversations
     ) {
         this.orderRepository = orderRepository;
         this.adminOrders = adminOrders;
         this.inventoryService = inventoryService;
+        this.supportConversations = supportConversations;
     }
 
     @Transactional(readOnly = true)
@@ -45,7 +49,14 @@ public class MerchantDashboardService {
         List<AdminOrderView> latestOrders = adminOrders.list(
             null, null, "", false, 0, LATEST_ORDER_LIMIT
         ).getContent();
-        return new DashboardView(orderCounts, lowStockCount, 0, latestOrders);
+        long waitingConversationCount =
+            supportConversations.countByMerchantUnreadCountGreaterThan(0);
+        return new DashboardView(
+            orderCounts,
+            lowStockCount,
+            waitingConversationCount,
+            latestOrders
+        );
     }
 
     public record DashboardView(

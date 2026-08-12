@@ -78,12 +78,12 @@ public class SupportConversation {
         }
     }
 
-    public void markCustomerRead() {
-        customerUnreadCount = 0;
+    public void markCustomerRead(int remainingUnreadCount) {
+        customerUnreadCount = remainingUnreadCount;
     }
 
-    public void markMerchantRead() {
-        merchantUnreadCount = 0;
+    public void markMerchantRead(int remainingUnreadCount) {
+        merchantUnreadCount = remainingUnreadCount;
     }
 
     public Long getId() {

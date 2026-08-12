@@ -23,4 +23,12 @@ public interface SupportMessageRepository extends JpaRepository<SupportMessage, 
         long conversationId,
         Pageable pageable
     );
+
+    boolean existsByIdAndConversationId(long id, long conversationId);
+
+    long countByConversationIdAndSenderTypeAndIdGreaterThan(
+        long conversationId,
+        SupportSenderType senderType,
+        long afterId
+    );
 }

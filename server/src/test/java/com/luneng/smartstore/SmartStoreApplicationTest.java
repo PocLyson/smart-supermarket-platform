@@ -14,6 +14,8 @@ import com.luneng.smartstore.order.OrderApplicationService;
 import com.luneng.smartstore.order.OrderRepository;
 import com.luneng.smartstore.staff.StaffAccountRepository;
 import com.luneng.smartstore.staff.StaffManagementService;
+import com.luneng.smartstore.support.SupportChatService;
+import com.luneng.smartstore.support.SupportConversationRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -74,6 +76,12 @@ class SmartStoreApplicationTest {
 
     @MockitoBean
     private StaffManagementService staffManagementService;
+
+    @MockitoBean
+    private SupportChatService supportChatService;
+
+    @MockitoBean
+    private SupportConversationRepository supportConversationRepository;
 
     @Test
     void contextLoads() {

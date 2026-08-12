@@ -75,8 +75,11 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/api/mini/account",
                     "/api/mini/profile",
-                    "/api/mini/orders/**"
-                ).hasRole("CUSTOMER")
+                    "/api/mini/orders/**",
+                    "/api/mini/support/**"
+                ).access((authentication, context) -> hasClientAndAnyRole(
+                    authentication.get(), "CLIENT_CUSTOMER_MINI", "ROLE_CUSTOMER"
+                ))
                 .requestMatchers(
                     HttpMethod.POST,
                     "/api/merchant-mini/orders/*/cancel"
