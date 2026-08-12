@@ -372,13 +372,13 @@
   gap: 12rpx;
 }
 
-.order-no,
+.order-recipient,
 .order-customer,
 .order-time {
   display: block;
 }
 
-.order-no {
+.order-recipient {
   overflow: hidden;
   color: var(--color-text-primary);
   font-size: 26rpx;

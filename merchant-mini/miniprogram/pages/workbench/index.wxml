@@ -114,8 +114,8 @@
           hover-class="order-row--pressed"
         >
           <view class="order-row__main">
-            <text class="order-no">#{{item.orderNo}}</text>
-            <text class="order-customer">用户：{{item.maskedPhone}}</text>
+            <text class="order-recipient">收件人：{{item.pickupName}}</text>
+            <text class="order-customer">电话：{{item.maskedPhone}}</text>
             <text class="order-time">{{item.createdAtText}}</text>
           </view>
           <view class="order-row__aside">
