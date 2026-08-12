@@ -3,6 +3,10 @@ import {
   merchantSessionStore,
   type MerchantSessionStore,
 } from '../store/session'
+import {
+  merchantUnreadStore,
+  syncDashboardUnread,
+} from '../store/message-unread'
 
 export interface OrderReminderOptions {
   pollMs?: number
@@ -105,6 +109,7 @@ export const createOrderReminder = ({
 export const createMerchantOrderReminderLifecycle = (
   session: Pick<MerchantSessionStore, 'current'>,
   reminder: OrderReminder,
+  onSignedOut: () => void = () => undefined,
 ): MerchantOrderReminderLifecycle => {
   let isForeground = false
 
@@ -131,7 +136,10 @@ export const createMerchantOrderReminderLifecycle = (
       isForeground = false
       reminder.stop()
     },
-    signedOut: () => reminder.reset(),
+    signedOut: () => {
+      onSignedOut()
+      reminder.reset()
+    },
   }
 }
 
@@ -140,6 +148,7 @@ export const merchantOrderReminder = createOrderReminder({
   hasValidSession: () => Boolean(merchantSessionStore.current()),
   fetchSummary: async () => {
     const summary = await merchantDashboardService.summary()
+    syncDashboardUnread(summary)
     return summary.latestOrders
       .filter(({ status }) => status === 'PENDING_CONFIRMATION')
       .map(({ orderNo }) => orderNo)
@@ -157,4 +166,5 @@ export const merchantOrderReminder = createOrderReminder({
 export const merchantOrderReminderLifecycle = createMerchantOrderReminderLifecycle(
   merchantSessionStore,
   merchantOrderReminder,
+  () => merchantUnreadStore.reset(),
 )

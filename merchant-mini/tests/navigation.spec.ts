@@ -109,6 +109,22 @@ describe('merchant primary navigation', () => {
     expect(styles).toMatch(/\.tab-item--verification\s+\.tab-icon-shell\s*\{[^}]*transform:\s*translateY\(-16px\);/s)
   })
 
+  test('shows an accessible capped badge on the message destination', () => {
+    const markup = readFileSync(
+      resolve('miniprogram/components/app-tab-bar/index.wxml'),
+      'utf8',
+    )
+    const styles = readFileSync(
+      resolve('miniprogram/components/app-tab-bar/index.wxss'),
+      'utf8',
+    )
+
+    expect(markup).toContain("item.id === 'messages' && unreadCount > 0")
+    expect(markup).toContain("unreadCount > 99 ? '99+' : unreadCount")
+    expect(markup).toContain('个待回复会话')
+    expect(styles).toMatch(/\.tab-unread-badge\s*\{[^}]*min-width:\s*18px;[^}]*height:\s*18px;/s)
+  })
+
   test('uses the accessible existing secondary text token for inactive tabs', () => {
     const styles = readFileSync(
       resolve('miniprogram/components/app-tab-bar/index.wxss'),

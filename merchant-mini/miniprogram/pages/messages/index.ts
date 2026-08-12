@@ -1,6 +1,7 @@
 import { merchantSupportService } from '../../services/support'
 import { merchantSessionStore } from '../../store/session'
 import type { MerchantSupportConversation } from '../../types/support'
+import { syncConversationListUnread } from '../../store/message-unread'
 
 type PresentedConversation = MerchantSupportConversation & { displayTime: string }
 
@@ -60,6 +61,7 @@ Page({
     try {
       const result = await merchantSupportService.list(0, 50)
       if (generation !== this.refreshGeneration) return
+      syncConversationListUnread(result.items)
       this.setData({
         conversations: result.items.map(present),
         hasLoaded: true,

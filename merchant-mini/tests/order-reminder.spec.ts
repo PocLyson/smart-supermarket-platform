@@ -144,6 +144,24 @@ describe('new order reminder', () => {
     lifecycle.signedOut()
   })
 
+  test('signing out also clears account-scoped unread presentation state', () => {
+    const onSignedOut = vi.fn()
+    const lifecycle = createMerchantOrderReminderLifecycle(
+      { current: () => undefined },
+      {
+        start: vi.fn(),
+        refreshNow: vi.fn().mockResolvedValue(undefined),
+        stop: vi.fn(),
+        reset: vi.fn(),
+      },
+      onSignedOut,
+    )
+
+    lifecycle.signedOut()
+
+    expect(onSignedOut).toHaveBeenCalledOnce()
+  })
+
   test('stops itself before a protected fetch when the stored session becomes invalid', async () => {
     vi.useFakeTimers()
     let valid = true

@@ -1,4 +1,7 @@
 import { NAV_ITEMS, type MerchantTab } from './navigation'
+import { merchantUnreadStore } from '../../store/message-unread'
+
+const unreadSubscriptions = new WeakMap<object, () => void>()
 
 Component({
   properties: {
@@ -10,6 +13,20 @@ Component({
 
   data: {
     items: NAV_ITEMS,
+    unreadCount: 0,
+  },
+
+  lifetimes: {
+    attached() {
+      const unsubscribe = merchantUnreadStore.subscribe((unreadCount) => {
+        this.setData({ unreadCount })
+      })
+      unreadSubscriptions.set(this, unsubscribe)
+    },
+    detached() {
+      unreadSubscriptions.get(this)?.()
+      unreadSubscriptions.delete(this)
+    },
   },
 
   methods: {

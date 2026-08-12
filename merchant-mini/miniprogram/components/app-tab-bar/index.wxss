@@ -30,12 +30,33 @@
 }
 
 .tab-icon-shell {
+  position: relative;
   display: flex;
   width: 28px;
   height: 28px;
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-round);
+}
+
+.tab-unread-badge {
+  position: absolute;
+  top: -5px;
+  right: -9px;
+  display: flex;
+  box-sizing: border-box;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border: 2px solid #FFFFFF;
+  border-radius: var(--radius-round);
+  background: var(--color-error);
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: var(--weight-semibold);
+  line-height: 14px;
+  align-items: center;
+  justify-content: center;
 }
 
 .tab-icon {
