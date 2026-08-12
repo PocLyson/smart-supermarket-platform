@@ -10,7 +10,6 @@
     <view class="employee-pill" role="button" aria-label="进入我的，当前账号 {{session.username}} {{roleLabel}}" bindtap="onProfileTap" hover-class="employee-pill--pressed">
       <image class="employee-pill__icon" src="/assets/icons/profile.svg" mode="aspectFit" aria-hidden="true" />
       <text>{{session.username}} {{roleLabel}}</text>
-      <text class="employee-pill__arrow">›</text>
     </view>
   </view>
 

@@ -113,6 +113,20 @@ describe('merchant workbench presentation', () => {
     expect(styles).toMatch(/\.employee-pill\s*\{[^}]*font-size:\s*24rpx;/s)
   })
 
+  test('shows the employee identity without a border or trailing arrow', () => {
+    const markup = readFileSync(
+      resolve('miniprogram/pages/workbench/index.wxml'),
+      'utf8',
+    )
+    const styles = readFileSync(
+      resolve('miniprogram/pages/workbench/index.wxss'),
+      'utf8',
+    )
+
+    expect(markup).not.toContain('employee-pill__arrow')
+    expect(styles).toMatch(/\.employee-pill\s*\{[^}]*border:\s*0;/s)
+  })
+
   test('uses class selectors that compile without page WXSS warnings', () => {
     const styles = readFileSync(
       resolve('miniprogram/pages/workbench/index.wxss'),
