@@ -1,13 +1,10 @@
 import { merchantSupportService } from '../../services/support'
 import { merchantSessionStore } from '../../store/session'
-import type { MerchantSupportMessage } from '../../types/support'
+import {
+  presentMerchantSupportMessage,
+  type PresentedMerchantSupportMessage,
+} from './presentation'
 
-type PresentedMessage = MerchantSupportMessage & { isMine: boolean; displayTime: string }
-const present = (item: MerchantSupportMessage): PresentedMessage => ({
-  ...item,
-  isMine: item.senderType === 'MERCHANT',
-  displayTime: item.createdAt ? item.createdAt.replace('T', ' ').slice(5, 16) : '',
-})
 const messageId = () => `merchant-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
 
 Page({
@@ -16,7 +13,7 @@ Page({
     displayName: '顾客',
     maskedPhone: '',
     orderNo: '',
-    messages: [] as PresentedMessage[],
+    messages: [] as PresentedMerchantSupportMessage[],
     draft: '',
     loading: true,
     sending: false,
@@ -76,15 +73,20 @@ Page({
       if (generation !== this.generation) return
       const known = new Set(this.data.messages.map((item) => item.id))
       const messages = quiet
-        ? [...this.data.messages, ...incoming.filter((item) => !known.has(item.id)).map(present)]
-        : incoming.map(present)
+        ? [
+            ...this.data.messages,
+            ...incoming
+              .filter((item) => !known.has(item.id))
+              .map(presentMerchantSupportMessage),
+          ]
+        : incoming.map(presentMerchantSupportMessage)
       this.setData({
         messages,
         loading: false,
         errorMessage: '',
         scrollIntoView: messages.length ? `message-${messages[messages.length - 1].id}` : '',
       })
-      const latestCustomer = [...incoming].reverse().find((item) => item.senderType === 'CUSTOMER')
+      const latestCustomer = [...incoming].reverse().find((item) => item.senderSide === 'CUSTOMER')
       if (latestCustomer) await merchantSupportService.markRead(this.data.conversationId, latestCustomer.id)
     } catch (error) {
       if (generation !== this.generation || quiet) return
@@ -121,7 +123,7 @@ Page({
       if (this.pendingMessageId !== clientMessageId) return
       const messages = this.data.messages.some((item) => item.id === reply.id)
         ? this.data.messages
-        : [...this.data.messages, present(reply)]
+        : [...this.data.messages, presentMerchantSupportMessage(reply)]
       this.pendingMessageId = ''
       this.pendingContent = ''
       this.setData({ messages, draft: '', scrollIntoView: `message-${reply.id}` })

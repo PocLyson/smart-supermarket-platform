@@ -59,6 +59,40 @@ describe('customer support chat service', () => {
   })
 })
 
+describe('customer message presentation', () => {
+  it('puts customer messages on the right and maps the API order field', async () => {
+    const { presentCustomerSupportMessage } = await import(
+      '../miniprogram/pages/support-chat/presentation'
+    )
+
+    expect(presentCustomerSupportMessage({
+      id: 21,
+      senderSide: 'CUSTOMER',
+      content: '请问几点可以取货',
+      relatedOrderNo: 'ORDER-21',
+      createdAt: '2026-08-12T17:35:00Z',
+    })).toMatchObject({
+      isMine: true,
+      orderNo: 'ORDER-21',
+      displayTime: '08-12 17:35',
+    })
+  })
+
+  it('keeps merchant replies on the left', async () => {
+    const { presentCustomerSupportMessage } = await import(
+      '../miniprogram/pages/support-chat/presentation'
+    )
+
+    expect(presentCustomerSupportMessage({
+      id: 22,
+      senderSide: 'MERCHANT',
+      content: '现在可以取货',
+      relatedOrderNo: null,
+      createdAt: '2026-08-12T17:36:00Z',
+    }).isMine).toBe(false)
+  })
+})
+
 describe('support polling lifecycle', () => {
   it('polls at most once at a time and stops while hidden', async () => {
     let finish: (() => void) | undefined

@@ -12,9 +12,9 @@ export interface SupportConversation {
 
 export interface SupportMessage {
   id: number
-  senderType: SupportSenderType
+  senderSide: SupportSenderType
   content: string
-  orderNo?: string | null
+  relatedOrderNo?: string | null
   createdAt: string
 }
 

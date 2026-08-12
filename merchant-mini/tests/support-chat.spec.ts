@@ -31,6 +31,40 @@ describe('merchant support service', () => {
   })
 })
 
+describe('merchant message presentation', () => {
+  it('puts merchant replies on the right and maps the API order field', async () => {
+    const { presentMerchantSupportMessage } = await import(
+      '../miniprogram/pages/message-detail/presentation'
+    )
+
+    expect(presentMerchantSupportMessage({
+      id: 12,
+      senderSide: 'MERCHANT',
+      content: '商品已经备好',
+      relatedOrderNo: 'ORDER-12',
+      createdAt: '2026-08-12T17:33:00Z',
+    })).toMatchObject({
+      isMine: true,
+      orderNo: 'ORDER-12',
+      displayTime: '08-12 17:33',
+    })
+  })
+
+  it('keeps customer messages on the left', async () => {
+    const { presentMerchantSupportMessage } = await import(
+      '../miniprogram/pages/message-detail/presentation'
+    )
+
+    expect(presentMerchantSupportMessage({
+      id: 13,
+      senderSide: 'CUSTOMER',
+      content: '什么时候可以取货',
+      relatedOrderNo: null,
+      createdAt: '2026-08-12T17:34:00Z',
+    }).isMine).toBe(false)
+  })
+})
+
 describe('merchant message center contract', () => {
   it('routes the message tab to the real inbox and registers detail artifacts', () => {
     expect(NAV_ITEMS.find((item) => item.id === 'messages')?.url).toBe('/pages/messages/index')
@@ -57,6 +91,8 @@ describe('merchant message center contract', () => {
     expect(detail).toContain('订单 {{item.orderNo}}')
     expect(style).toContain('env(safe-area-inset-bottom)')
     expect(style).toContain('min-height: 88rpx')
+    expect(detail).toContain('reply-button__visual')
+    expect(style).toContain('height: 68rpx')
     expect(read('pages/messages/index.ts')).toContain('result.items.map(present)')
   })
 

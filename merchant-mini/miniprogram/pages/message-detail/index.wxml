@@ -32,7 +32,9 @@
     <view wx:if="{{errorMessage && messages.length}}" class="reply-error" role="alert">{{errorMessage}}</view>
     <view class="reply-row">
       <textarea class="reply-input" value="{{draft}}" maxlength="500" auto-height fixed placeholder="回复顾客" bindinput="onDraftInput" />
-      <button class="reply-button" disabled="{{!draft || sending}}" loading="{{sending}}" bindtap="onReply">发送</button>
+      <button class="reply-button" disabled="{{!draft || sending}}" bindtap="onReply">
+        <view class="reply-button__visual">{{sending ? '发送中' : '发送'}}</view>
+      </button>
     </view>
   </view>
 </view>

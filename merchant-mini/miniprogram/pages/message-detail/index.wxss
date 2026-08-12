@@ -21,7 +21,9 @@
 .reply-composer { padding: 16rpx 24rpx calc(16rpx + env(safe-area-inset-bottom)); border-top: 2rpx solid var(--color-divider); background: #FFFFFF; }
 .reply-row { display: flex; align-items: flex-end; gap: 16rpx; }
 .reply-input { box-sizing: border-box; min-height: 88rpx; max-height: 192rpx; padding: 20rpx 24rpx; border: 2rpx solid var(--color-border-control); border-radius: 24rpx; background: var(--color-bg-subtle); flex: 1; }
-.reply-button { display: flex; min-width: 112rpx; min-height: 88rpx; margin: 0; padding: 0 24rpx; border: 0; border-radius: 24rpx; background: var(--primary-600); color: #FFFFFF; align-items: center; justify-content: center; }
+.reply-button { display: flex; min-width: 104rpx; min-height: 88rpx; margin: 0; padding: 0 6rpx; border: 0; background: transparent; color: #FFFFFF; align-items: center; justify-content: center; }
 .reply-button::after { border: 0; }
-.reply-button[disabled] { background: var(--color-disabled-bg); color: var(--color-disabled-text); }
+.reply-button__visual { display: flex; box-sizing: border-box; width: 92rpx; height: 68rpx; border-radius: 18rpx; background: var(--primary-600); font-size: 26rpx; align-items: center; justify-content: center; }
+.reply-button[disabled] { background: transparent; color: var(--color-disabled-text); }
+.reply-button[disabled] .reply-button__visual { background: var(--color-disabled-bg); }
 .reply-error { padding: 0 16rpx 12rpx; color: var(--color-error-text); font-size: var(--type-caption-size); }

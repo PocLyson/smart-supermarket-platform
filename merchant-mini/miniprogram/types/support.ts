@@ -19,9 +19,9 @@ export interface MerchantSupportConversationPage {
 
 export interface MerchantSupportMessage {
   id: number
-  senderType: SupportSenderType
+  senderSide: SupportSenderType
   content: string
-  orderNo?: string | null
+  relatedOrderNo?: string | null
   createdAt: string
 }
 

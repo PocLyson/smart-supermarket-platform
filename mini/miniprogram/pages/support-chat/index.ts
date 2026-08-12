@@ -2,19 +2,10 @@ import { supportService } from '../../services/support'
 import { sessionStore } from '../../store/session'
 import type { SupportMessage } from '../../types/support'
 import { createSupportPoller, type SupportPoller } from '../../utils/support-poller'
-
-type PresentedMessage = SupportMessage & {
-  isMine: boolean
-  displayTime: string
-}
-
-const presentMessage = (message: SupportMessage): PresentedMessage => ({
-  ...message,
-  isMine: message.senderType === 'CUSTOMER',
-  displayTime: message.createdAt
-    ? message.createdAt.replace('T', ' ').slice(5, 16)
-    : '',
-})
+import {
+  presentCustomerSupportMessage,
+  type PresentedCustomerSupportMessage,
+} from './presentation'
 
 const createClientMessageId = (): string =>
   `customer-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
@@ -23,7 +14,7 @@ Page({
   data: {
     conversationId: 0,
     orderNo: '',
-    messages: [] as PresentedMessage[],
+    messages: [] as PresentedCustomerSupportMessage[],
     draft: '',
     loading: true,
     sending: false,
@@ -84,7 +75,7 @@ Page({
       this.initialized = true
       this.setData({
         conversationId: conversation.id,
-        messages: messages.map(presentMessage),
+        messages: messages.map(presentCustomerSupportMessage),
         scrollIntoView: messages.length ? `message-${messages[messages.length - 1].id}` : '',
       })
       await this.markLatestRead(messages)
@@ -105,7 +96,9 @@ Page({
       const known = new Set(this.data.messages.map((message) => message.id))
       const merged = [
         ...this.data.messages,
-        ...incoming.filter((message) => !known.has(message.id)).map(presentMessage),
+        ...incoming
+          .filter((message) => !known.has(message.id))
+          .map(presentCustomerSupportMessage),
       ]
       this.setData({
         messages: merged,
@@ -119,7 +112,7 @@ Page({
 
   async markLatestRead(messages: SupportMessage[]) {
     const latest = messages[messages.length - 1]
-    if (!latest || latest.senderType !== 'MERCHANT') return
+    if (!latest || latest.senderSide !== 'MERCHANT') return
     try {
       await supportService.markRead(this.data.conversationId, latest.id)
     } catch {
@@ -155,7 +148,7 @@ Page({
       const known = this.data.messages.some((item) => item.id === message.id)
       const messages = known
         ? this.data.messages
-        : [...this.data.messages, presentMessage(message)]
+        : [...this.data.messages, presentCustomerSupportMessage(message)]
       this.pendingMessageId = ''
       this.pendingContent = ''
       this.setData({
