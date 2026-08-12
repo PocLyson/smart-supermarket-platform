@@ -135,4 +135,22 @@ describe('merchant workbench presentation', () => {
     expect(token).toBe('--color-text-secondary')
     expect(contrast).toBeGreaterThanOrEqual(4.5)
   })
+
+  test('separates recent orders into readable cards with a local chevron', () => {
+    const markup = readFileSync(
+      resolve('miniprogram/pages/workbench/index.wxml'),
+      'utf8',
+    )
+    const styles = readFileSync(
+      resolve('miniprogram/pages/workbench/index.wxss'),
+      'utf8',
+    )
+
+    expect(markup).toContain('class="order-row__arrow-icon"')
+    expect(markup).toContain('/assets/icons/chevron-right.svg')
+    expect(markup).not.toContain('class="order-row__arrow">›</text>')
+    expect(styles).toMatch(/\.order-list\s*\{[^}]*background:\s*transparent;[^}]*gap:\s*16rpx;/s)
+    expect(styles).toMatch(/\.order-row\s*\{[^}]*display:\s*grid;[^}]*border-radius:\s*24rpx;/s)
+    expect(styles).toMatch(/\.order-no\s*\{[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
+  })
 })

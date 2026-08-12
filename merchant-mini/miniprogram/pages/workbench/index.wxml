@@ -122,7 +122,7 @@
             <text class="order-status order-status--{{item.status}}">{{item.statusLabel}}</text>
             <text class="order-money">{{item.amountText}}</text>
           </view>
-          <text class="order-row__arrow">›</text>
+          <image class="order-row__arrow-icon" src="/assets/icons/chevron-right.svg" mode="aspectFit" aria-hidden="true" />
         </view>
       </view>
     </block>

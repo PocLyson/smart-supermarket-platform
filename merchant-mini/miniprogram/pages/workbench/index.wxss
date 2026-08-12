@@ -227,15 +227,13 @@
 }
 
 .priority-row__button-arrow,
-.priority-row__arrow,
-.order-row__arrow {
+.priority-row__arrow {
   font-size: 48rpx;
   font-weight: var(--weight-regular);
   line-height: 48rpx;
 }
 
-.priority-row__arrow,
-.order-row__arrow {
+.priority-row__arrow {
   margin-left: 12rpx;
   color: var(--color-text-placeholder);
 }
@@ -335,20 +333,32 @@
 }
 
 .order-list {
+  display: flex;
   margin-top: 18rpx;
-  overflow: hidden;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  flex-direction: column;
+  gap: 16rpx;
 }
 
 .order-row {
+  display: grid;
   box-sizing: border-box;
-  min-height: 150rpx;
-  padding: 22rpx 20rpx;
-  border-bottom: 2rpx solid var(--color-divider);
+  min-height: 176rpx;
+  padding: 24rpx;
+  align-items: center;
+  grid-template-columns: minmax(0, 1fr) auto 36rpx;
+  border: 2rpx solid var(--color-divider);
+  border-radius: 24rpx;
+  background: var(--color-bg-surface);
+  box-shadow: 0 8rpx 24rpx rgba(13, 27, 54, 0.06);
   gap: 16rpx;
 }
 
 .order-row:last-child {
-  border-bottom: 0;
+  border-bottom: 2rpx solid var(--color-divider);
 }
 
 .order-row__main {
@@ -369,10 +379,13 @@
 }
 
 .order-no {
+  overflow: hidden;
   color: var(--color-text-primary);
-  font-size: 28rpx;
+  font-size: 26rpx;
   font-weight: var(--weight-semibold);
-  line-height: 40rpx;
+  line-height: 38rpx;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .order-customer,
@@ -388,8 +401,11 @@
 }
 
 .order-status {
+  padding: 4rpx 12rpx;
+  border-radius: var(--radius-md);
+  background: var(--primary-50);
   color: var(--primary-600);
-  font-size: 27rpx;
+  font-size: 24rpx;
 }
 
 .order-status--PENDING_CONFIRMATION {
@@ -405,6 +421,11 @@
   font-size: 30rpx;
   font-weight: var(--weight-bold);
   font-variant-numeric: tabular-nums;
+}
+
+.order-row__arrow-icon {
+  width: 32rpx;
+  height: 32rpx;
 }
 
 .state-card {
