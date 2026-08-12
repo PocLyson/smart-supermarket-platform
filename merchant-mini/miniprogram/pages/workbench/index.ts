@@ -135,6 +135,10 @@ Page({
     wx.redirectTo({ url: '/pages/orders/index' })
   },
 
+  onMessagesTap() {
+    wx.redirectTo({ url: '/pages/messages/index' })
+  },
+
   onProfileTap() {
     wx.redirectTo({ url: '/pages/profile/index' })
   },

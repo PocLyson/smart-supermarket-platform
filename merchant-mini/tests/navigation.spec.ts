@@ -23,7 +23,7 @@ describe('merchant primary navigation', () => {
       '/pages/workbench/index',
       '/pages/orders/index',
       '/pages/verify-pickup/index',
-      '/pages/messages-unavailable/index?feature=messages',
+      '/pages/messages/index',
       '/pages/profile/index',
     ])
   })

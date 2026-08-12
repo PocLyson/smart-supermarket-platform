@@ -1,0 +1,31 @@
+.merchant-page-header {
+  box-sizing: border-box;
+  min-height: 260rpx;
+  padding: calc(112rpx + env(safe-area-inset-top)) 32rpx 44rpx;
+  background: var(--primary-600);
+  color: #FFFFFF;
+}
+
+.merchant-page-header__eyebrow,
+.merchant-page-header__title,
+.merchant-page-header__description { display: block; }
+.merchant-page-header__eyebrow { font-size: var(--type-caption-size); opacity: 0.76; }
+.merchant-page-header__title { margin-top: 8rpx; font-size: 46rpx; font-weight: var(--weight-bold); }
+.merchant-page-header__description { margin-top: 8rpx; font-size: var(--type-helper-size); opacity: 0.8; }
+.messages-page { min-height: calc(100vh - 260rpx); padding: 24rpx 16rpx calc(176rpx + env(safe-area-inset-bottom)); }
+.conversation-list { overflow: hidden; border: 2rpx solid var(--color-divider); border-radius: var(--radius-xl); background: #FFFFFF; }
+.conversation-row { position: relative; display: flex; min-height: 176rpx; padding: var(--space-4); border-bottom: 2rpx solid var(--color-divider); align-items: center; gap: var(--space-3); }
+.conversation-row:last-child { border-bottom: 0; }
+.conversation-row--pressed { background: var(--primary-50); }
+.conversation-avatar { display: flex; width: 80rpx; height: 80rpx; flex: none; border-radius: var(--radius-round); background: var(--primary-100); align-items: center; justify-content: center; }
+.conversation-avatar image { width: 40rpx; height: 40rpx; }
+.conversation-main { min-width: 0; flex: 1; }
+.conversation-heading { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.conversation-name { overflow: hidden; font-weight: var(--weight-semibold); text-overflow: ellipsis; white-space: nowrap; }
+.conversation-time, .conversation-phone, .conversation-order { color: var(--color-text-tertiary); font-size: var(--type-caption-size); }
+.conversation-phone, .conversation-preview, .conversation-order { display: block; }
+.conversation-preview { overflow: hidden; margin-top: 4rpx; color: var(--color-text-secondary); font-size: var(--type-helper-size); text-overflow: ellipsis; white-space: nowrap; }
+.conversation-order { margin-top: 4rpx; color: var(--primary-600); }
+.unread-badge { display: flex; min-width: 40rpx; height: 40rpx; padding: 0 8rpx; border-radius: var(--radius-round); background: var(--color-error); color: #FFFFFF; font-size: 22rpx; align-items: center; justify-content: center; }
+.empty-card { margin-top: var(--space-5); }
+.empty-icon { width: 72rpx; height: 72rpx; margin-bottom: var(--space-3); }

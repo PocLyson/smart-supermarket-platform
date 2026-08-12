@@ -1,0 +1,39 @@
+<view class="merchant-page-header">
+  <text class="merchant-page-header__eyebrow">门店服务</text>
+  <text class="merchant-page-header__title">消息中心</text>
+  <text class="merchant-page-header__description">查看顾客咨询并及时回复</text>
+</view>
+
+<view class="messages-page">
+  <view wx:if="{{loading && !hasLoaded}}" class="state-card" role="status">
+    <t-loading theme="circular" size="48rpx" />
+    <text>正在加载消息…</text>
+  </view>
+  <view wx:elif="{{errorMessage && !hasLoaded}}" class="state-card state-card--error" role="alert">
+    <text class="state-title">消息暂时无法加载</text>
+    <text class="state-description">{{errorMessage}}</text>
+    <t-button block bindtap="retry">重新加载</t-button>
+  </view>
+  <view wx:elif="{{hasLoaded && conversations.length === 0}}" class="state-card empty-card">
+    <image class="empty-icon" src="/assets/icons/messages.svg" mode="aspectFit" aria-hidden="true" />
+    <text class="state-title">暂时没有顾客消息</text>
+    <text class="state-description">顾客发来咨询后会显示在这里</text>
+  </view>
+  <view wx:else class="conversation-list">
+    <view wx:for="{{conversations}}" wx:key="id" class="conversation-row" role="button" aria-label="{{item.displayName}}，{{item.unreadCount}} 条未读" data-id="{{item.id}}" bindtap="onOpenConversation" hover-class="conversation-row--pressed">
+      <view class="conversation-avatar"><image src="/assets/icons/messages.svg" mode="aspectFit" aria-hidden="true" /></view>
+      <view class="conversation-main">
+        <view class="conversation-heading">
+          <text class="conversation-name">{{item.displayName}}</text>
+          <text class="conversation-time">{{item.displayTime}}</text>
+        </view>
+        <text class="conversation-phone">{{item.maskedPhone}}</text>
+        <text class="conversation-preview">{{item.lastMessagePreview || '顾客发起了咨询'}}</text>
+        <text wx:if="{{item.lastRelatedOrderNo}}" class="conversation-order">关联订单 {{item.lastRelatedOrderNo}}</text>
+      </view>
+      <text wx:if="{{item.unreadCount > 0}}" class="unread-badge">{{item.unreadCount > 99 ? '99+' : item.unreadCount}}</text>
+    </view>
+  </view>
+</view>
+
+<app-tab-bar value="messages" />

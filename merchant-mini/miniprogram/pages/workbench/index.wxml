@@ -83,7 +83,7 @@
           <text class="overview-label">低库存</text>
           <text class="overview-value overview-value--warning">{{summary.lowStockCount}}</text>
         </view>
-        <view class="overview-item">
+        <view class="overview-item" role="button" aria-label="待回复 {{summary.waitingConversationCount}} 条" bindtap="onMessagesTap" hover-class="overview-item--pressed">
           <text class="overview-label">待回复</text>
           <text class="overview-value overview-value--danger">{{summary.waitingConversationCount}}</text>
         </view>

@@ -7,6 +7,8 @@
     "pages/verify-pickup/index",
     "pages/profile/index",
     "pages/account-wechat/index",
+    "pages/messages/index",
+    "pages/message-detail/index",
     "pages/messages-unavailable/index"
   ],
   "window": {

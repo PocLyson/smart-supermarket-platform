@@ -9,7 +9,7 @@ describe('merchant top-level page presentation', () => {
   test.each([
     ['orders', '订单管理'],
     ['verify-pickup', '取货核销'],
-    ['messages-unavailable', '消息中心'],
+    ['messages', '消息中心'],
     ['profile', '我的'],
     ['account-wechat', '账号与微信'],
   ])('%s uses the approved custom navy header', (page, title) => {
@@ -55,7 +55,7 @@ describe('merchant top-level page presentation', () => {
   })
 
   test('messages page uses a bundled icon instead of CSS-drawn artwork', () => {
-    const markup = pageSource('messages-unavailable', 'wxml')
+    const markup = pageSource('messages', 'wxml')
 
     expect(markup).toContain('/assets/icons/messages.svg')
     expect(markup).not.toContain('state-icon__line')

@@ -1,0 +1,38 @@
+<view class="chat-page">
+  <view class="detail-header">
+    <view class="back-button" role="button" aria-label="返回" bindtap="goBack">‹</view>
+    <view class="customer-heading">
+      <text class="customer-name">{{displayName}}</text>
+      <text class="customer-context">{{maskedPhone}}{{orderNo ? ' · 订单 ' + orderNo : ''}}</text>
+    </view>
+  </view>
+
+  <scroll-view class="message-scroll" scroll-y scroll-with-animation scroll-into-view="{{scrollIntoView}}">
+    <view wx:if="{{loading}}" class="state-card">正在加载会话…</view>
+    <view wx:elif="{{errorMessage && !messages.length}}" class="state-card state-card--error" role="alert">
+      <text class="state-title">会话暂时无法加载</text>
+      <text class="state-description">{{errorMessage}}</text>
+      <t-button block bindtap="retry">重新加载</t-button>
+    </view>
+    <view wx:elif="{{!messages.length}}" class="state-card"><text>暂时没有消息</text></view>
+    <view wx:for="{{messages}}" wx:key="id" id="message-{{item.id}}" class="message-row {{item.isMine ? 'is-mine' : 'is-customer'}}">
+      <view class="message-stack">
+        <text class="message-sender">{{item.isMine ? '门店' : displayName}}</text>
+        <view class="message-bubble">
+          <view wx:if="{{item.orderNo}}" class="order-chip">订单 {{item.orderNo}}</view>
+          <text class="message-content">{{item.content}}</text>
+        </view>
+        <text class="message-time">{{item.displayTime}}</text>
+      </view>
+    </view>
+    <view class="scroll-spacer"></view>
+  </scroll-view>
+
+  <view class="reply-composer">
+    <view wx:if="{{errorMessage && messages.length}}" class="reply-error" role="alert">{{errorMessage}}</view>
+    <view class="reply-row">
+      <textarea class="reply-input" value="{{draft}}" maxlength="500" auto-height fixed placeholder="回复顾客" bindinput="onDraftInput" />
+      <button class="reply-button" disabled="{{!draft || sending}}" loading="{{sending}}" bindtap="onReply">发送</button>
+    </view>
+  </view>
+</view>

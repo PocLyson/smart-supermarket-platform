@@ -1,0 +1,9 @@
+{
+  "navigationStyle": "custom",
+  "navigationBarTitleText": "消息中心",
+  "usingComponents": {
+    "app-tab-bar": "/components/app-tab-bar/index",
+    "t-button": "tdesign-miniprogram/button/button",
+    "t-loading": "tdesign-miniprogram/loading/loading"
+  }
+}

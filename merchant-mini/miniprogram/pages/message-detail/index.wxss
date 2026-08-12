@@ -1,0 +1,27 @@
+.chat-page { display: flex; height: 100vh; background: var(--color-bg-page); flex-direction: column; }
+.detail-header { display: flex; box-sizing: border-box; min-height: 196rpx; padding: calc(76rpx + env(safe-area-inset-top)) 24rpx 20rpx; background: var(--primary-600); color: #FFFFFF; align-items: center; gap: 20rpx; }
+.back-button { display: flex; width: 88rpx; min-height: 88rpx; flex: none; font-size: 64rpx; align-items: center; justify-content: center; }
+.customer-heading { min-width: 0; flex: 1; }
+.customer-name, .customer-context { display: block; }
+.customer-name { font-size: 36rpx; font-weight: var(--weight-bold); }
+.customer-context { overflow: hidden; color: rgba(255,255,255,.78); font-size: var(--type-caption-size); text-overflow: ellipsis; white-space: nowrap; }
+.message-scroll { min-height: 0; flex: 1; }
+.message-row { display: flex; padding: 16rpx 32rpx; }
+.message-row.is-mine { justify-content: flex-end; }
+.message-stack { display: flex; max-width: 78%; flex-direction: column; align-items: flex-start; }
+.is-mine .message-stack { align-items: flex-end; }
+.message-sender, .message-time { color: var(--color-text-tertiary); font-size: 22rpx; }
+.message-bubble { margin-top: 6rpx; padding: 24rpx; border-radius: 8rpx 24rpx 24rpx 24rpx; background: #FFFFFF; overflow-wrap: anywhere; }
+.is-mine .message-bubble { border-radius: 24rpx 8rpx 24rpx 24rpx; background: var(--primary-600); color: #FFFFFF; }
+.order-chip { margin-bottom: 12rpx; padding-bottom: 12rpx; border-bottom: 2rpx solid rgba(113,128,150,.22); color: var(--primary-600); font-size: var(--type-caption-size); }
+.is-mine .order-chip { border-color: rgba(255,255,255,.28); color: rgba(255,255,255,.86); }
+.message-content { white-space: pre-wrap; }
+.message-time { margin-top: 4rpx; }
+.scroll-spacer { height: 24rpx; }
+.reply-composer { padding: 16rpx 24rpx calc(16rpx + env(safe-area-inset-bottom)); border-top: 2rpx solid var(--color-divider); background: #FFFFFF; }
+.reply-row { display: flex; align-items: flex-end; gap: 16rpx; }
+.reply-input { box-sizing: border-box; min-height: 88rpx; max-height: 192rpx; padding: 20rpx 24rpx; border: 2rpx solid var(--color-border-control); border-radius: 24rpx; background: var(--color-bg-subtle); flex: 1; }
+.reply-button { display: flex; min-width: 112rpx; min-height: 88rpx; margin: 0; padding: 0 24rpx; border: 0; border-radius: 24rpx; background: var(--primary-600); color: #FFFFFF; align-items: center; justify-content: center; }
+.reply-button::after { border: 0; }
+.reply-button[disabled] { background: var(--color-disabled-bg); color: var(--color-disabled-text); }
+.reply-error { padding: 0 16rpx 12rpx; color: var(--color-error-text); font-size: var(--type-caption-size); }

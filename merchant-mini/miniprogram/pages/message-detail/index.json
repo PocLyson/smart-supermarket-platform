@@ -1,0 +1,7 @@
+{
+  "navigationStyle": "custom",
+  "navigationBarTitleText": "顾客消息",
+  "usingComponents": {
+    "t-button": "tdesign-miniprogram/button/button"
+  }
+}
