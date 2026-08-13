@@ -4,6 +4,7 @@ import {
   type MerchantSessionStore,
 } from '../store/session'
 import {
+  createUnreadMessageNotifier,
   merchantUnreadStore,
   syncDashboardUnread,
 } from '../store/message-unread'
@@ -109,12 +110,15 @@ export const createOrderReminder = ({
 export const createMerchantOrderReminderLifecycle = (
   session: Pick<MerchantSessionStore, 'current'>,
   reminder: OrderReminder,
-  onSignedOut: () => void = () => undefined,
+  resetAccountState: () => void = () => undefined,
 ): MerchantOrderReminderLifecycle => {
   let isForeground = false
 
   const activate = async (freshBaseline: boolean): Promise<void> => {
-    if (freshBaseline) reminder.reset()
+    if (freshBaseline) {
+      resetAccountState()
+      reminder.reset()
+    }
     if (!isForeground) return
     if (!session.current()) {
       reminder.reset()
@@ -137,17 +141,34 @@ export const createMerchantOrderReminderLifecycle = (
       reminder.stop()
     },
     signedOut: () => {
-      onSignedOut()
+      resetAccountState()
       reminder.reset()
     },
   }
 }
+
+export const notifyNewMerchantMessages = (conversationCount: number): void => {
+  if (typeof wx === 'undefined') return
+  wx.vibrateShort({ type: 'light' })
+  wx.showToast({
+    title: conversationCount > 1
+      ? `${conversationCount}个会话有新消息`
+      : '收到新的顾客消息',
+    icon: 'none',
+    duration: 2_000,
+  })
+}
+
+const merchantMessageNotifier = createUnreadMessageNotifier(
+  notifyNewMerchantMessages,
+)
 
 export const merchantOrderReminder = createOrderReminder({
   pollMs: 15_000,
   hasValidSession: () => Boolean(merchantSessionStore.current()),
   fetchSummary: async () => {
     const summary = await merchantDashboardService.summary()
+    merchantMessageNotifier.accept(summary.waitingConversationCount)
     syncDashboardUnread(summary)
     return summary.latestOrders
       .filter(({ status }) => status === 'PENDING_CONFIRMATION')
@@ -166,5 +187,8 @@ export const merchantOrderReminder = createOrderReminder({
 export const merchantOrderReminderLifecycle = createMerchantOrderReminderLifecycle(
   merchantSessionStore,
   merchantOrderReminder,
-  () => merchantUnreadStore.reset(),
+  () => {
+    merchantUnreadStore.reset()
+    merchantMessageNotifier.reset()
+  },
 )

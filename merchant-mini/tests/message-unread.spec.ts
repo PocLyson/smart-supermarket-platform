@@ -1,6 +1,7 @@
 import { describe, expect, test, vi } from 'vitest'
 import type { MerchantDashboardSummary } from '../miniprogram/types/dashboard'
 import {
+  createUnreadMessageNotifier,
   createMerchantUnreadStore,
   syncConversationListUnread,
   syncDashboardUnread,
@@ -53,5 +54,31 @@ describe('merchant unread conversation store', () => {
     ], store)
 
     expect(store.current()).toBe(2)
+  })
+
+  test('notifies only when unread conversations increase after the first baseline', () => {
+    const onIncrease = vi.fn()
+    const notifier = createUnreadMessageNotifier(onIncrease)
+
+    notifier.accept(2)
+    notifier.accept(2)
+    notifier.accept(4)
+    notifier.accept(1)
+    notifier.accept(2)
+
+    expect(onIncrease.mock.calls.map(([increase]) => increase)).toEqual([2, 1])
+  })
+
+  test('uses the next count as a silent baseline after account state is reset', () => {
+    const onIncrease = vi.fn()
+    const notifier = createUnreadMessageNotifier(onIncrease)
+
+    notifier.accept(1)
+    notifier.accept(2)
+    notifier.reset()
+    notifier.accept(5)
+
+    expect(onIncrease).toHaveBeenCalledOnce()
+    expect(onIncrease).toHaveBeenCalledWith(1)
   })
 })

@@ -3,6 +3,7 @@ import {
   createMerchantOrderReminderLifecycle,
   createOrderReminder,
   findNewOrderIds,
+  notifyNewMerchantMessages,
 } from '../miniprogram/utils/order-reminder'
 import {
   createMerchantSessionStore,
@@ -15,6 +16,22 @@ afterEach(() => {
 })
 
 describe('new order reminder', () => {
+  test('uses one lightweight toast and haptic when new customer messages arrive', () => {
+    const showToast = vi.fn()
+    const vibrateShort = vi.fn()
+    vi.stubGlobal('wx', { showToast, vibrateShort })
+
+    notifyNewMerchantMessages(2)
+
+    expect(vibrateShort).toHaveBeenCalledOnce()
+    expect(vibrateShort).toHaveBeenCalledWith({ type: 'light' })
+    expect(showToast).toHaveBeenCalledOnce()
+    expect(showToast).toHaveBeenCalledWith(expect.objectContaining({
+      title: '2个会话有新消息',
+      icon: 'none',
+    }))
+  })
+
   test('finds only identifiers that were not already seen', () => {
     expect(findNewOrderIds(['A', 'B'], new Set(['A']))).toEqual(['B'])
   })
@@ -160,6 +177,33 @@ describe('new order reminder', () => {
     lifecycle.signedOut()
 
     expect(onSignedOut).toHaveBeenCalledOnce()
+  })
+
+  test('authentication also clears the previous account unread baseline', async () => {
+    const resetAccountState = vi.fn()
+    const lifecycle = createMerchantOrderReminderLifecycle(
+      {
+        current: () => ({
+          accessToken: 'new-token',
+          role: 'CASHIER',
+          staffId: 2,
+          username: 'cashier',
+          expiresAt: Date.now() + 60_000,
+        }),
+      },
+      {
+        start: vi.fn(),
+        refreshNow: vi.fn().mockResolvedValue(undefined),
+        stop: vi.fn(),
+        reset: vi.fn(),
+      },
+      resetAccountState,
+    )
+
+    await lifecycle.foreground()
+    await lifecycle.authenticated()
+
+    expect(resetAccountState).toHaveBeenCalledOnce()
   })
 
   test('stops itself before a protected fetch when the stored session becomes invalid', async () => {

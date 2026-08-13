@@ -7,6 +7,11 @@ export interface MerchantUnreadStore {
   subscribe(listener: (count: number) => void): () => void
 }
 
+export interface UnreadMessageNotifier {
+  accept(count: number): void
+  reset(): void
+}
+
 const normalizeCount = (count: number): number =>
   Number.isFinite(count) ? Math.max(0, Math.floor(count)) : 0
 
@@ -29,6 +34,25 @@ export const createMerchantUnreadStore = (): MerchantUnreadStore => {
       listeners.add(listener)
       listener(count)
       return () => listeners.delete(listener)
+    },
+  }
+}
+
+export const createUnreadMessageNotifier = (
+  onIncrease: (increase: number) => void,
+): UnreadMessageNotifier => {
+  let previousCount: number | undefined
+
+  return {
+    accept: (count) => {
+      const normalized = normalizeCount(count)
+      if (previousCount !== undefined && normalized > previousCount) {
+        onIncrease(normalized - previousCount)
+      }
+      previousCount = normalized
+    },
+    reset: () => {
+      previousCount = undefined
     },
   }
 }
